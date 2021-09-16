@@ -10,6 +10,7 @@ from unittest.mock import ANY, MagicMock, PropertyMock
 import arrow
 import pytest
 import schedule
+import time_machine
 
 from freqtrade.constants import CANCEL_REASON, MATH_CLOSE_PREC, UNLIMITED_STAKE_AMOUNT
 from freqtrade.enums import RPCMessageType, RunMode, SellType, State, TradingMode

@@ -18,6 +18,8 @@ from freqtrade.resolvers import ExchangeResolver, StrategyResolver
 from freqtrade.strategy import IStrategy
 
 
+
+
 logger = logging.getLogger(__name__)
 
 
@@ -25,6 +27,7 @@ try:
     import plotly.graph_objects as go
     from plotly.offline import plot
     from plotly.subplots import make_subplots
+    import plotly.express as px
 except ImportError:
     logger.exception("Module plotly not found \n Please install using `pip3 install plotly`")
     exit(1)
@@ -193,7 +196,9 @@ def plot_trades(fig, trades: pd.DataFrame) -> make_subplots:
     if trades is not None and len(trades) > 0:
         # Create description for sell summarizing the trade
         trades['desc'] = trades.apply(lambda row: f"{round(row['profit_ratio'] * 100, 1)}%, "
+                                                  f"{row['buy_tag']}, "
                                                   f"{row['sell_reason']}, "
+                                                  f"{row['sell_tag']}, "
                                                   f"{row['trade_duration']} min",
                                       axis=1)
         trade_buys = go.Scatter(
@@ -264,7 +269,7 @@ def create_plotconfig(indicators1: List[str], indicators2: List[str],
     if not plot_config:
         # If no indicators and no plot-config given, use defaults.
         if not indicators1:
-            indicators1 = ['sma', 'ema3', 'ema5']
+            indicators1 = ['sma_trend', 'sma_smalltrend', 'sma50', 'sma200', 'sma400', 'sma10k']
         if not indicators2:
             indicators2 = ['macd', 'macdsignal']
 
@@ -389,19 +394,29 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
     if 'buy' in data.columns:
         df_buy = data[data['buy'] == 1]
         if len(df_buy) > 0:
-            buys = go.Scatter(
-                x=df_buy.date,
-                y=df_buy.close,
-                mode='markers',
-                name='buy',
-                marker=dict(
-                    symbol='triangle-up-dot',
-                    size=9,
-                    line=dict(width=1),
-                    color='green',
+            index = 0
+            buy_colours_hex=["#7CFC00"  ,  "#32CD32"  , "#006400" , "#9ACD32" , "#00FA9A" , "#8FBC8F" ,     #green colours
+                         "#20B2AA" ,    ##electric color
+                         "#556B2F" , "#808000"] #brownish olive green
+
+            for buy_tag in df_buy.buy_tag.copy().drop_duplicates():
+                buy_tag_series = df_buy[df_buy['buy_tag'] == buy_tag]
+
+                buys = go.Scatter(
+                    x=buy_tag_series.date,
+                    y=buy_tag_series.close,
+                    mode='markers',
+                    text=buy_tag_series.buy_tag,
+                    name='buy',
+                    marker=dict(
+                        symbol="pentagon",
+                        size=9,
+                        line=dict(width=1),
+                        color=buy_colours_hex[index]
+                    )
                 )
-            )
-            fig.add_trace(buys, 1, 1)
+                fig.add_trace(buys, 1, 1)
+                index+=1
         else:
             logger.warning("No buy-signals found.")
 
@@ -412,6 +427,7 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
                 x=df_sell.date,
                 y=df_sell.close,
                 mode='markers',
+                text=df_sell.sell_tag,
                 name='sell',
                 marker=dict(
                     symbol='triangle-down-dot',
@@ -455,6 +471,28 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
         fig = add_areas(fig, row, data, sub_config)
 
     return fig
+
+def buy_tag_colours(buy_tag):
+
+    premade_tags = {"LOW":{color}}
+
+    buy_colours_hex=["#7CFC00"  ,  "#32CD32"  , "#006400" , "#9ACD32" , "#00FA9A" , "#8FBC8F" ,     #green colours
+                     "#20B2AA" ,    ##electric color
+                     "#556B2F" , "#808000"] #brownish olive green
+
+    buy_tag_dict = {}
+
+    buy_tags_unique = buy_tags.copy().drop_duplicates()
+
+    index=0
+    for buy_tag in buy_tags_unique:
+
+        buy_tag_dict[buy_tag] = buy_colours_hex[index]
+        index+=1
+
+    print(str(buy_tag_dict))
+
+    return buy_tag_dict
 
 
 def generate_profit_graph(pairs: str, data: Dict[str, pd.DataFrame],

@@ -1,7 +1,7 @@
 import logging
 from pathlib import Path
 from typing import Any, Dict, List
-
+import random
 import pandas as pd
 
 from freqtrade.configuration import TimeRange
@@ -209,7 +209,7 @@ def plot_trades(fig, trades: pd.DataFrame) -> make_subplots:
             text=trades["desc"],
             marker=dict(
                 symbol='circle-open',
-                size=11,
+                size=13,
                 line=dict(width=2),
                 color='cyan'
 
@@ -224,7 +224,7 @@ def plot_trades(fig, trades: pd.DataFrame) -> make_subplots:
             name='Sell - Profit',
             marker=dict(
                 symbol='square-open',
-                size=11,
+                size=13,
                 line=dict(width=2),
                 color='green'
             )
@@ -237,7 +237,7 @@ def plot_trades(fig, trades: pd.DataFrame) -> make_subplots:
             name='Sell - Loss',
             marker=dict(
                 symbol='square-open',
-                size=11,
+                size=13,
                 line=dict(width=2),
                 color='red'
             )
@@ -299,19 +299,170 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
     :param fill_color: color to be used for the filled area
     :return: fig with added  filled_traces plot
     """
-    if indicator_a in data and indicator_b in data:
-        # make lines invisible to get the area plotted, only.
-        line = {'color': 'rgba(255,255,255,0)'}
-        # TODO: Figure out why scattergl causes problems plotly/plotly.js#2284
-        trace_a = go.Scatter(x=data.date, y=data[indicator_a],
-                             showlegend=False,
-                             line=line)
-        trace_b = go.Scatter(x=data.date, y=data[indicator_b], name=label,
-                             fill="tonexty", fillcolor=fill_color,
-                             line=line)
-        fig.add_trace(trace_a, row, 1)
-        fig.add_trace(trace_b, row, 1)
+
+    data = data.copy()
+
+    if( label=="Bollinger Band"):
+
+
+
+        main_color_hex = {
+                            "3":"yellow",#"name":"LONG_UPTREND"},
+                            "-2":"#FF0000",#"name":"LONG_DOWNTREND"},
+                             "-1":"#E9967A",#"name":"SLOW_DOWNTREND"},
+                              "0": "RGBA(255, 255, 255, 0.1)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
+                               "2":"#4682B4",#"name":"DOWNTREND_UPSWING"},
+                                "-3":"#006400",#"name":"DANGER_ZONE"},
+                                 "5":"#8FBC8F"#"name":"UPPER_DANGER_ZONE"}
+            }
+        main_volatility_hex = {
+                    "1":"rgba(175, 225, 233, 0.5)",#"name":"LOW"},
+                    "2":"rgba(73, 187, 204, 0.5)",#"name":"MID"},
+                    "3":"rgba(12, 174, 199, 0.5)",#"name":"HIGH"}
+                }
+
+                #Main trend
+
+        # 3 - LONG/SHARP UPTREND
+        # 2 - DOWNTREND UPSWING
+        # 1 - SMALL UPSWING
+        # 0 - NORMAL
+        #-1 - SLOW DOWNTREND
+        #-2 - LONG/SHARP DOWNTREND
+        #-3 - DANGER ZONE
+
+
+        # SEC
+        # 5 - UPPER DANGER ZONE
+        # 4 - HUGE FALL TURNAROUND
+        # 3 - LONG/SHARP UPTREND
+        # 2 - DOWNTREND UPSWING
+        #-2 - LONG/SHARP DOWNTREND
+        #-3 - DANGER ZONE
+
+
+
+        if indicator_a in data and indicator_b in data:
+           ##line = {'color': 'rgba(255,255,255,0)'}
+            ##make lines invisible to get the area plotted, only.
+
+            #TODO: Figure out why scattergl causes problems plotly/plotly.js#2284
+            #df_main_t =  data["main_trend"]
+            # df_main_vol =  data["volatility"]
+            #
+            # data_main = data[data['main_trend'] == m_trend]
+
+            # main_trend_area_style ={"color":"#98FB98",
+            #                      "name":"LOW"}
+            # if(m_trend!=0):   #df_sell[df_sell['sell_tag'] == sell_tag]
+            #     main_trend_area_style = main_color_hex[m_trend]
+            line = {'color': "#98FB98",
+                    "simplify":"true"}
+            # else:
+            #     main_trend_area_style = main_notrend_hex[data_main["volatility"]]
+            data['main_trend'] = data['main_trend'].astype(str)
+            data['volatility'] = data['volatility'].astype(str)
+
+
+            #volatility_df = data.copy()
+            volatility_df = data[data['main_trend'] == "0"]
+            main_trend_df = data[data['main_trend'] != "0"]
+
+
+            data['sma_volatility_display'] =(data['sma5']+(data['sma5']/100*9))
+
+
+            trace_a = px.scatter(main_trend_df, x="date", y=indicator_b,#,
+                                # hover_name="main_trend",
+                                 color_discrete_sequence=px.colors.qualitative.Alphabet,
+                                 color_discrete_map=main_color_hex,
+                                 color ="main_trend",
+                                 # symbol ="main_trend",
+                                 # height=30,
+                                 # opacity =0.5,
+
+                                 #main_color_hex
+                                 # size = 15
+                                 # trendline ="lowess",
+                 #                 trendline_options=dict(frac=0.1),
+                 # trendline_color_override='red',
+                                 # showlegend=False,
+                                 # connectgaps= False,
+                                 # line=line)
+                              )
+
+            trace_b = px.scatter(volatility_df, x="date", y=indicator_b,#,
+                                 #hover_name="volatility",
+                                 color_discrete_sequence=px.colors.qualitative.Alphabet,
+                                 color_discrete_map=main_volatility_hex,
+                                 color ="volatility",
+                                 # symbol ="main_trend",
+                                 # height=30,
+                                 # opacity =0.5,
+
+                                 #main_color_hex
+                                 # size = 15
+                                 # trendline ="lowess",
+                 #                 trendline_options=dict(frac=0.1),
+                 # trendline_color_override='red',
+                                 # showlegend=False,
+                                 # connectgaps= False,
+                                 # line=line)
+                              )
+
+            trace_c = px.scatter(data, x="date", y="sma_volatility_display",#,
+                                 #hover_name="volatility",
+                                 color_discrete_sequence=px.colors.qualitative.Alphabet,
+                                 color_discrete_map=main_volatility_hex,
+                                 color ="volatility",
+                                 # symbol ="main_trend",
+                                 # height=30,
+                                 # opacity =0.5,
+
+                                 #main_color_hex
+                                 # size = 15
+                                 # trendline ="lowess",
+                 #                 trendline_options=dict(frac=0.1),
+                 # trendline_color_override='red',
+                                 # showlegend=False,
+                                 # connectgaps= False,
+                                 # line=line)
+                              )
+
+            fig.add_traces(
+                list(trace_a.select_traces())
+            )
+            fig.add_traces(
+                list(trace_b.select_traces())
+            )
+            fig.add_traces(
+                list(trace_c.select_traces())
+            )
+
+
+
+    # elif indicator_a in data and indicator_b in data:
+    #     # make lines invisible to get the area plotted, only.
+    #     line = {'color': 'rgba(255,255,255,0)'}
+    #     # TODO: Figure out why scattergl causes problems plotly/plotly.js#2284
+    #     trace_a = go.Scatter(x=data.date, y=data[indicator_a],
+    #                          showlegend=False,
+    #                          line=line)
+    #     trace_b = go.Scatter(x=data.date, y=data[indicator_b], name=label,
+    #                          fill="tonexty", fillcolor=fill_color,
+    #                          line=line)
+    #     fig.add_trace(trace_a, row, 1)
+    #     fig.add_trace(trace_b, row, 1)
     return fig
+
+# def update_opacity(figure,opacity):
+#     for trace in range(len(figure['data'])):
+#         # print(figure['data'][trace]['fillcolor'],'-> ',end='')
+#         #print(figure['data'][trace]["x"][0])
+#         rgba_split = figure['data'][trace]['fillcolor'].split(',')
+#         figure['data'][trace]['fillcolor'] = ','.join(rgba_split[:-1] + [' {})'.format(opacity)])
+#         # print(figure['data'][trace]['fillcolor'])
+#     return figure
 
 
 def add_areas(fig, row: int, data: pd.DataFrame, indicators) -> make_subplots:
@@ -396,12 +547,24 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
         if len(df_buy) > 0:
             index = 0
             buy_colours_hex=["#7CFC00"  ,  "#32CD32"  , "#006400" , "#9ACD32" , "#00FA9A" , "#8FBC8F" ,     #green colours
-                         "#20B2AA" ,    ##electric color
-                         "#556B2F" , "#808000"] #brownish olive green
+                         "#20B2AA" , "#00FFFF" , "#00CED1" , "#008B8B",   ##electric color
+                         "#556B2F" , "#808000",#brownish olive green
+                         "#E6E6FA", "#B0E0E6" , "#00BFFF" , "#1E90FF" , "#0000FF" , "#000080" , "#7B68EE" , "#8A2BE2",  # blue to purple
+                         "#FFC0CB", "#FF69B4" ,   #pink
+                         "#C0C0C0", "#808080" , "#2F4F4F",   #grey
+                         "#FFFAFA", "#F0FFF0" , "#F0FFFF" ,"#F0F8FF" , "#F5F5DC" ,"#FFFFF0" ,"#FAEBD7" ,"#FFE4E1" , "#FFDEAD", #white - little orange shades in end
+                         "#FFFACD", "#F0E68C" , "#FFFF00", "FFD700"  #yellow
+                             ]
+            random.shuffle(buy_colours_hex)
+
+            buy_symbols=["circle"  ,  "square"  , "diamond" , "cross" , "pentagon" , "star" ,
+                         "hexagram" , "star-triangle-up" , "star-triangle-down" , "star-square",
+                         "hexagon" , "star-diamond", "octagon", "diamond-tall"
+                         ]
 
             for buy_tag in df_buy.buy_tag.copy().drop_duplicates():
                 buy_tag_series = df_buy[df_buy['buy_tag'] == buy_tag]
-
+                buy_tag_style = generate_buy_tag_style(buy_tag, buy_colours_hex[index%len(buy_colours_hex)], buy_symbols[index%len(buy_symbols)])
                 buys = go.Scatter(
                     x=buy_tag_series.date,
                     y=buy_tag_series.close,
@@ -409,10 +572,10 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
                     text=buy_tag_series.buy_tag,
                     name='buy',
                     marker=dict(
-                        symbol="pentagon",
-                        size=9,
+                        symbol=buy_tag_style["symbol"],
+                        size=buy_tag_style["size"],
                         line=dict(width=1),
-                        color=buy_colours_hex[index]
+                        color=buy_tag_style["color"]
                     )
                 )
                 fig.add_trace(buys, 1, 1)
@@ -423,24 +586,44 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
     if 'sell' in data.columns:
         df_sell = data[data['sell'] == 1]
         if len(df_sell) > 0:
-            sells = go.Scatter(
-                x=df_sell.date,
-                y=df_sell.close,
-                mode='markers',
-                text=df_sell.sell_tag,
-                name='sell',
-                marker=dict(
-                    symbol='triangle-down-dot',
-                    size=9,
-                    line=dict(width=1),
-                    color='red',
+            index = 0
+            sell_colours_hex=["#8B0000"  ,  "#A52A2A"  , "#B22222" , "#DC143C", #bordo
+                         "#CD5C5C" , "#DC143C" , "#B22222" , "#FF0000",   #red
+                         "#FF0000" , "#FF0000","#FF0000", "#FF0000" , "#FF6347" , "#FF4500"
+                           ]
+            random.shuffle(sell_colours_hex)
+
+            sell_symbols=["triangle-up"  ,  "triangle-down"  , "triangle-left" , "triangle-right",
+                         "triangle-ne" , "triangle-se" , "triangle-sw" , "triangle-nw",
+                         "arrow-left" , "arrow-right","diamond-wide" ,
+                          "triangle-up-dot"  ,  "triangle-down-dot"  , "triangle-left-dot" , "triangle-right-dot",
+                         "triangle-ne-dot" , "triangle-se-dot" , "triangle-sw-dot" , "triangle-nw-dot",
+                         "diamond-wide-dot"
+                         ]
+
+
+            for sell_tag in df_sell.sell_tag.copy().drop_duplicates():
+                sell_tag_series = df_sell[df_sell['sell_tag'] == sell_tag]
+                sell_tag_style = generate_sell_tag_style(sell_tag, sell_colours_hex[index%len(buy_colours_hex)], sell_symbols[index%len(sell_symbols)])
+                sells = go.Scatter(
+                    x=sell_tag_series.date,
+                    y=sell_tag_series.close,
+                    mode='markers',
+                    text=sell_tag_series.sell_tag,
+                    name='sell',
+                    marker=dict(
+                        symbol=sell_tag_style["symbol"],
+                        size=sell_tag_style["size"],
+                        line=dict(width=1),
+                        color=sell_tag_style["color"],
+                    )
                 )
-            )
-            fig.add_trace(sells, 1, 1)
+                fig.add_trace(sells, 1, 1)
+                index+=1
         else:
             logger.warning("No sell-signals found.")
     # Add Bollinger Bands
-    fig = plot_area(fig, 1, data, 'bb_lowerband', 'bb_upperband',
+    fig = plot_area(fig, 1, data, 'bb_lowerband', 'backtesting_main_trend',
                     label="Bollinger Band")
     # prevent bb_lower and bb_upper from plotting
     try:
@@ -452,7 +635,7 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
     fig = add_indicators(fig=fig, row=1, indicators=plot_config['main_plot'], data=data)
     fig = add_areas(fig, 1, data, plot_config['main_plot'])
     fig = plot_trades(fig, trades)
-    # sub plot: Volume goes to row 2
+
     volume = go.Bar(
         x=data['date'],
         y=data['volume'],
@@ -461,6 +644,7 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
         marker_line_color='DarkSlateGrey'
     )
     fig.add_trace(volume, 2, 1)
+
     # add each sub plot to a separate row
     for i, label in enumerate(plot_config['subplots']):
         sub_config = plot_config['subplots'][label]
@@ -472,27 +656,97 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
 
     return fig
 
-def buy_tag_colours(buy_tag):
+def generate_buy_tag_style(buy_tag, color, symbol):
 
-    premade_tags = {"LOW":{color}}
+    premade_tags = {
+                    "LOW":          {"color":"#98FB98",
+                                    "symbol":"circle-dot",
+                                    "size":8},
 
-    buy_colours_hex=["#7CFC00"  ,  "#32CD32"  , "#006400" , "#9ACD32" , "#00FA9A" , "#8FBC8F" ,     #green colours
-                     "#20B2AA" ,    ##electric color
-                     "#556B2F" , "#808000"] #brownish olive green
+                    "MID":          {"color":"#7CFC00",
+                                    "symbol":"circle-dot",
+                                    "size":9},
 
-    buy_tag_dict = {}
+                    "HIGH":         {"color":"#228B22",
+                                    "symbol":"circle-dot",
+                                    "size":10},
 
-    buy_tags_unique = buy_tags.copy().drop_duplicates()
+                    "LONG_UPTREND":{"color":"#20B2AA",
+                                    "symbol":"star-triangle-up",
+                                    "size":11},
 
-    index=0
-    for buy_tag in buy_tags_unique:
+                    "LONG_DOWNTREND":{"color":"#6B8E23",
+                                    "symbol":"star-triangle-down",
+                                    "size":10},
 
-        buy_tag_dict[buy_tag] = buy_colours_hex[index]
-        index+=1
+                    "SLOW_DOWNTREND":{"color":"#9ACD32",
+                                    "symbol":"triangle-down",
+                                    "size":8},
 
-    print(str(buy_tag_dict))
+                    "DOWNTREND_UPSWING":{"color":"#00FA9A",
+                                    "symbol":"cross",
+                                    "size":11},
 
-    return buy_tag_dict
+                    "DANGER_ZONE":  {"color":"#006400",
+                                    "symbol":"x",
+                                    "size":11},
+
+                    "UPPER_DANGER_ZONE":{"color":"#8FBC8F",
+                                    "symbol":"x",
+                                    "size":11}
+        }
+
+    if(buy_tag in premade_tags.keys()):
+        return premade_tags[buy_tag]
+    else:
+        return {"color":color, "symbol":symbol, "size":10}
+
+
+def generate_sell_tag_style(sell_tag, color, symbol):
+
+    premade_tags = {
+                    "SELL_LOW":          {"color":"#F08080",
+                                    "symbol":"triangle-sw-dot",
+                                          "size":8},
+
+                    "SELL_MID":          {"color":"#CD5C5C",
+                                    "symbol":"triangle-right-dot",
+                                          "size":9},
+
+                    "SELL_HIGH":         {"color":"#B22222",
+                                    "symbol":"triangle-up-dot",
+                                          "size":9},
+
+                    "SELL_LONG_UPTREND":{"color":"#FF4500",
+                                    "symbol":"star-triangle-up-dot",
+                                         "size":10},
+
+                    "SELL_LONG_DOWNTREND":{"color":"#FF0000",
+                                    "symbol":"star-triangle-down-dot",
+                                           "size":10},
+
+                    "SELL_SLOW_DOWNTREND":{"color":"#FF6347",
+                                    "symbol":"triangle-down-dot",
+                                    "size":9},
+
+                    "SELL_DOWNTREND_UPSWING":{"color":"#F08080",
+                                    "symbol":"cross-dot",
+                                    "size":10},
+
+                    "SELL_DANGER_ZONE":  {"color":"#800000",
+                                    "symbol":"x-dot",
+                                    "size":11},
+
+                    "SELL_UPPER_DANGER_ZONE":{"color":"#800000",
+                                    "symbol":"x-dot",
+                                    "size":11}
+        }
+
+    if(sell_tag in premade_tags.keys()):
+        return premade_tags[sell_tag]
+    else:
+        return {"color":color, "symbol":symbol,"size":9}
+
 
 
 def generate_profit_graph(pairs: str, data: Dict[str, pd.DataFrame],

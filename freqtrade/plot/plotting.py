@@ -269,7 +269,7 @@ def create_plotconfig(indicators1: List[str], indicators2: List[str],
     if not plot_config:
         # If no indicators and no plot-config given, use defaults.
         if not indicators1:
-            indicators1 = ['sma_trend', 'sma_smalltrend', 'sma50', 'sma200', 'sma400', 'sma10k']
+            indicators1 = []# ['sma_trend', 'sma_smalltrend', 'sma50', 'sma200', 'sma400', 'sma10k']
         if not indicators2:
             indicators2 = ['macd', 'macdsignal']
 
@@ -302,24 +302,316 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
 
     data = data.copy()
 
-    if( label=="Bollinger Band"):
+    if( label=="main_trend"):
 
 
 
-        main_color_hex = {
-                            "3":"yellow",#"name":"LONG_UPTREND"},
-                            "-2":"#FF0000",#"name":"LONG_DOWNTREND"},
-                             "-1":"#E9967A",#"name":"SLOW_DOWNTREND"},
-                              "0": "RGBA(255, 255, 255, 0.1)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
-                               "2":"#4682B4",#"name":"DOWNTREND_UPSWING"},
+
+
+        main_trend_color_hex = {  5:"rgba(143, 188, 143,0.25)",#"name":"UPPER_DANGER_ZONE"}
+                            3:"rgba(0,128,0, 0.2)",#"name":"LONG_UPTREND"},
+                            2:"rgba(70, 130, 180,0.25)",#"name":"DOWNTREND_UPSWING"},
+                            0:"rgba(255, 255, 255, 0)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
+                            -1:"rgba(233, 150, 122,0.25)",#"name":"SLOW_DOWNTREND"},
+                            -2:"rgba(255, 0, 0,0.2)",#"name":"LONG_DOWNTREND"},
+                            -3:"rgba(0, 100, 0,000.25)",#"name":"DANGER_ZONE"},
+                        }
+        main_trend_labels = {  "5":"UPPER_DANGER_ZONE",
+                            "3":"LONG_UPTREND",
+                            "2":"DOWNTREND_UPSWING",
+                            "0":"NOTREND",
+                            "-1":"SLOW_DOWNTREND",
+                            "-2":"LONG_DOWNTREND",
+                            "-3":"DANGER_ZONE"
+
+                        }
+
+        main_volatility_hex = {
+                    1:"rgba(175, 225, 233, 0.25)",#"name":"LOW"},
+                    2:"rgba(73, 187, 204, 0.25)",#"name":"MID"},
+                    3:"rgba(0, 139, 251, 0.22)",#"name":"HIGH"}
+                        }
+        main_volatility_labels = {
+                    "1":"LOW_VOL",
+                    "2":"MID_VOL",
+                    "3":"HIGH_VOL"
+                        }
+        line = {'color': 'rgba(255,255,255,0)'}
+
+        for m_trend in data["main_trend"].copy().drop_duplicates():
+            if(m_trend != 0):
+                newframe = data.copy()
+
+                newframe.loc[( newframe['main_trend'] != m_trend), 'bb_upperband'] = newframe['bb_middleband']
+                newframe.loc[( newframe['main_trend'] != m_trend), 'bb_lowerband'] = newframe['bb_middleband']
+
+
+                main_trend_area_style = main_trend_color_hex[m_trend]
+                main_trend_label_style = main_trend_labels[str(m_trend)]
+
+
+                trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
+                                 showlegend=False,
+                                 line=line)
+                trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=main_trend_label_style,
+                                     fill="tonexty", fillcolor=main_trend_area_style,
+                                     line=line)
+                fig.add_trace(trace_a, row, 1)
+                fig.add_trace(trace_b, row, 1)
+            else:
+                for vol in range(3):
+                    vol+=1
+                    newframe = data.copy()
+
+                    newframe.loc[( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)), 'bb_upperband'] = newframe['bb_middleband']
+                    newframe.loc[( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)), 'bb_lowerband'] = newframe['bb_middleband']
+
+
+                    vol_area_style = main_volatility_hex[vol]
+                    vol_area_labels = main_volatility_labels[str(vol)]
+
+
+                    trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
+                                     showlegend=False,
+                                     line=line)
+                    trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=vol_area_labels,
+                                         fill="tonexty", fillcolor=vol_area_style,
+                                         line=line)
+                    fig.add_trace(trace_a, row, 1)
+                    fig.add_trace(trace_b, row, 1)
+
+
+
+
+
+    if label=="Bolinger Bands" and indicator_a in data and indicator_b in data:
+        # make lines invisible to get the area plotted, only.
+        line = {'color': 'rgba(255,255,255,0)'}
+        # TODO: Figure out why scattergl causes problems plotly/plotly.js#2284
+        trace_a = go.Scatter(x=data.date, y=data[indicator_a],
+                             showlegend=False,
+                             line=line)
+        trace_b = go.Scatter(x=data.date, y=data[indicator_b], name=label,
+                             fill="tonexty", fillcolor=fill_color,
+                             line=line)
+        fig.add_trace(trace_a, row, 1)
+        fig.add_trace(trace_b, row, 1)
+
+    return fig
+
+
+def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
+    """ Creates a plot for the main/volatility trends provided.
+    :param fig: Plot figure to append to
+    :param data: candlestick DataFrame
+    :param label: label for the trend area
+    :return: fig with added  filled_traces plot
+    """
+
+    data = data.copy()
+
+    if( label=="main_trend"):
+        main_color_hex = {  "5":"#8FBC8F",#"name":"UPPER_DANGER_ZONE"}
+                            "3":"rgba(0,128,0, 0.8)",#"name":"LONG_UPTREND"},
+                            "2":"#4682B4",#"name":"DOWNTREND_UPSWING"},
+                              "0": "RGBA(255, 255, 255, 0)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
+                            "-1":"#E9967A",#"name":"SLOW_DOWNTREND"},
+                                 "-2":"#FF0000",#"name":"LONG_DOWNTREND"},
                                 "-3":"#006400",#"name":"DANGER_ZONE"},
-                                 "5":"#8FBC8F"#"name":"UPPER_DANGER_ZONE"}
+
             }
         main_volatility_hex = {
                     "1":"rgba(175, 225, 233, 0.5)",#"name":"LOW"},
                     "2":"rgba(73, 187, 204, 0.5)",#"name":"MID"},
-                    "3":"rgba(12, 174, 199, 0.5)",#"name":"HIGH"}
+                    "3":"rgba(0, 139, 251, 0.5)",#"name":"HIGH"}
                 }
+
+        main_volatility_symbols = {
+                    "1":"circle-open",#"name":"LOW"},
+                    "2":"circle-open-dot",#"name":"MID"},
+                    "3":"circle",#"name":"HIGH"}
+                }
+        main_trend_symbols = {
+                            "3":"star-triangle-up",#"name":"LONG_UPTREND"},
+                            "-2":"star-triangle-down",#"name":"LONG_DOWNTREND"},
+                             "-1":"triangle-down",#"name":"SLOW_DOWNTREND"},
+                             "0": "circle",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
+                            "2":"cross",#"name":"DOWNTREND_UPSWING"},
+                            "-3":"x",#"name":"DANGER_ZONE"},
+                             "5":"x"#"name":"UPPER_DANGER_ZONE"}
+                }
+
+
+        data['main_trend'] = data['main_trend'].astype(str)
+        data['volatility'] = data['volatility'].astype(str)
+
+
+        #volatility_df = data.copy()
+        volatility_df = data[data['main_trend'] == "0"]
+        main_trend_df = data[data['main_trend'] != "0"]
+
+
+        main_trend_df['sma_main_trend_display'] =(main_trend_df['sma25']-(main_trend_df['sma25']/100*15))
+        volatility_df['sma_main_trend_display'] =(volatility_df['sma25']-(volatility_df['sma25']/100*15))
+
+
+        trace_main1 = px.scatter(main_trend_df, x="date", y="sma_main_trend_display",#,
+                            # hover_name="main_trend",
+                             color_discrete_sequence=px.colors.qualitative.Alphabet,
+                             color_discrete_map=main_color_hex,
+                             color ="main_trend",
+                             symbol ="main_trend",
+                             symbol_map =main_trend_symbols
+                             # symbol ="main_trend",
+                             # height=30,
+                             # opacity =0.5,
+
+                          )
+
+        main_trend_df['sma_main_trend_display'] =(main_trend_df['sma_main_trend_display']-(main_trend_df['sma_main_trend_display']/100*1))
+
+        trace_main2 = px.scatter(main_trend_df, x="date", y="sma_main_trend_display",#,
+                            # hover_name="main_trend",
+                             color_discrete_sequence=px.colors.qualitative.Alphabet,
+                             color_discrete_map=main_color_hex,
+                             color ="main_trend",
+                             symbol ="main_trend",
+                             symbol_map =main_trend_symbols
+
+                          )
+
+        trace_mainVOL = px.scatter(volatility_df, x="date", y="sma_main_trend_display",#,
+                             #hover_name="volatility",
+                             color_discrete_sequence=px.colors.qualitative.Alphabet,
+                             color_discrete_map=main_volatility_hex,
+                             color ="volatility",
+                             symbol ="volatility",
+                             symbol_map =main_volatility_symbols
+                             # symbol ="main_trend",
+                             # height=30,
+                             # opacity =0.5,
+                          )
+
+        fig.add_traces(
+            list(trace_main1.select_traces())
+        )
+        fig.add_traces(
+            list(trace_main2.select_traces())
+        )
+        fig.add_traces(
+            list(trace_mainVOL.select_traces())
+        )
+
+
+    if( label=="volatility_trend"):
+        main_volatility_hex = {
+                    "1":"rgba(175, 225, 233, 0.5)",#"name":"LOW"},
+                    "2":"rgba(73, 187, 204, 0.5)",#"name":"MID"},
+                    "3":"rgba(0, 139, 251, 0.5)",#"name":"HIGH"}
+                }
+
+        main_volatility_symbols = {
+                    "1":"circle-open",#"name":"LOW"},
+                    "2":"circle-open-dot",#"name":"MID"},
+                    "3":"circle",#"name":"HIGH"}
+                }
+
+
+        data['volatility'] = data['volatility'].astype(str)
+
+        data['sma_volatility_display'] =(data['sma25']+(data['sma25']/100*15))
+
+
+        # Volatility display above price
+
+        trace_upper1 = px.scatter(data, x="date", y="sma_volatility_display",#,
+                             #hover_name="volatility",
+                             color_discrete_sequence=px.colors.qualitative.Alphabet,
+                             color_discrete_map=main_volatility_hex,
+                             color ="volatility",
+                             symbol ="volatility",
+                             symbol_map =main_volatility_symbols
+                             # symbol ="main_trend",
+                             # height=30,
+                             # opacity =0.5,
+                          )
+
+        data['sma_volatility_display'] =(data['sma_volatility_display']+(data['sma_volatility_display']/100*1))
+        trace_upper2 = px.scatter(data, x="date", y="sma_volatility_display",#,
+                             #hover_name="volatility",
+                             color_discrete_sequence=px.colors.qualitative.Alphabet,
+                             color_discrete_map=main_volatility_hex,
+                             color ="volatility",
+                             symbol ="volatility",
+                             symbol_map =main_volatility_symbols
+                             # symbol ="main_trend",
+                             # height=30,
+                             # opacity =0.5,
+                          )
+
+        fig.add_traces(
+            list(trace_upper1.select_traces())
+        )
+        fig.add_traces(
+            list(trace_upper2.select_traces())
+        )
+
+    if(label == "sec_trend"):
+        sec_trend_color_hex = {       "5":"#8FBC8F",#"name":"UPPER_DANGER_ZONE"},
+                     "4":"YELLOW",#"name":"HUGE_FALL_TURNAROUND"},
+                    "3":"rgba(0,128,0,0.8)",#"name":"LONG_UPTREND"},
+                         "2":"#4682B4",#"name":"DOWNTREND_UPSWING"},
+                        "1":"#90EE90",#"name":"SMALL_UPSWING"},
+                      "0": "RGBA(0, 0, 0, 0.1)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",#
+
+                           # "-1":"#E9967A",#"name":"SLOW_DOWNTREND"},
+                         "-2":"#FF0000",#"name":"LONG_DOWNTREND"},
+                        "-3":"#006400",#"name":"DANGER_ZONE"},
+
+        }
+
+        sec_trend_symbols = {
+                             "5":"x",#"name":"UPPER_DANGER_ZONE"},
+                             "4":"cross",#"name":"HUGE_FALL_TURNAROUND"},
+                            "3":"star-triangle-up",#"name":"LONG_UPTREND"},
+                             "2":"cross",#"name":"DOWNTREND_UPSWING"},
+                            "1":"triangle-up",#"name":"SMALL UPSWING"},
+                             "0": "triangle-down",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
+                            "-2":"star-triangle-down",#"name":"LONG_DOWNTREND"},
+                             "-1":"triangle-down",#"name":"SLOW_DOWNTREND"},
+                            "-3":"x",#"name":"DANGER_ZONE"},
+
+                }
+
+
+        data['sec_trend'] = data['sec_trend'].astype(str)
+
+
+
+        sec_trend_df = data[data['sec_trend'] != "0"]
+
+
+        #data['sma_volatility_display'] =(data['sma25']+(data['sma25']/100*15))
+        sec_trend_df['sma_sec_trend_display'] =(sec_trend_df['sma25']-(sec_trend_df['sma25']/100*17))
+
+
+        trace_sec1 = px.scatter(sec_trend_df, x="date", y="sma_sec_trend_display",#,
+                            # hover_name="main_trend",
+                             color_discrete_sequence=px.colors.qualitative.Alphabet,
+                             color_discrete_map=sec_trend_color_hex,
+                             color ="sec_trend",
+                             symbol ="sec_trend",
+                             symbol_map =sec_trend_symbols
+                             # symbol ="main_trend",
+                             # height=30,
+                             # opacity =0.5,
+                          )
+
+        fig.add_traces(
+            list(trace_sec1.select_traces())
+        )
+
+
 
                 #Main trend
 
@@ -342,127 +634,146 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
 
 
 
-        if indicator_a in data and indicator_b in data:
-           ##line = {'color': 'rgba(255,255,255,0)'}
-            ##make lines invisible to get the area plotted, only.
+#         if indicator_a in data and indicator_b in data:
+#            ##line = {'color': 'rgba(255,255,255,0)'}
+#             ##make lines invisible to get the area plotted, only.
+#
+#             main_color_hex = {
+#                                 "3":"rgba(0,128,0, 0.8)",#"name":"LONG_UPTREND"},
+#                                 "-2":"#FF0000",#"name":"LONG_DOWNTREND"},
+#                                  "-1":"#E9967A",#"name":"SLOW_DOWNTREND"},
+#                                   "0": "RGBA(255, 255, 255, 0)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
+#                                    "2":"#4682B4",#"name":"DOWNTREND_UPSWING"},
+#                                     "-3":"#006400",#"name":"DANGER_ZONE"},
+#                                      "5":"#8FBC8F"#"name":"UPPER_DANGER_ZONE"}
+#                 }
+#             main_volatility_hex = {
+#                         "1":"rgba(175, 225, 233, 0.5)",#"name":"LOW"},
+#                         "2":"rgba(73, 187, 204, 0.5)",#"name":"MID"},
+#                         "3":"rgba(0, 139, 251, 0.5)",#"name":"HIGH"}
+#                     }
+#
+#             main_volatility_symbols = {
+#                         "1":"circle-open",#"name":"LOW"},
+#                         "2":"circle-open-dot",#"name":"MID"},
+#                         "3":"circle",#"name":"HIGH"}
+#                     }
+#             main_trend_symbols = {
+#                                 "3":"star-triangle-up",#"name":"LONG_UPTREND"},
+#                                 "-2":"star-triangle-down",#"name":"LONG_DOWNTREND"},
+#                                  "-1":"triangle-down",#"name":"SLOW_DOWNTREND"},
+#                                  "0": "RGBA(255, 255, 255, 0)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
+#                                 "2":"cross",#"name":"DOWNTREND_UPSWING"},
+#                                 "-3":"x",#"name":"DANGER_ZONE"},
+#                                  "5":"x"#"name":"UPPER_DANGER_ZONE"}
+#                     }
+#
+#
+#             data['main_trend'] = data['main_trend'].astype(str)
+#             data['volatility'] = data['volatility'].astype(str)
+#
+#
+#             #volatility_df = data.copy()
+#             volatility_df = data[data['main_trend'] == "0"]
+#             main_trend_df = data[data['main_trend'] != "0"]
+#
+#
+#             data['sma_volatility_display'] =(data['sma25']+(data['sma25']/100*15))
+#             main_trend_df['sma_main_trend_display'] =(main_trend_df['sma25']-(main_trend_df['sma25']/100*15))
+#             volatility_df['sma_main_trend_display'] =(volatility_df['sma25']-(volatility_df['sma25']/100*15))
+#
+#
+#             trace_main1 = px.scatter(main_trend_df, x="date", y="sma_main_trend_display",#,
+#                                 # hover_name="main_trend",
+#                                  color_discrete_sequence=px.colors.qualitative.Alphabet,
+#                                  color_discrete_map=main_color_hex,
+#                                  color ="main_trend",
+#                                  symbol ="main_trend",
+#                                  symbol_map =main_trend_symbols
+#                                  # symbol ="main_trend",
+#                                  # height=30,
+#                                  # opacity =0.5,
+#
+#                                  #main_color_hex
+#                                  # size = 15
+#                                  # trendline ="lowess",
+#                  #                 trendline_options=dict(frac=0.1),
+#                  # trendline_color_override='red',
+#                                  # showlegend=False,
+#                                  # connectgaps= False,
+#                                  # line=line)
+#                               )
+#
+#             main_trend_df['sma_main_trend_display'] =(main_trend_df['sma_main_trend_display']-(main_trend_df['sma_main_trend_display']/100*1))
+#
+#             trace_main2 = px.scatter(main_trend_df, x="date", y="sma_main_trend_display",#,
+#                                 # hover_name="main_trend",
+#                                  color_discrete_sequence=px.colors.qualitative.Alphabet,
+#                                  color_discrete_map=main_color_hex,
+#                                  color ="main_trend",
+#                                  symbol ="main_trend",
+#                                  symbol_map =main_trend_symbols
+#
+#                               )
+#
+#             trace_mainVOL = px.scatter(volatility_df, x="date", y="sma_main_trend_display",#,
+#                                  #hover_name="volatility",
+#                                  color_discrete_sequence=px.colors.qualitative.Alphabet,
+#                                  color_discrete_map=main_volatility_hex,
+#                                  color ="volatility",
+#                                  symbol ="volatility",
+#                                  symbol_map =main_volatility_symbols
+#                                  # symbol ="main_trend",
+#                                  # height=30,
+#                                  # opacity =0.5,
+# #
+#                               )
+#
+#             # Volatility display above price
+#
+#             trace_upper1 = px.scatter(data, x="date", y="sma_volatility_display",#,
+#                                  #hover_name="volatility",
+#                                  color_discrete_sequence=px.colors.qualitative.Alphabet,
+#                                  color_discrete_map=main_volatility_hex,
+#                                  color ="volatility",
+#                                  symbol ="volatility",
+#                                  symbol_map =main_volatility_symbols
+#                                  # symbol ="main_trend",
+#                                  # height=30,
+#                                  # opacity =0.5,
+#                               )
+#
+#             data['sma_volatility_display'] =(data['sma_volatility_display']+(data['sma_volatility_display']/100*1))
+#             trace_upper2 = px.scatter(data, x="date", y="sma_volatility_display",#,
+#                                  #hover_name="volatility",
+#                                  color_discrete_sequence=px.colors.qualitative.Alphabet,
+#                                  color_discrete_map=main_volatility_hex,
+#                                  color ="volatility",
+#                                  symbol ="volatility",
+#                                  symbol_map =main_volatility_symbols
+#                                  # symbol ="main_trend",
+#                                  # height=30,
+#                                  # opacity =0.5,
+#                               )
+#             fig.add_traces(
+#                 list(trace_main1.select_traces())
+#             )
+#             fig.add_traces(
+#                 list(trace_main2.select_traces())
+#             )
+#             fig.add_traces(
+#                 list(trace_mainVOL.select_traces())
+#             )
+#             fig.add_traces(
+#                 list(trace_upper1.select_traces())
+#             )
+#             fig.add_traces(
+#                 list(trace_upper2.select_traces())
+#             )
 
-            #TODO: Figure out why scattergl causes problems plotly/plotly.js#2284
-            #df_main_t =  data["main_trend"]
-            # df_main_vol =  data["volatility"]
-            #
-            # data_main = data[data['main_trend'] == m_trend]
-
-            # main_trend_area_style ={"color":"#98FB98",
-            #                      "name":"LOW"}
-            # if(m_trend!=0):   #df_sell[df_sell['sell_tag'] == sell_tag]
-            #     main_trend_area_style = main_color_hex[m_trend]
-            line = {'color': "#98FB98",
-                    "simplify":"true"}
-            # else:
-            #     main_trend_area_style = main_notrend_hex[data_main["volatility"]]
-            data['main_trend'] = data['main_trend'].astype(str)
-            data['volatility'] = data['volatility'].astype(str)
 
 
-            #volatility_df = data.copy()
-            volatility_df = data[data['main_trend'] == "0"]
-            main_trend_df = data[data['main_trend'] != "0"]
-
-
-            data['sma_volatility_display'] =(data['sma5']+(data['sma5']/100*9))
-
-
-            trace_a = px.scatter(main_trend_df, x="date", y=indicator_b,#,
-                                # hover_name="main_trend",
-                                 color_discrete_sequence=px.colors.qualitative.Alphabet,
-                                 color_discrete_map=main_color_hex,
-                                 color ="main_trend",
-                                 # symbol ="main_trend",
-                                 # height=30,
-                                 # opacity =0.5,
-
-                                 #main_color_hex
-                                 # size = 15
-                                 # trendline ="lowess",
-                 #                 trendline_options=dict(frac=0.1),
-                 # trendline_color_override='red',
-                                 # showlegend=False,
-                                 # connectgaps= False,
-                                 # line=line)
-                              )
-
-            trace_b = px.scatter(volatility_df, x="date", y=indicator_b,#,
-                                 #hover_name="volatility",
-                                 color_discrete_sequence=px.colors.qualitative.Alphabet,
-                                 color_discrete_map=main_volatility_hex,
-                                 color ="volatility",
-                                 # symbol ="main_trend",
-                                 # height=30,
-                                 # opacity =0.5,
-
-                                 #main_color_hex
-                                 # size = 15
-                                 # trendline ="lowess",
-                 #                 trendline_options=dict(frac=0.1),
-                 # trendline_color_override='red',
-                                 # showlegend=False,
-                                 # connectgaps= False,
-                                 # line=line)
-                              )
-
-            trace_c = px.scatter(data, x="date", y="sma_volatility_display",#,
-                                 #hover_name="volatility",
-                                 color_discrete_sequence=px.colors.qualitative.Alphabet,
-                                 color_discrete_map=main_volatility_hex,
-                                 color ="volatility",
-                                 # symbol ="main_trend",
-                                 # height=30,
-                                 # opacity =0.5,
-
-                                 #main_color_hex
-                                 # size = 15
-                                 # trendline ="lowess",
-                 #                 trendline_options=dict(frac=0.1),
-                 # trendline_color_override='red',
-                                 # showlegend=False,
-                                 # connectgaps= False,
-                                 # line=line)
-                              )
-
-            fig.add_traces(
-                list(trace_a.select_traces())
-            )
-            fig.add_traces(
-                list(trace_b.select_traces())
-            )
-            fig.add_traces(
-                list(trace_c.select_traces())
-            )
-
-
-
-    # elif indicator_a in data and indicator_b in data:
-    #     # make lines invisible to get the area plotted, only.
-    #     line = {'color': 'rgba(255,255,255,0)'}
-    #     # TODO: Figure out why scattergl causes problems plotly/plotly.js#2284
-    #     trace_a = go.Scatter(x=data.date, y=data[indicator_a],
-    #                          showlegend=False,
-    #                          line=line)
-    #     trace_b = go.Scatter(x=data.date, y=data[indicator_b], name=label,
-    #                          fill="tonexty", fillcolor=fill_color,
-    #                          line=line)
-    #     fig.add_trace(trace_a, row, 1)
-    #     fig.add_trace(trace_b, row, 1)
     return fig
-
-# def update_opacity(figure,opacity):
-#     for trace in range(len(figure['data'])):
-#         # print(figure['data'][trace]['fillcolor'],'-> ',end='')
-#         #print(figure['data'][trace]["x"][0])
-#         rgba_split = figure['data'][trace]['fillcolor'].split(',')
-#         figure['data'][trace]['fillcolor'] = ','.join(rgba_split[:-1] + [' {})'.format(opacity)])
-#         # print(figure['data'][trace]['fillcolor'])
-#     return figure
 
 
 def add_areas(fig, row: int, data: pd.DataFrame, indicators) -> make_subplots:
@@ -623,8 +934,8 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
         else:
             logger.warning("No sell-signals found.")
     # Add Bollinger Bands
-    fig = plot_area(fig, 1, data, 'bb_lowerband', 'backtesting_main_trend',
-                    label="Bollinger Band")
+    fig = plot_area(fig, 1, data, 'bb_lowerband', 'bb_upperband',
+                    label="main_trend")
     # prevent bb_lower and bb_upper from plotting
     try:
         del plot_config['main_plot']['bb_lowerband']
@@ -671,7 +982,7 @@ def generate_buy_tag_style(buy_tag, color, symbol):
                                     "symbol":"circle-dot",
                                     "size":10},
 
-                    "LONG_UPTREND":{"color":"#20B2AA",
+                    "LONG_UPTREND":{"color":"RGBA(0,128,0,1)",
                                     "symbol":"star-triangle-up",
                                     "size":11},
 

@@ -186,7 +186,7 @@ def get_patched_worker(mocker, config) -> Worker:
     return Worker(args=None, config=config)
 
 
-def patch_get_signal(freqtrade: FreqtradeBot, value=(True, False, None)) -> None:
+def patch_get_signal(freqtrade: FreqtradeBot, value=(True, False, None, None)) -> None:
     """
     :param mocker: mocker to patch IStrategy class
     :param value: which value IStrategy.get_signal() must return
@@ -226,7 +226,7 @@ def create_mock_trades(fee, use_db: bool = True):
     add_trade(trade)
 
     if use_db:
-        Trade.query.session.flush()
+        Trade.commit()
 
 
 def create_mock_trades_usdt(fee, use_db: bool = True):
@@ -259,7 +259,7 @@ def create_mock_trades_usdt(fee, use_db: bool = True):
     add_trade(trade)
 
     if use_db:
-        Trade.query.session.flush()
+        Trade.commit()
 
 
 @pytest.fixture(autouse=True)

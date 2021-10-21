@@ -25,6 +25,7 @@ from freqtrade.constants import DUST_PER_COIN
 from freqtrade.enums import RPCMessageType
 from freqtrade.exceptions import OperationalException
 from freqtrade.misc import chunks, plural, round_coin_value
+from freqtrade.persistence import Trade
 from freqtrade.rpc import RPC, RPCException, RPCHandler
 
 
@@ -59,7 +60,8 @@ def authorized_only(command_handler: Callable[..., None]) -> Callable[..., Any]:
                 update.message.chat_id
             )
             return wrapper
-
+        # Rollback session to avoid getting data stored in a transaction.
+        Trade.query.session.rollback()
         logger.debug(
             'Executing handler: %s for chat_id: %s',
             command_handler.__name__,
@@ -105,10 +107,9 @@ class Telegram(RPCHandler):
         #       this needs refactoring of the whole telegram module (same
         #       problem in _help()).
         valid_keys: List[str] = [r'/start$', r'/stop$', r'/status$', r'/status table$',
-                                 r'/trades$', r'/performance$', r'/daily$', r'/daily \d+$',
-                                 r'/profit$', r'/profit \d+',
+                                 r'/trades$', r'/performance$', r'/buys', r'/sells', r'/mix_tags',
+                                 r'/daily$', r'/daily \d+$', r'/profit$', r'/profit \d+',
                                  r'/stats$', r'/count$', r'/locks$', r'/balance$',
-                                 r'/buys',r'/sells',r'/mix_tags',
                                  r'/stopbuy$', r'/reload_config$', r'/show_config$',
                                  r'/logs$', r'/whitelist$', r'/blacklist$', r'/edge$',
                                  r'/forcebuy$', r'/help$', r'/version$']
@@ -154,7 +155,7 @@ class Telegram(RPCHandler):
             CommandHandler('delete', self._delete_trade),
             CommandHandler('performance', self._performance),
             CommandHandler('buys', self._buy_tag_performance),
-            CommandHandler('sells', self._sell_tag_performance),
+            CommandHandler('sells', self._sell_reason_performance),
             CommandHandler('mix_tags', self._mix_tag_performance),
             CommandHandler('stats', self._stats),
             CommandHandler('daily', self._daily),
@@ -177,9 +178,9 @@ class Telegram(RPCHandler):
             CallbackQueryHandler(self._profit, pattern='update_profit'),
             CallbackQueryHandler(self._balance, pattern='update_balance'),
             CallbackQueryHandler(self._performance, pattern='update_performance'),
-            CallbackQueryHandler(self._performance, pattern='update_buy_tag_performance'),
-            CallbackQueryHandler(self._performance, pattern='update_sell_tag_performance'),
-            CallbackQueryHandler(self._performance, pattern='update_mix_tag_performance'),
+            CallbackQueryHandler(self._buy_tag_performance, pattern='update_buy_tag_performance'),
+            CallbackQueryHandler(self._sell_reason_performance, pattern='update_sell_reason_performance'),
+            CallbackQueryHandler(self._mix_tag_performance, pattern='update_mix_tag_performance'),
             CallbackQueryHandler(self._count, pattern='update_count'),
             CallbackQueryHandler(self._forcebuy_inline),
         ]
@@ -243,6 +244,7 @@ class Telegram(RPCHandler):
             microsecond=0) - msg['open_date'].replace(microsecond=0)
         msg['duration_min'] = msg['duration'].total_seconds() / 60
 
+        msg['buy_tag'] = msg['buy_tag'] if "buy_tag" in msg.keys() else None
         msg['emoji'] = self._get_sell_emoji(msg)
 
         # Check if all sell properties are available.
@@ -258,34 +260,6 @@ class Telegram(RPCHandler):
 
         message = ("{emoji} *{exchange}:* Selling {pair} (#{trade_id})\n"
                    "*Profit:* `{profit_percent:.2f}%{profit_extra}`\n"
-                   "*Sell Reason:* `{sell_reason}`\n"
-                   "*Duration:* `{duration} ({duration_min:.1f} min)`\n"
-                   "*Amount:* `{amount:.8f}`\n"
-                   "*Open Rate:* `{open_rate:.8f}`\n"
-                   "*Current Rate:* `{current_rate:.8f}`\n"
-                   "*Close Rate:* `{limit:.8f}`").format(**msg)
-
-        sell_tag =None
-        if("sell_tag" in msg.keys()):
-            sell_tag = msg['sell_tag']
-        buy_tag =None
-        if("buy_tag" in msg.keys()):
-            buy_tag = msg['buy_tag']
-
-        if sell_tag is not None and buy_tag is not None:
-            message = ("{emoji} *{exchange}:* Selling {pair} (#{trade_id})\n"
-                   "*Profit:* `{profit_percent:.2f}%{profit_extra}`\n"
-                   "*Buy Tag:* `{buy_tag}`\n"
-                   "*Sell Tag:* `{sell_tag}`\n"
-                   "*Sell Reason:* `{sell_reason}`\n"
-                   "*Duration:* `{duration} ({duration_min:.1f} min)`\n"
-                   "*Amount:* `{amount:.8f}`\n"
-                   "*Open Rate:* `{open_rate:.8f}`\n"
-                   "*Current Rate:* `{current_rate:.8f}`\n"
-                   "*Close Rate:* `{limit:.8f}`").format(**msg)
-        elif sell_tag is None and buy_tag is not None:
-            message = ("{emoji} *{exchange}:* Selling {pair} (#{trade_id})\n"
-                   "*Profit:* `{profit_percent:.2f}%{profit_extra}`\n"
                    "*Buy Tag:* `{buy_tag}`\n"
                    "*Sell Reason:* `{sell_reason}`\n"
                    "*Duration:* `{duration} ({duration_min:.1f} min)`\n"
@@ -293,17 +267,6 @@ class Telegram(RPCHandler):
                    "*Open Rate:* `{open_rate:.8f}`\n"
                    "*Current Rate:* `{current_rate:.8f}`\n"
                    "*Close Rate:* `{limit:.8f}`").format(**msg)
-        elif sell_tag is not None and buy_tag is None:
-            message = ("{emoji} *{exchange}:* Selling {pair} (#{trade_id})\n"
-                   "*Profit:* `{profit_percent:.2f}%{profit_extra}`\n"
-                   "*Sell Tag:* `{sell_tag}`\n"
-                   "*Sell Reason:* `{sell_reason}`\n"
-                   "*Duration:* `{duration} ({duration_min:.1f} min)`\n"
-                   "*Amount:* `{amount:.8f}`\n"
-                   "*Open Rate:* `{open_rate:.8f}`\n"
-                   "*Current Rate:* `{current_rate:.8f}`\n"
-                   "*Close Rate:* `{limit:.8f}`").format(**msg)
-
 
         return message
 
@@ -425,7 +388,6 @@ class Telegram(RPCHandler):
                     "*Current Pair:* {pair}",
                     "*Amount:* `{amount} ({stake_amount} {base_currency})`",
                     "*Buy Tag:* `{buy_tag}`" if r['buy_tag'] else "",
-                    "*Sell Tag:* `{sell_tag}`" if r['sell_tag'] else "",
                     "*Open Rate:* `{open_rate:.8f}`",
                     "*Close Rate:* `{close_rate}`" if r['close_rate'] else "",
                     "*Current Rate:* `{current_rate:.8f}`",
@@ -923,12 +885,12 @@ class Telegram(RPCHandler):
         :return: None
         """
         try:
-            pair=None
+            pair = None
             if context.args:
                 pair = context.args[0]
 
             trades = self._rpc._rpc_buy_tag_performance(pair)
-            output = "<b>Performance:</b>\n"
+            output = "<b>Buy Tag Performance:</b>\n"
             for i, trade in enumerate(trades):
                 stat_line = (
                     f"{i+1}.\t <code>{trade['buy_tag']}\t"
@@ -949,7 +911,7 @@ class Telegram(RPCHandler):
             self._send_msg(str(e))
 
     @authorized_only
-    def _sell_tag_performance(self, update: Update, context: CallbackContext) -> None:
+    def _sell_reason_performance(self, update: Update, context: CallbackContext) -> None:
         """
         Handler for /sells.
         Shows a performance statistic from finished trades
@@ -958,15 +920,15 @@ class Telegram(RPCHandler):
         :return: None
         """
         try:
-            pair=None
+            pair = None
             if context.args:
                 pair = context.args[0]
 
-            trades = self._rpc._rpc_sell_tag_performance(pair)
-            output = "<b>Performance:</b>\n"
+            trades = self._rpc._rpc_sell_reason_performance(pair)
+            output = "<b>Sell Reason Performance:</b>\n"
             for i, trade in enumerate(trades):
                 stat_line = (
-                    f"{i+1}.\t <code>{trade['sell_tag']}\t"
+                    f"{i+1}.\t <code>{trade['sell_reason']}\t"
                     f"{round_coin_value(trade['profit_abs'], self._config['stake_currency'])} "
                     f"({trade['profit']:.2f}%) "
                     f"({trade['count']})</code>\n")
@@ -978,7 +940,7 @@ class Telegram(RPCHandler):
                     output += stat_line
 
             self._send_msg(output, parse_mode=ParseMode.HTML,
-                           reload_able=True, callback_path="update_sell_tag_performance",
+                           reload_able=True, callback_path="update_sell_reason_performance",
                            query=update.callback_query)
         except RPCException as e:
             self._send_msg(str(e))
@@ -993,12 +955,12 @@ class Telegram(RPCHandler):
         :return: None
         """
         try:
-            pair=None
+            pair = None
             if context.args:
                 pair = context.args[0]
 
             trades = self._rpc._rpc_mix_tag_performance(pair)
-            output = "<b>Performance:</b>\n"
+            output = "<b>Mix Tag Performance:</b>\n"
             for i, trade in enumerate(trades):
                 stat_line = (
                     f"{i+1}.\t <code>{trade['mix_tag']}\t"

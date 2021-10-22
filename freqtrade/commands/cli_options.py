@@ -446,6 +446,12 @@ AVAILABLE_CLI_OPTIONS = {
         "Space-separated list. Example: `fastd fastk`. Default: `['macd', 'macdsignal']`.",
         nargs='+',
     ),
+    "indicators3": Arg(
+        '--indicators3',
+        help='Set indicators from your strategy you want in the third row of the graph. '
+        "Space-separated list. Example: `fastd fastk`. Default: `['macd', 'macdsignal']`.",
+        nargs='+',
+    ),
     "plot_limit": Arg(
         '--plot-limit',
         help='Specify tick limit for plotting. Notice: too high values cause huge files. '

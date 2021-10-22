@@ -67,7 +67,7 @@ ARGS_DOWNLOAD_DATA = ["pairs", "pairs_file", "days", "new_pairs_days", "include_
                       "timerange", "download_trades", "exchange", "timeframes",
                       "erase", "dataformat_ohlcv", "dataformat_trades"]
 
-ARGS_PLOT_DATAFRAME = ["pairs", "indicators1", "indicators2", "plot_limit",
+ARGS_PLOT_DATAFRAME = ["pairs", "indicators1", "indicators2", "indicators3", "plot_limit",
                        "db_url", "trade_source", "export", "exportfilename",
                        "timerange", "timeframe", "no_trades"]
 

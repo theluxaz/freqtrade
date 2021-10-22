@@ -18,7 +18,16 @@ from freqtrade.resolvers import ExchangeResolver, StrategyResolver
 from freqtrade.strategy import IStrategy
 
 
+## List of available main plot render commands
 
+plot_indicators = ["main_trend","main_trend-above","sec_trend","sec_trend-above","volatility",
+                   "volatility-above","uptrend","uptrend-above","uptrendsmall","uptrendsmall-above"]
+
+default_indicators1 = ['volatility', 'uptrend', 'uptrendsmall', 'sma50', 'sma200', 'sma400', 'sma10k']
+
+default_indicators2 = ["ppo5"]
+
+default_indicators3 = ["rsi"]
 
 logger = logging.getLogger(__name__)
 
@@ -105,7 +114,12 @@ def add_indicators(fig, row, indicators: Dict[str, Dict], data: pd.DataFrame) ->
     }
     for indicator, conf in indicators.items():
         logger.debug(f"indicator {indicator} with config {conf}")
-        if indicator in data:
+
+        ##DRAWS THE NEW TREND INDICATORS
+        if(indicator in plot_indicators):
+            fig = plot_trend(fig,  data,label=indicator)
+
+        elif indicator in data:
             kwargs = {'x': data['date'],
                       'y': data[indicator].values,
                       'name': indicator
@@ -198,7 +212,6 @@ def plot_trades(fig, trades: pd.DataFrame) -> make_subplots:
         trades['desc'] = trades.apply(lambda row: f"{round(row['profit_ratio'] * 100, 1)}%, "
                                                   f"{row['buy_tag']}, "
                                                   f"{row['sell_reason']}, "
-                                                  f"{row['sell_tag']}, "
                                                   f"{row['trade_duration']} min",
                                       axis=1)
         trade_buys = go.Scatter(
@@ -250,7 +263,7 @@ def plot_trades(fig, trades: pd.DataFrame) -> make_subplots:
     return fig
 
 
-def create_plotconfig(indicators1: List[str], indicators2: List[str],
+def create_plotconfig(indicators1: List[str], indicators2: List[str], indicators3: List[str],
                       plot_config: Dict[str, Dict]) -> Dict[str, Dict]:
     """
     Combines indicators 1 and indicators 2 into plot_config if necessary
@@ -264,25 +277,34 @@ def create_plotconfig(indicators1: List[str], indicators2: List[str],
         if indicators1:
             plot_config['main_plot'] = {ind: {} for ind in indicators1}
         if indicators2:
-            plot_config['subplots'] = {'Other': {ind: {} for ind in indicators2}}
+            plot_config['subplots'] = {'Indicator 2': {ind: {} for ind in indicators2}}
+        if indicators3:
+            plot_config['subplots']["Indicator 3"] = {ind: {} for ind in indicators3}
 
     if not plot_config:
         # If no indicators and no plot-config given, use defaults.
         if not indicators1:
-            indicators1 = []# ['sma_trend', 'sma_smalltrend', 'sma50', 'sma200', 'sma400', 'sma10k']
+            indicators1 = default_indicators1
         if not indicators2:
-            indicators2 = ['macd', 'macdsignal']
+            indicators2 = default_indicators2
+        if not indicators3:
+            indicators3 = default_indicators3
 
         # Create subplot configuration if plot_config is not available.
         plot_config = {
             'main_plot': {ind: {} for ind in indicators1},
-            'subplots': {'Other': {ind: {} for ind in indicators2}},
+            'subplots': {'Indicator 2': {ind: {} for ind in indicators2}}
         }
+        if(indicators3):
+            plot_config['subplots']["Indicator 3"] = {ind: {} for ind in indicators3}
+
     if 'main_plot' not in plot_config:
         plot_config['main_plot'] = {}
 
     if 'subplots' not in plot_config:
         plot_config['subplots'] = {}
+
+
     return plot_config
 
 
@@ -383,7 +405,6 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
 
 
 
-
     if label=="Bolinger Bands" and indicator_a in data and indicator_b in data:
         # make lines invisible to get the area plotted, only.
         line = {'color': 'rgba(255,255,255,0)'}
@@ -410,11 +431,20 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
 
     data = data.copy()
 
+    labels = label.split('-')
+    label = labels[0]
+
+    display="below"
+    if(len(labels)>1):
+        display = labels[1]
+
     if( label=="main_trend"):
+        distance = 18
+
         main_color_hex = {  "5":"#8FBC8F",#"name":"UPPER_DANGER_ZONE"}
                             "3":"rgba(0,128,0, 0.8)",#"name":"LONG_UPTREND"},
                             "2":"#4682B4",#"name":"DOWNTREND_UPSWING"},
-                              "0": "RGBA(255, 255, 255, 0)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
+                              "0": "rgba(255, 255, 255, 0.01)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
                             "-1":"#E9967A",#"name":"SLOW_DOWNTREND"},
                                  "-2":"#FF0000",#"name":"LONG_DOWNTREND"},
                                 "-3":"#006400",#"name":"DANGER_ZONE"},
@@ -451,8 +481,12 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
         main_trend_df = data[data['main_trend'] != "0"]
 
 
-        main_trend_df['sma_main_trend_display'] =(main_trend_df['sma25']-(main_trend_df['sma25']/100*15))
-        volatility_df['sma_main_trend_display'] =(volatility_df['sma25']-(volatility_df['sma25']/100*15))
+        if(display == "above"):
+            main_trend_df['sma_main_trend_display'] =(main_trend_df['sma25']+(main_trend_df['sma25']/100*distance))
+            volatility_df['sma_main_trend_display'] =(volatility_df['sma25']+(volatility_df['sma25']/100*distance))
+        else:
+            main_trend_df['sma_main_trend_display'] =(main_trend_df['sma25']-(main_trend_df['sma25']/100*distance))
+            volatility_df['sma_main_trend_display'] =(volatility_df['sma25']-(volatility_df['sma25']/100*distance))
 
 
         trace_main1 = px.scatter(main_trend_df, x="date", y="sma_main_trend_display",#,
@@ -502,8 +536,9 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
             list(trace_mainVOL.select_traces())
         )
 
+    if( label=="volatility"):
+        distance = 14
 
-    if( label=="volatility_trend"):
         main_volatility_hex = {
                     "1":"rgba(175, 225, 233, 0.5)",#"name":"LOW"},
                     "2":"rgba(73, 187, 204, 0.5)",#"name":"MID"},
@@ -519,7 +554,13 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
 
         data['volatility'] = data['volatility'].astype(str)
 
-        data['sma_volatility_display'] =(data['sma25']+(data['sma25']/100*15))
+        display="above"  ##SET VOLATILITY TO BE ABOVE BY DEFAULT
+
+        if(display == "above"):
+            data['sma_volatility_display'] =(data['sma25']+(data['sma25']/100*distance))
+        else:
+            data['sma_volatility_display'] =(data['sma25']-(data['sma25']/100*distance))
+
 
 
         # Volatility display above price
@@ -536,47 +577,55 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
                              # opacity =0.5,
                           )
 
-        data['sma_volatility_display'] =(data['sma_volatility_display']+(data['sma_volatility_display']/100*1))
-        trace_upper2 = px.scatter(data, x="date", y="sma_volatility_display",#,
-                             #hover_name="volatility",
-                             color_discrete_sequence=px.colors.qualitative.Alphabet,
-                             color_discrete_map=main_volatility_hex,
-                             color ="volatility",
-                             symbol ="volatility",
-                             symbol_map =main_volatility_symbols
-                             # symbol ="main_trend",
-                             # height=30,
-                             # opacity =0.5,
-                          )
+        ##UNCOMMENT FOR DOUBLE SIZE
+
+        # if(display == "above"):
+        #     data['sma_volatility_display'] =(data['sma_volatility_display']+(data['sma_volatility_display']/100*1))
+        # else:
+        #     data['sma_volatility_display'] =(data['sma_volatility_display']-(data['sma_volatility_display']/100*1))
+        #
+        # trace_upper2 = px.scatter(data, x="date", y="sma_volatility_display",#,
+        #                      #hover_name="volatility",
+        #                      color_discrete_sequence=px.colors.qualitative.Alphabet,
+        #                      color_discrete_map=main_volatility_hex,
+        #                      color ="volatility",
+        #                      symbol ="volatility",
+        #                      symbol_map =main_volatility_symbols
+        #                      # symbol ="main_trend",
+        #                      # height=30,
+        #                      # opacity =0.5,
+        #                   )
 
         fig.add_traces(
             list(trace_upper1.select_traces())
         )
-        fig.add_traces(
-            list(trace_upper2.select_traces())
-        )
+        # fig.add_traces(
+        #     list(trace_upper2.select_traces())
+        # )
 
     if(label == "sec_trend"):
-        sec_trend_color_hex = {       "5":"#8FBC8F",#"name":"UPPER_DANGER_ZONE"},
-                     "4":"YELLOW",#"name":"HUGE_FALL_TURNAROUND"},
-                    "3":"rgba(0,128,0,0.8)",#"name":"LONG_UPTREND"},
-                         "2":"#4682B4",#"name":"DOWNTREND_UPSWING"},
-                        "1":"#90EE90",#"name":"SMALL_UPSWING"},
-                      "0": "RGBA(0, 0, 0, 0.1)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",#
+        distance = 18
 
+        sec_trend_color_hex = {
+                    "5":"rgba(143, 188, 143, 0.7)",#"name":"UPPER_DANGER_ZONE"},
+                     #"4":"YELLOW",#"name":"HUGE_FALL_TURNAROUND"},     ##FIX LATER
+                    "3":"rgba(0,128,0,0.5)",#"name":"LONG_UPTREND"},
+                         "2":"rgba(70, 130, 180, 0.57)",#"name":"DOWNTREND_UPSWING"},
+                        "1":"rgba(144, 238, 144, 0.7)",#"name":"SMALL_UPSWING"},
+                      "0": "rgba(0, 0, 0, 0.01)",#"name":"NOTREND"},
                            # "-1":"#E9967A",#"name":"SLOW_DOWNTREND"},
-                         "-2":"#FF0000",#"name":"LONG_DOWNTREND"},
-                        "-3":"#006400",#"name":"DANGER_ZONE"},
+                         "-2":"rgba(220,20,60,0.5)",#"name":"LONG_DOWNTREND"},
+                        "-3":"rgba(0, 100, 0, 0.7)",#"name":"DANGER_ZONE"},
 
         }
 
         sec_trend_symbols = {
                              "5":"x",#"name":"UPPER_DANGER_ZONE"},
-                             "4":"cross",#"name":"HUGE_FALL_TURNAROUND"},
+                            # "4":"cross",#"name":"HUGE_FALL_TURNAROUND"},     ##FIX LATER
                             "3":"star-triangle-up",#"name":"LONG_UPTREND"},
                              "2":"cross",#"name":"DOWNTREND_UPSWING"},
                             "1":"triangle-up",#"name":"SMALL UPSWING"},
-                             "0": "triangle-down",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
+                             "0": "triangle-down",#"name":"NOTREND"},
                             "-2":"star-triangle-down",#"name":"LONG_DOWNTREND"},
                              "-1":"triangle-down",#"name":"SLOW_DOWNTREND"},
                             "-3":"x",#"name":"DANGER_ZONE"},
@@ -591,8 +640,10 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
         sec_trend_df = data[data['sec_trend'] != "0"]
 
 
-        #data['sma_volatility_display'] =(data['sma25']+(data['sma25']/100*15))
-        sec_trend_df['sma_sec_trend_display'] =(sec_trend_df['sma25']-(sec_trend_df['sma25']/100*17))
+        if(display == "above"):
+            sec_trend_df['sma_sec_trend_display'] =(sec_trend_df['sma25']+(sec_trend_df['sma25']/100*distance))
+        else:
+            sec_trend_df['sma_sec_trend_display'] =(sec_trend_df['sma25']-(sec_trend_df['sma25']/100*distance))
 
 
         trace_sec1 = px.scatter(sec_trend_df, x="date", y="sma_sec_trend_display",#,
@@ -606,12 +657,70 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
                              # height=30,
                              # opacity =0.5,
                           )
-
+        print("Drawing sec_trend line on chart...")
         fig.add_traces(
             list(trace_sec1.select_traces())
         )
 
+    if(label == "uptrend"):
+        distance = 16
 
+        uptrend_color_hex = {
+                        "4.0":"rgba(0,128,0,0.20)",
+                        "3.0":"rgba(50,205,50,0.29)",
+                         "2.0":"rgba(124,252,0,0.29)",
+                        "1.0":"rgba(152,251,152,0.35)",
+                      "0.0": "rgba(0, 0, 0, 0.01)",
+                        "-0.0": "rgba(0, 0, 0, 0.01)",
+                         "-1.0":"rgba(255,160,122,0.35)",
+                         "-2.0":"rgba(240,128,128,0.29)",
+                         "-3.0":"rgba(220,20,60,0.29)",
+                        "-4.0":"rgba(255,0,0,0.20)"
+
+        }
+
+        uptrend_symbols = { "4.0":"x",
+                            "3.0":"star-triangle-up",
+                             "2.0":"triangle-up",
+                            "1.0":"triangle-up",
+                             "0.0": "triangle-down",
+                            "-0.0": "triangle-down",
+                             "-1.0":"triangle-down",
+                            "-2.0":"triangle-down",
+                            "-3.0":"star-triangle-down",
+                            "-4.0":"x"
+                }
+
+
+        data['uptrend'] = data['uptrend'].astype(str)
+
+
+
+        uptrend_df = data[(data['uptrend'] != "0")&(data['uptrend'] != "nan")]
+
+        #print(uptrend_df['uptrend'].value_counts())
+
+        if(display == "above"):
+            uptrend_df['sma_uptrend_display'] =(uptrend_df['sma25']+(uptrend_df['sma25']/100*distance))
+        else:
+            uptrend_df['sma_uptrend_display'] =(uptrend_df['sma25']-(uptrend_df['sma25']/100*distance))
+
+
+        trace_uptrend1 = px.scatter(uptrend_df, x="date", y="sma_uptrend_display",#,
+                            # hover_name="main_trend",
+                             color_discrete_sequence=px.colors.qualitative.Alphabet,
+                             color_discrete_map=uptrend_color_hex,
+                             color ="uptrend",
+                             symbol ="uptrend",
+                             symbol_map =uptrend_symbols
+                             # symbol ="main_trend",
+                             # height=30,
+                             # opacity =0.5,
+                          )
+        print("Drawing uptrend line on chart...")
+        fig.add_traces(
+            list(trace_uptrend1.select_traces())
+        )
 
                 #Main trend
 
@@ -632,145 +741,81 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
         #-2 - LONG/SHARP DOWNTREND
         #-3 - DANGER ZONE
 
+    if(label == "uptrendsmall"):
+        distance = 13
+
+        uptrendsmall_color_hex = {
+                        "3.0":"rgba(50,205,50,0.29)",
+                         "2.0":"rgba(124,252,0,0.29)",
+                        "1.0":"rgba(152,251,152,0.35)",
+                      "0.0": "rgba(0, 0, 0, 0.01)",
+                        "-0.0": "rgba(0, 0, 0, 0.01)",
+                         "-1.0":"rgba(255,160,122,0.35)",
+                         "-2.0":"rgba(240,128,128,0.29)",
+                         "-3.0":"rgba(220,20,60,0.29)"
+
+        }
+
+        uptrendsmall_symbols = {
+                            "3.0":"star-triangle-up",
+                             "2.0":"triangle-up",
+                            "1.0":"triangle-up",
+                             "0.0": "triangle-down",
+                            "-0.0": "triangle-down",
+                             "-1.0":"triangle-down",
+                            "-2.0":"triangle-down",
+                            "-3.0":"star-triangle-down"
+                }
 
 
-#         if indicator_a in data and indicator_b in data:
-#            ##line = {'color': 'rgba(255,255,255,0)'}
-#             ##make lines invisible to get the area plotted, only.
-#
-#             main_color_hex = {
-#                                 "3":"rgba(0,128,0, 0.8)",#"name":"LONG_UPTREND"},
-#                                 "-2":"#FF0000",#"name":"LONG_DOWNTREND"},
-#                                  "-1":"#E9967A",#"name":"SLOW_DOWNTREND"},
-#                                   "0": "RGBA(255, 255, 255, 0)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
-#                                    "2":"#4682B4",#"name":"DOWNTREND_UPSWING"},
-#                                     "-3":"#006400",#"name":"DANGER_ZONE"},
-#                                      "5":"#8FBC8F"#"name":"UPPER_DANGER_ZONE"}
-#                 }
-#             main_volatility_hex = {
-#                         "1":"rgba(175, 225, 233, 0.5)",#"name":"LOW"},
-#                         "2":"rgba(73, 187, 204, 0.5)",#"name":"MID"},
-#                         "3":"rgba(0, 139, 251, 0.5)",#"name":"HIGH"}
-#                     }
-#
-#             main_volatility_symbols = {
-#                         "1":"circle-open",#"name":"LOW"},
-#                         "2":"circle-open-dot",#"name":"MID"},
-#                         "3":"circle",#"name":"HIGH"}
-#                     }
-#             main_trend_symbols = {
-#                                 "3":"star-triangle-up",#"name":"LONG_UPTREND"},
-#                                 "-2":"star-triangle-down",#"name":"LONG_DOWNTREND"},
-#                                  "-1":"triangle-down",#"name":"SLOW_DOWNTREND"},
-#                                  "0": "RGBA(255, 255, 255, 0)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
-#                                 "2":"cross",#"name":"DOWNTREND_UPSWING"},
-#                                 "-3":"x",#"name":"DANGER_ZONE"},
-#                                  "5":"x"#"name":"UPPER_DANGER_ZONE"}
-#                     }
-#
-#
-#             data['main_trend'] = data['main_trend'].astype(str)
-#             data['volatility'] = data['volatility'].astype(str)
-#
-#
-#             #volatility_df = data.copy()
-#             volatility_df = data[data['main_trend'] == "0"]
-#             main_trend_df = data[data['main_trend'] != "0"]
-#
-#
-#             data['sma_volatility_display'] =(data['sma25']+(data['sma25']/100*15))
-#             main_trend_df['sma_main_trend_display'] =(main_trend_df['sma25']-(main_trend_df['sma25']/100*15))
-#             volatility_df['sma_main_trend_display'] =(volatility_df['sma25']-(volatility_df['sma25']/100*15))
-#
-#
-#             trace_main1 = px.scatter(main_trend_df, x="date", y="sma_main_trend_display",#,
-#                                 # hover_name="main_trend",
-#                                  color_discrete_sequence=px.colors.qualitative.Alphabet,
-#                                  color_discrete_map=main_color_hex,
-#                                  color ="main_trend",
-#                                  symbol ="main_trend",
-#                                  symbol_map =main_trend_symbols
-#                                  # symbol ="main_trend",
-#                                  # height=30,
-#                                  # opacity =0.5,
-#
-#                                  #main_color_hex
-#                                  # size = 15
-#                                  # trendline ="lowess",
-#                  #                 trendline_options=dict(frac=0.1),
-#                  # trendline_color_override='red',
-#                                  # showlegend=False,
-#                                  # connectgaps= False,
-#                                  # line=line)
-#                               )
-#
-#             main_trend_df['sma_main_trend_display'] =(main_trend_df['sma_main_trend_display']-(main_trend_df['sma_main_trend_display']/100*1))
-#
-#             trace_main2 = px.scatter(main_trend_df, x="date", y="sma_main_trend_display",#,
-#                                 # hover_name="main_trend",
-#                                  color_discrete_sequence=px.colors.qualitative.Alphabet,
-#                                  color_discrete_map=main_color_hex,
-#                                  color ="main_trend",
-#                                  symbol ="main_trend",
-#                                  symbol_map =main_trend_symbols
-#
-#                               )
-#
-#             trace_mainVOL = px.scatter(volatility_df, x="date", y="sma_main_trend_display",#,
-#                                  #hover_name="volatility",
-#                                  color_discrete_sequence=px.colors.qualitative.Alphabet,
-#                                  color_discrete_map=main_volatility_hex,
-#                                  color ="volatility",
-#                                  symbol ="volatility",
-#                                  symbol_map =main_volatility_symbols
-#                                  # symbol ="main_trend",
-#                                  # height=30,
-#                                  # opacity =0.5,
-# #
-#                               )
-#
-#             # Volatility display above price
-#
-#             trace_upper1 = px.scatter(data, x="date", y="sma_volatility_display",#,
-#                                  #hover_name="volatility",
-#                                  color_discrete_sequence=px.colors.qualitative.Alphabet,
-#                                  color_discrete_map=main_volatility_hex,
-#                                  color ="volatility",
-#                                  symbol ="volatility",
-#                                  symbol_map =main_volatility_symbols
-#                                  # symbol ="main_trend",
-#                                  # height=30,
-#                                  # opacity =0.5,
-#                               )
-#
-#             data['sma_volatility_display'] =(data['sma_volatility_display']+(data['sma_volatility_display']/100*1))
-#             trace_upper2 = px.scatter(data, x="date", y="sma_volatility_display",#,
-#                                  #hover_name="volatility",
-#                                  color_discrete_sequence=px.colors.qualitative.Alphabet,
-#                                  color_discrete_map=main_volatility_hex,
-#                                  color ="volatility",
-#                                  symbol ="volatility",
-#                                  symbol_map =main_volatility_symbols
-#                                  # symbol ="main_trend",
-#                                  # height=30,
-#                                  # opacity =0.5,
-#                               )
-#             fig.add_traces(
-#                 list(trace_main1.select_traces())
-#             )
-#             fig.add_traces(
-#                 list(trace_main2.select_traces())
-#             )
-#             fig.add_traces(
-#                 list(trace_mainVOL.select_traces())
-#             )
-#             fig.add_traces(
-#                 list(trace_upper1.select_traces())
-#             )
-#             fig.add_traces(
-#                 list(trace_upper2.select_traces())
-#             )
+        data['uptrendsmall'] = data['uptrendsmall'].astype(str)
 
+
+
+        uptrendsmall_df = data[(data['uptrendsmall'] != "0")&(data['uptrendsmall'] != "nan")]
+
+        #print(uptrend_df['uptrend'].value_counts())
+
+        if(display == "above"):
+            uptrendsmall_df['sma_uptrendsmall_display'] =(uptrendsmall_df['sma25']+(uptrendsmall_df['sma25']/100*distance))
+        else:
+            uptrendsmall_df['sma_uptrendsmall_display'] =(uptrendsmall_df['sma25']-(uptrendsmall_df['sma25']/100*distance))
+
+
+        trace_uptrendsmall1 = px.scatter(uptrendsmall_df, x="date", y="sma_uptrendsmall_display",#,
+                            # hover_name="main_trend",
+                             color_discrete_sequence=px.colors.qualitative.Alphabet,
+                             color_discrete_map=uptrendsmall_color_hex,
+                             color ="uptrendsmall",
+                             symbol ="uptrendsmall",
+                             symbol_map =uptrendsmall_symbols
+                             # symbol ="main_trend",
+                             # height=30,
+                             # opacity =0.5,
+                          )
+        print("Drawing uptrendsmall line on chart "+str(display)+"...")
+        fig.add_traces(
+            list(trace_uptrendsmall1.select_traces())
+        )
+
+                #Main trend
+
+        # 3 - LONG/SHARP UPTREND
+        # 2 - DOWNTREND UPSWING
+        # 1 - SMALL UPSWING
+        # 0 - NORMAL
+        #-1 - SLOW DOWNTREND
+        #-2 - LONG/SHARP DOWNTREND
+        #-3 - DANGER ZONE
+
+
+        # SEC
+        # 5 - UPPER DANGER ZONE
+        # 4 - HUGE FALL TURNAROUND
+        # 3 - LONG/SHARP UPTREND
+        # 2 - DOWNTREND UPSWING
+        #-2 - LONG/SHARP DOWNTREND
+        #-3 - DANGER ZONE
 
 
     return fig
@@ -810,6 +855,7 @@ def add_areas(fig, row: int, data: pd.DataFrame, indicators) -> make_subplots:
 def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFrame = None, *,
                                indicators1: List[str] = [],
                                indicators2: List[str] = [],
+                               indicators3: List[str] = [],
                                plot_config: Dict[str, Dict] = {},
                                ) -> go.Figure:
     """
@@ -823,22 +869,22 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
     :param plot_config: Dict of Dicts containing advanced plot configuration
     :return: Plotly figure
     """
-    plot_config = create_plotconfig(indicators1, indicators2, plot_config)
-    rows = 2 + len(plot_config['subplots'])
+    plot_config = create_plotconfig(indicators1, indicators2, indicators3, plot_config)
+    rows = 1 + len(plot_config['subplots'])
     row_widths = [1 for _ in plot_config['subplots']]
     # Define the graph
     fig = make_subplots(
         rows=rows,
         cols=1,
         shared_xaxes=True,
-        row_width=row_widths + [1, 4],
+        row_width=[1] + [1, 4],
         vertical_spacing=0.0001,
     )
     fig['layout'].update(title=pair)
     fig['layout']['yaxis1'].update(title='Price')
-    fig['layout']['yaxis2'].update(title='Volume')
+    fig['layout']['yaxis2'].update(title='Price')
     for i, name in enumerate(plot_config['subplots']):
-        fig['layout'][f'yaxis{3 + i}'].update(title=name)
+        fig['layout'][f'yaxis{2 + i}'].update(title=name)
     fig['layout']['xaxis']['rangeslider'].update(visible=False)
     fig.update_layout(modebar_add=["v1hovermode", "toggleSpikeLines"])
 
@@ -913,29 +959,32 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
                          ]
 
 
-            for sell_tag in df_sell.sell_tag.copy().drop_duplicates():
-                sell_tag_series = df_sell[df_sell['sell_tag'] == sell_tag]
-                sell_tag_style = generate_sell_tag_style(sell_tag, sell_colours_hex[index%len(buy_colours_hex)], sell_symbols[index%len(sell_symbols)])
+            for exit_tag in df_sell.exit_tag.copy().drop_duplicates():
+                sell_reason_series = df_sell[df_sell['exit_tag'] == exit_tag]
+                sell_reason_style = generate_sell_reason_style(exit_tag, sell_colours_hex[index%len(buy_colours_hex)], sell_symbols[index%len(sell_symbols)])
                 sells = go.Scatter(
-                    x=sell_tag_series.date,
-                    y=sell_tag_series.close,
+                    x=sell_reason_series.date,
+                    y=sell_reason_series.close,
                     mode='markers',
-                    text=sell_tag_series.sell_tag,
+                    text=sell_reason_series.exit_tag,
                     name='sell',
                     marker=dict(
-                        symbol=sell_tag_style["symbol"],
-                        size=sell_tag_style["size"],
+                        symbol=sell_reason_style["symbol"],
+                        size=sell_reason_style["size"],
                         line=dict(width=1),
-                        color=sell_tag_style["color"],
+                        color=sell_reason_style["color"],
                     )
                 )
                 fig.add_trace(sells, 1, 1)
                 index+=1
         else:
             logger.warning("No sell-signals found.")
-    # Add Bollinger Bands
+
+    ##Add Bollinger Bands
     fig = plot_area(fig, 1, data, 'bb_lowerband', 'bb_upperband',
                     label="main_trend")
+
+
     # prevent bb_lower and bb_upper from plotting
     try:
         del plot_config['main_plot']['bb_lowerband']
@@ -947,19 +996,20 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
     fig = add_areas(fig, 1, data, plot_config['main_plot'])
     fig = plot_trades(fig, trades)
 
-    volume = go.Bar(
-        x=data['date'],
-        y=data['volume'],
-        name='Volume',
-        marker_color='DarkSlateGrey',
-        marker_line_color='DarkSlateGrey'
-    )
-    fig.add_trace(volume, 2, 1)
+    #  Disabled Volume, indicators 3 enabled
+    # volume = go.Bar(
+    #     x=data['date'],
+    #     y=data['volume'],
+    #     name='Volume',
+    #     marker_color='DarkSlateGrey',
+    #     marker_line_color='DarkSlateGrey'
+    # )
+    # fig.add_trace(volume, 2, 1)
 
     # add each sub plot to a separate row
     for i, label in enumerate(plot_config['subplots']):
         sub_config = plot_config['subplots'][label]
-        row = 3 + i
+        row = 2 + i
         fig = add_indicators(fig=fig, row=row, indicators=sub_config,
                              data=data)
         # fill area between indicators ( 'fill_to': 'other_indicator')
@@ -1013,7 +1063,7 @@ def generate_buy_tag_style(buy_tag, color, symbol):
         return {"color":color, "symbol":symbol, "size":10}
 
 
-def generate_sell_tag_style(sell_tag, color, symbol):
+def generate_sell_reason_style(sell_reason, color, symbol):
 
     premade_tags = {
                     "SELL_LOW":          {"color":"#F08080",
@@ -1053,8 +1103,8 @@ def generate_sell_tag_style(sell_tag, color, symbol):
                                     "size":11}
         }
 
-    if(sell_tag in premade_tags.keys()):
-        return premade_tags[sell_tag]
+    if(sell_reason in premade_tags.keys()):
+        return premade_tags[sell_reason]
     else:
         return {"color":color, "symbol":symbol,"size":9}
 
@@ -1172,6 +1222,7 @@ def load_and_plot_trades(config: Dict[str, Any]):
             trades=trades_pair,
             indicators1=config.get('indicators1', []),
             indicators2=config.get('indicators2', []),
+            indicators3=config.get('indicators3', []),
             plot_config=strategy.plot_config if hasattr(strategy, 'plot_config') else {}
         )
 

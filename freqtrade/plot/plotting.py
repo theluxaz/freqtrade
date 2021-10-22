@@ -957,9 +957,7 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
                          "triangle-ne-dot" , "triangle-se-dot" , "triangle-sw-dot" , "triangle-nw-dot",
                          "diamond-wide-dot"
                          ]
-            # print(df_sell)
-            # print(df_sell["exit_tag"])
-            # print(df_sell.exit_tag)
+=
             if("exit_tag" in df_sell):
                 for exit_tag in df_sell.exit_tag.copy().drop_duplicates():
                     sell_reason_series = df_sell[df_sell['exit_tag'] == exit_tag]

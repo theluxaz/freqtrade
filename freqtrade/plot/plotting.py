@@ -910,7 +910,7 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
                          "#FFC0CB", "#FF69B4" ,   #pink
                          "#C0C0C0", "#808080" , "#2F4F4F",   #grey
                          "#FFFAFA", "#F0FFF0" , "#F0FFFF" ,"#F0F8FF" , "#F5F5DC" ,"#FFFFF0" ,"#FAEBD7" ,"#FFE4E1" , "#FFDEAD", #white - little orange shades in end
-                         "#FFFACD", "#F0E68C" , "#FFFF00", "FFD700"  #yellow
+                         "#FFFACD", "#F0E68C" , "#FFFF00", "#FFD700"  #yellow
                              ]
             random.shuffle(buy_colours_hex)
 
@@ -957,26 +957,28 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
                          "triangle-ne-dot" , "triangle-se-dot" , "triangle-sw-dot" , "triangle-nw-dot",
                          "diamond-wide-dot"
                          ]
-
-
-            for exit_tag in df_sell.exit_tag.copy().drop_duplicates():
-                sell_reason_series = df_sell[df_sell['exit_tag'] == exit_tag]
-                sell_reason_style = generate_sell_reason_style(exit_tag, sell_colours_hex[index%len(buy_colours_hex)], sell_symbols[index%len(sell_symbols)])
-                sells = go.Scatter(
-                    x=sell_reason_series.date,
-                    y=sell_reason_series.close,
-                    mode='markers',
-                    text=sell_reason_series.exit_tag,
-                    name='sell',
-                    marker=dict(
-                        symbol=sell_reason_style["symbol"],
-                        size=sell_reason_style["size"],
-                        line=dict(width=1),
-                        color=sell_reason_style["color"],
+            # print(df_sell)
+            # print(df_sell["exit_tag"])
+            # print(df_sell.exit_tag)
+            if("exit_tag" in df_sell):
+                for exit_tag in df_sell.exit_tag.copy().drop_duplicates():
+                    sell_reason_series = df_sell[df_sell['exit_tag'] == exit_tag]
+                    sell_reason_style = generate_sell_reason_style(exit_tag, sell_colours_hex[index%len(buy_colours_hex)], sell_symbols[index%len(sell_symbols)])
+                    sells = go.Scatter(
+                        x=sell_reason_series.date,
+                        y=sell_reason_series.close,
+                        mode='markers',
+                        text=sell_reason_series.exit_tag,
+                        name='sell',
+                        marker=dict(
+                            symbol=sell_reason_style["symbol"],
+                            size=sell_reason_style["size"],
+                            line=dict(width=1),
+                            color=sell_reason_style["color"],
+                        )
                     )
-                )
-                fig.add_trace(sells, 1, 1)
-                index+=1
+                    fig.add_trace(sells, 1, 1)
+                    index+=1
         else:
             logger.warning("No sell-signals found.")
 

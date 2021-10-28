@@ -1,12 +1,15 @@
 import sys
 from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QComboBox, QLabel, QCheckBox
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAction, QLineEdit, QMessageBox
+from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAction, QLineEdit, QMessageBox,QPlainTextEdit
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSlot
 
 strategies = ["DevLukas15min","ProdLukas15min","BuyerDevHigh","BuyerDevMid""BuyerDevLow",
               "BuyerDevLongUptrend","BuyerDevSlowDowntrend","BuyerDevLongDowntrend","BuyerDevDowntrendUpswing"]
+
+hyperopt_loss_functions = ["ShortTradeDurHyperOptLoss","OnlyProfitHyperOptLoss","SharpeHyperOptLoss","SharpeHyperOptLossDaily","SortinoHyperOptLoss",
+              "SortinoHyperOptLossDaily","MaxDrawDownHyperOptLoss"]
 
 timesteps = ["1","2","3","4""5"]
 
@@ -18,7 +21,7 @@ class App(QWidget):
         self.left = 300
         self.top = 200
         self.width = 850
-        self.height = 480
+        self.height = 380
         self.initUI()
 
     def initUI(self):
@@ -138,9 +141,81 @@ class App(QWidget):
         # Time Until Checkbox
         self.time_until_checkbox = QCheckBox(self)
         self.time_until_checkbox.move(667, 37)
+        self.time_until_checkbox.setChecked(True)
         #self.time_until_checkbox.stateChanged.connect(self.clickBox)
 
 
+         # Label Pairs 1
+        self.pairs1_label = QLabel(self)
+        self.pairs1_label.setText('Pairs:')
+        self.pairs1_label.move(320, 100)
+        # Textbox Pairs 1
+        self.pairs1_textbox = QPlainTextEdit(self)
+        self.pairs1_textbox.move(355, 100)
+        self.pairs1_textbox.resize(60,246)
+
+         # Label Cache Pairs 2
+        self.pairs2_label = QLabel(self)
+        self.pairs2_label.setText('Cache:')
+        self.pairs2_label.move(470, 100)
+        # Textbox Cache Pairs 2
+        self.pairs2_textbox = QPlainTextEdit(self)
+        self.pairs2_textbox.move(510, 100)
+        self.pairs2_textbox.resize(60,246)
+
+         # Label All Pairs 3
+        self.pairs3_label = QLabel(self)
+        self.pairs3_label.setText('All:')
+        self.pairs3_label.move(580, 100)
+        # Textbox All Pairs 3
+        self.pairs3_textbox = QPlainTextEdit(self)
+        self.pairs3_textbox.move(600, 100)
+        self.pairs3_textbox.resize(60,246)
+
+
+
+        # Label Hyperopt
+        self.hyperopt_label = QLabel(self)
+        self.hyperopt_label.setText('Hyperopt:')
+        self.hyperopt_label.move(20, 220)
+
+        # Checkbox hyperopt
+        self.hyperopt_checkbox = QCheckBox(self)
+        self.hyperopt_checkbox.move(71, 221)
+        self.hyperopt_checkbox.setChecked(False)
+        #self.indicator1_checkbox_default.stateChanged.connect(self.clickBox)
+
+
+        self.addSearchSpace()
+
+
+        # Button backtest
+        self.backtest_button=QPushButton('Backtest',self)
+        self.backtest_button.setToolTip('Thank you for thinking about me')
+        self.backtest_button.move(670,324)
+        #self.backtest_button.clicked.connect(self.on_click)
+
+
+        # Button Show Plot
+        self.plot_button=QPushButton('Show Plot',self)
+        self.plot_button.setToolTip('Thank you for thinking about me')
+        self.plot_button.move(760,324)
+        #self.plot_button.clicked.connect(self.on_click)
+
+        # Profit plot label
+        self.display_profit_label = QLabel(self)
+        self.display_profit_label.setText('Profit')
+        self.display_profit_label.move(789,302)
+        # Time Until Checkbox Date
+        self.display_profit_checkbox = QCheckBox(self)
+        self.display_profit_checkbox.move(820,302)
+        #self.display_profit_checkbox.stateChanged.connect(self.clickBox)
+
+
+        # Label Run Command args
+        self.run_command_args_label = QLabel(self)
+        self.run_command_args_label.setText('--Indicator1 test test2 test3 --Indicator2 sma10k rsi macd rsi100')
+        self.run_command_args_label.move(18,356)
 
 
         #         # Label strategy
@@ -163,10 +238,7 @@ class App(QWidget):
         # #self.button.clicked.connect(self.on_click)
         #
         #
-        # button=QPushButton('Backtest',self)
-        # button.setToolTip('Thank you for thinking about me')
-        # button.move(100,100)
-        # button.clicked.connect(self.on_click)
+
         #
         #
         # button_plot=QPushButton('Show graph',self)
@@ -181,7 +253,125 @@ class App(QWidget):
         QMessageBox.question(self, 'Message - pythonspot.com', "You typed: " + textboxValue, QMessageBox.Ok, QMessageBox.Ok)
         self.textbox.setText("BACKTESTIIING")
 
+    def addSearchSpace(self):
+
+
+        # Label Search Space:
+        self.search_space_label = QLabel(self)
+        self.search_space_label.setText('Search Space')
+        self.search_space_label.move(190, 230)
+
+
+        # # Label Hyperopt
+        # self.label_strategy = QLabel(self)
+        # self.label_strategy.setText('Hyperopt:')
+        # self.label_strategy.move(20, 300)
+        # # Dropdown strategy
+        # self.combo_box = QComboBox(self)
+        # self.combo_box.setGeometry(15, 320, 150, 30)
+        # self.combo_box.addItems(strategies)
+
+
+        # Label Loss Function
+        self.label_strategy = QLabel(self)
+        self.label_strategy.setText('Loss function:')
+        self.label_strategy.move(20, 300)
+        # Dropdown Loss Function
+        self.combo_box = QComboBox(self)
+        self.combo_box.setGeometry(17, 320, 200, 30)
+        self.combo_box.addItems(hyperopt_loss_functions)
+
+
+        # Button Hyperopt
+        self.hyperopt_button=QPushButton('Hyperopt',self)
+        self.hyperopt_button.move(255,323)
+        #self.hyperopt_button.clicked.connect(self.on_click)
+
+
+        # Label ALL Search Space:
+        self.search_space_all_label = QLabel(self)
+        self.search_space_all_label.setText('All:')
+        self.search_space_all_label.move(100, 250)
+        # Checkbox ALL Search Space
+        self.search_space_all_checkbox = QCheckBox(self)
+        self.search_space_all_checkbox.move(118, 251)
+        self.search_space_all_checkbox.setChecked(False)
+        #self.search_space_all_checkbox.stateChanged.connect(self.clickBox)
+
+        # Label DEFAULT Search Space:
+        self.search_space_default_label = QLabel(self)
+        self.search_space_default_label.setText('Default:')
+        self.search_space_default_label.move(150, 250)
+        # Checkbox DEFAULT Search Space
+        self.search_space_default_checkbox = QCheckBox(self)
+        self.search_space_default_checkbox.move(191, 251)
+        self.search_space_default_checkbox.setChecked(False)
+        #self.search_space_default_checkbox.stateChanged.connect(self.clickBox)
+
+        # Label BUY Search Space:
+        self.search_space_buy_label = QLabel(self)
+        self.search_space_buy_label.setText('Buy:')
+        self.search_space_buy_label.move(230, 250)
+        # Checkbox BUY Search Space
+        self.search_space_buy_checkbox = QCheckBox(self)
+        self.search_space_buy_checkbox.move(254, 251)
+        self.search_space_buy_checkbox.setChecked(False)
+        #self.search_space_buy_checkbox.stateChanged.connect(self.clickBox)
+
+        # Label SELL Search Space:
+        self.search_space_sell_label = QLabel(self)
+        self.search_space_sell_label.setText('Sell:')
+        self.search_space_sell_label.move(290, 250)
+        # Checkbox SELL Search Space
+        self.search_space_sell_checkbox = QCheckBox(self)
+        self.search_space_sell_checkbox.move(312, 251)
+        self.search_space_sell_checkbox.setChecked(False)
+        #self.search_space_sell_checkbox.stateChanged.connect(self.clickBox)
+
+        # Label ROI Search Space:
+        self.search_space_roi_label = QLabel(self)
+        self.search_space_roi_label.setText('Roi:')
+        self.search_space_roi_label.move(100, 270)
+        # Checkbox ROI Search Space
+        self.search_space_roi_checkbox = QCheckBox(self)
+        self.search_space_roi_checkbox.move(120, 271)
+        self.search_space_roi_checkbox.setChecked(False)
+        #self.search_space_roi_checkbox.stateChanged.connect(self.clickBox)
+
+        # Label STOPLOSS Search Space:
+        self.search_space_stoploss_label = QLabel(self)
+        self.search_space_stoploss_label.setText('Stoploss:')
+        self.search_space_stoploss_label.move(150, 270)
+        # Checkbox STOPLOSS Search Space
+        self.search_space_stoploss_checkbox = QCheckBox(self)
+        self.search_space_stoploss_checkbox.move(195, 271)
+        self.search_space_stoploss_checkbox.setChecked(False)
+        #self.search_space_stoploss_checkbox.stateChanged.connect(self.clickBox)
+
+        # Label TRAILING Search Space:
+        self.search_space_trailing_label = QLabel(self)
+        self.search_space_trailing_label.setText('Trailing:')
+        self.search_space_trailing_label.move(230, 270)
+        # Checkbox TRAILING Search Space
+        self.search_space_trailing_checkbox = QCheckBox(self)
+        self.search_space_trailing_checkbox.move(269, 271)
+        self.search_space_trailing_checkbox.setChecked(False)
+        #self.search_space_trailing_checkbox.stateChanged.connect(self.clickBox)
+
+        # Label PROTECTIONS Search Space:
+        self.search_space_protections_label = QLabel(self)
+        self.search_space_protections_label.setText('Protect:')
+        self.search_space_protections_label.move(290, 270)
+        # Checkbox PROTECTIONS Search Space
+        self.search_space_protections_checkbox = QCheckBox(self)
+        self.search_space_protections_checkbox.move(330, 271)
+        self.search_space_protections_checkbox.setChecked(False)
+        #self.search_space_protections_checkbox.stateChanged.connect(self.clickBox)
+
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     ex = App()
     sys.exit(app.exec_())
+

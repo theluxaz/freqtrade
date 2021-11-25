@@ -40,13 +40,16 @@ timeframes_json = [{"4":"1631232000000"},# 10 september 2021
                     #     {"0":"BuyerDevDowntrendUpswing"}
                  ]
 
+configs_json = ["normal","nostalgia","nostalgia-other","older-classic"]
 
 hyperopt_loss_functions = ["ShortTradeDurHyperOptLoss","OnlyProfitHyperOptLoss","SharpeHyperOptLoss","SharpeHyperOptLossDaily","SortinoHyperOptLoss",
               "SortinoHyperOptLossDaily","MaxDrawDownHyperOptLoss"]
 
-timesteps = ["1","2","3","4""5"]
+indicators1_default = ['volatility', 'uptrend', 'uptrendsmall', 'sma50', 'sma200', 'sma400', 'sma10k']
 
-config_file = "test-config.json"
+config_file = "run-configuration.json"
+
+fiat_currency="USDT"
 
 class App(QWidget):
 
@@ -74,6 +77,9 @@ class App(QWidget):
                 self.timeframes_label.append(key)
                 self.timeframes.append(value)
 
+        # Set configs
+        self.configs = configs_json
+
         f = open(config_file)
         self.data = json.load(f)
         f.close()
@@ -93,7 +99,7 @@ class App(QWidget):
         self.label_strategy.move(25, 10)
         # Dropdown strategy
         self.combobox_strategy = QComboBox(self)
-        self.combobox_strategy.setGeometry(20, 30, 150, 30)
+        self.combobox_strategy.setGeometry(20, 30, 220, 30)
         self.combobox_strategy.addItems(self.strategies_label)
         self.combobox_strategy.setCurrentIndex(self.data["strategy"])
         self.combobox_strategy.currentIndexChanged.connect(self.on_select_strategy)
@@ -324,11 +330,10 @@ class App(QWidget):
         self.backtest_button.move(670,324)
         self.backtest_button.clicked.connect(self.on_click_backtest)
 
-        ## TEMP ------------------------------------------
         # Button backtest
-        self.backtest_button=QPushButton('Save JSON',self)
+        self.backtest_button=QPushButton('Load JSON',self)
         self.backtest_button.move(670,354)
-        self.backtest_button.clicked.connect(self.on_click_save_json)
+        self.backtest_button.clicked.connect(self.update_config_pairs)
 
         # Button Show Plot
         self.plot_button=QPushButton('Show Plot',self)
@@ -336,15 +341,59 @@ class App(QWidget):
         self.plot_button.move(760,324)
         self.plot_button.clicked.connect(self.on_click_plot)
 
+
+
+        # Config  label
+        self.label_config = QLabel(self)
+        self.label_config.setText('Config:')
+        self.label_config.move(735, 72)
+        # Config Default label
+        self.label_config_default = QLabel(self)
+        self.label_config_default.setText('Default:')
+        self.label_config_default.move(675, 100)
+        # Config Default checkbox
+        self.checkbox_config_default = QCheckBox(self)
+        self.checkbox_config_default.move(720,100)
+        self.checkbox_config_default.setChecked(self.data["config_default"])
+        self.checkbox_config_default.stateChanged.connect(self.checkbox_config)
+        # Config dropdown
+        self.dropdown_config = QComboBox(self)
+        self.dropdown_config.setGeometry(750, 96, 85, 20)
+        self.dropdown_config.addItems(self.configs)
+        self.dropdown_config.setCurrentIndex(self.data["config_selection"])
+        self.dropdown_config.currentIndexChanged.connect(self.on_select_config)
+        if(self.data["config_default"]):
+            self.dropdown_config.hide()
+
+        # Button load config pairs
+        self.backtest_button=QPushButton('Config Pairs',self)
+        self.backtest_button.move(750,120)
+        self.backtest_button.clicked.connect(self.load_config_pairs)
+
+
+        # # Plot Pair label
+        # self.label_plot_pair = QLabel(self)
+        # self.label_plot_pair.setText('Plot Pair:')
+        # self.label_plot_pair.move(705, 300)
+        # Plot Pair dropdown
+        self.dropdown_plot_pair = QComboBox(self)
+        self.dropdown_plot_pair.setGeometry(761, 300, 73, 20)
+        self.dropdown_plot_pair.addItems(self.data["pairs1"].split())
+        self.dropdown_plot_pair.setCurrentIndex(self.data["plot_pair"])
+        self.dropdown_plot_pair.currentIndexChanged.connect(self.on_select_plot_pair)
+
+
+
+
         # Profit plot label
         self.display_profit_label = QLabel(self)
         self.display_profit_label.setText('Profit')
-        self.display_profit_label.move(789,302)
-        # Time Until Checkbox Date
+        self.display_profit_label.move(789,275)
+        # Profit plot Checkbox Date
         self.display_profit_checkbox = QCheckBox(self)
-        self.display_profit_checkbox.move(820,302)
+        self.display_profit_checkbox.move(820,275)
+        self.display_profit_checkbox.setChecked(self.data["plot_profit"])
         self.display_profit_checkbox.stateChanged.connect(self.checkbox_profit)
-
 
         # Label Run Command args
         self.run_command_args_label = QLabel(self)
@@ -408,7 +457,7 @@ class App(QWidget):
         # Checkbox ALL Search Space
         self.search_space_all_checkbox = QCheckBox(self)
         self.search_space_all_checkbox.move(118, 251)
-        self.search_space_all_checkbox.setChecked(False)
+        self.search_space_all_checkbox.setChecked(self.data["hyperopt"]["search_space_all"])
         self.search_space_all_checkbox.stateChanged.connect(self.checkbox_search_space_all)
 
         # Label DEFAULT Search Space:
@@ -418,7 +467,7 @@ class App(QWidget):
         # Checkbox DEFAULT Search Space
         self.search_space_default_checkbox = QCheckBox(self)
         self.search_space_default_checkbox.move(191, 251)
-        self.search_space_default_checkbox.setChecked(False)
+        self.search_space_default_checkbox.setChecked(self.data["hyperopt"]["search_space_default"])
         self.search_space_default_checkbox.stateChanged.connect(self.checkbox_search_space_default)
 
         # Label BUY Search Space:
@@ -428,7 +477,7 @@ class App(QWidget):
         # Checkbox BUY Search Space
         self.search_space_buy_checkbox = QCheckBox(self)
         self.search_space_buy_checkbox.move(254, 251)
-        self.search_space_buy_checkbox.setChecked(False)
+        self.search_space_buy_checkbox.setChecked(self.data["hyperopt"]["search_space_buy"])
         self.search_space_buy_checkbox.stateChanged.connect(self.checkbox_search_space_buy)
 
         # Label SELL Search Space:
@@ -438,7 +487,7 @@ class App(QWidget):
         # Checkbox SELL Search Space
         self.search_space_sell_checkbox = QCheckBox(self)
         self.search_space_sell_checkbox.move(312, 251)
-        self.search_space_sell_checkbox.setChecked(False)
+        self.search_space_sell_checkbox.setChecked(self.data["hyperopt"]["search_space_sell"])
         self.search_space_sell_checkbox.stateChanged.connect(self.checkbox_search_space_sell)
 
         # Label ROI Search Space:
@@ -448,7 +497,7 @@ class App(QWidget):
         # Checkbox ROI Search Space
         self.search_space_roi_checkbox = QCheckBox(self)
         self.search_space_roi_checkbox.move(120, 271)
-        self.search_space_roi_checkbox.setChecked(False)
+        self.search_space_roi_checkbox.setChecked(self.data["hyperopt"]["search_space_roi"])
         self.search_space_roi_checkbox.stateChanged.connect(self.checkbox_search_space_roi)
 
         # Label STOPLOSS Search Space:
@@ -458,7 +507,7 @@ class App(QWidget):
         # Checkbox STOPLOSS Search Space
         self.search_space_stoploss_checkbox = QCheckBox(self)
         self.search_space_stoploss_checkbox.move(195, 271)
-        self.search_space_stoploss_checkbox.setChecked(False)
+        self.search_space_stoploss_checkbox.setChecked(self.data["hyperopt"]["search_space_stoploss"])
         self.search_space_stoploss_checkbox.stateChanged.connect(self.checkbox_search_space_stoploss)
 
         # Label TRAILING Search Space:
@@ -468,7 +517,7 @@ class App(QWidget):
         # Checkbox TRAILING Search Space
         self.search_space_trailing_checkbox = QCheckBox(self)
         self.search_space_trailing_checkbox.move(269, 271)
-        self.search_space_trailing_checkbox.setChecked(False)
+        self.search_space_trailing_checkbox.setChecked(self.data["hyperopt"]["search_space_trailing"])
         self.search_space_trailing_checkbox.stateChanged.connect(self.checkbox_search_space_trailing)
 
         # Label PROTECTIONS Search Space:
@@ -478,7 +527,7 @@ class App(QWidget):
         # Checkbox PROTECTIONS Search Space
         self.search_space_protections_checkbox = QCheckBox(self)
         self.search_space_protections_checkbox.move(330, 271)
-        self.search_space_protections_checkbox.setChecked(False)
+        self.search_space_protections_checkbox.setChecked(self.data["hyperopt"]["search_space_protect"])
         self.search_space_protections_checkbox.stateChanged.connect(self.checkbox_search_space_protect)
 
 
@@ -555,28 +604,121 @@ class App(QWidget):
 
     @pyqtSlot()
     def on_click_backtest(self):
+        self.update_config_pairs(self)
         self.on_click_save_json()
-        main(["backtesting", "--timeframe" , "15m", "--strategy", "DevLukas15min","--export","trades","--timerange=1625097600000-"])
+        time_until = ""
+        if(self.data["time_until_enabled"]):
+            time_until = self.data["time_until"]
+
+        command_list = ["backtesting","--config", self.data["config"], "--timeframe" , "15m", "--strategy",self.strategies[self.data["strategy"]],"--export","trades","--timerange="+self.data["time_from"]+"-"+time_until]
+
+        print(command_list)
+        main(command_list)
 
     @pyqtSlot()
     def on_click_plot(self):
+        self.update_config_pairs()
         self.on_click_save_json()
-        main(["plot-dataframe", "--timeframe" , "15m", "--strategy", "DevLukas15min","--export","trades","--timerange=1625097600000-"])
 
+        time_until = ""
+        if(self.data["time_until_enabled"]):
+            time_until = self.data["time_until"]
+
+        pair = self.data["pairs1"].split()[self.data["plot_pair"]]
+
+        command = "plot-dataframe"
+        if(self.data["time_until_enabled"]):
+            command = "plot-profit"
+
+        indicators1 = []
+        indicators2 = []
+        indicators3 = []
+        if(self.data["indicators1"]["default"]):
+            indicators1 = ["--indicators1"]
+            for item in indicators1_default:
+                indicators1.append(item)
+        if(self.data["indicators1"]["enabled"]):
+            if(len(indicators1) <= 0):
+                indicators1 = ["--indicators1"]
+            for item in self.data["indicators1"]["text"].split():
+                indicators1.append(item)
+
+        if(self.data["indicators2"]["enabled"]):
+            indicators2 = ["--indicators2"]
+            for item in self.data["indicators2"]["text"].split():
+                indicators2.append(item)
+        if(self.data["indicators3"]["enabled"]):
+            indicators3 = ["--indicators3"]
+            for item in self.data["indicators3"]["text"].split():
+                indicators3.append(item)
+
+
+        command_list = [command,"--config", self.data["config"], "--timeframe" , "15m", "--strategy", self.strategies[self.data["strategy"]],"-p",pair+"/"+fiat_currency,"--timerange="+str(self.data["time_from"])+"-"+str(time_until)]
+
+        if(len(indicators1)>0):
+            command_list.extend(indicators1)
+        if(len(indicators2)>0):
+            command_list.extend(indicators2)
+        if(len(indicators3)>0):
+            command_list.extend(indicators3)
+
+        print(command_list)
+        main(command_list)
+
+    ## TO BE COMPLETED
     @pyqtSlot()
     def on_click_hyperopt(self):
-        self.on_click_save_json()
-        main(["hyperopt", "--timeframe" , "15m", "--strategy", "DevLukas15min","--export","trades","--timerange=1625097600000-"])
+        if(self.data["hyperopt"]["hyperopt"]):
+            self.update_config_pairs()
+            self.on_click_save_json()
+            time_until = ""
+            if(self.data["time_until_enabled"]):
+                time_until = self.data["time_until"]
+
+            search_spaces = ["--spaces"]
+            if(self.data["hyperopt"]["search_space_all"]):
+                search_spaces.append("all")
+            if(self.data["hyperopt"]["search_space_default"]):
+                search_spaces.append("default")
+            if(self.data["hyperopt"]["search_space_buy"]):
+                search_spaces.append("buy")
+            if(self.data["hyperopt"]["search_space_sell"]):
+                search_spaces.append("sell")
+            if(self.data["hyperopt"]["search_space_roi"]):
+                search_spaces.append("roi")
+            if(self.data["hyperopt"]["search_space_stoploss"]):
+                search_spaces.append("stoploss")
+            if(self.data["hyperopt"]["search_space_trailing"]):
+                search_spaces.append("trailing")
+            if(self.data["hyperopt"]["search_space_protect"]):
+                search_spaces.append("protect")
+
+
+
+
+            command_list = ["hyperopt","--config", self.data["config"], "--timeframe" , "15m", "--strategy", self.strategies[self.data["strategy"]],"-e",self.data["hyperopt"]["epochs"],"--timerange="+str(self.data["time_from"])+"-"+str(time_until),"--hyperopt-loss",hyperopt_loss_functions[self.data["hyperopt"]["loss_function"]]]
+
+            if(len(search_spaces)>1):
+                command_list.extend(search_spaces)
+            else:
+                print("At least one search space should be selected!")
+
+            print(command_list)
+            main(command_list)
+        else:
+            print("Hyperopt is disabled")
 
     @pyqtSlot()
     def on_click_15m(self):
+        self.update_config_pairs(self)
         self.on_click_save_json()
-        main(["download-data", "--timeframe" , "15m", "--strategy", "DevLukas15min","--export","trades","--timerange=1625097600000-"])
+        main(["download-data", "-t" , "15m"])
 
     @pyqtSlot()
     def on_click_1h(self):
+        self.update_config_pairs(self)
         self.on_click_save_json()
-        main(["download-data", "--timeframe" , "15m", "--strategy", "DevLukas15min","--export","trades","--timerange=1625097600000-"])
+        main(["download-data", "-t" , "1h"])
 
     @pyqtSlot()
     def checkbox_indicators1(self):
@@ -740,10 +882,20 @@ class App(QWidget):
 
     @pyqtSlot()
     def checkbox_profit(self):
-        if(self.data["profit_enable"] == True):
-            self.data["profit_enable"] = False
+        if(self.data["plot_profit"] == True):
+            self.data["plot_profit"] = False
         else:
-            self.data["profit_enable"] = True
+            self.data["plot_profit"] = True
+
+    @pyqtSlot()
+    def checkbox_config(self):
+        if(self.data["config_default"] == True):
+            self.data["config_default"] = False
+            self.dropdown_config.show()
+        else:
+            self.data["config"] = "config.json"
+            self.data["config_default"] = True
+            self.dropdown_config.hide()
 
     def on_select_strategy(self,i):
         self.data["strategy"] = i
@@ -761,6 +913,15 @@ class App(QWidget):
         timestamp = self.timeframes[i]
         self.data["time_until"] = timestamp
         self.update_display_dates()
+
+    def on_select_config(self,i):
+        self.data["config_selection"] = i
+        config = self.configs[i]
+        self.data["config"] = "config-"+str(config)+".json"
+
+    def on_select_plot_pair(self,i):
+        self.data["plot_pair"] = i
+
 
     def on_select_from_date(self,date):
         print("Changing from date")
@@ -792,10 +953,52 @@ class App(QWidget):
         self.data["time_until"] = final_timestamp
         self.update_display_dates()
 
+
+
+    # Updates chosen chosen with pairs from GUI
+    def update_config_pairs(self):
+        config_url = file_dir+"/user_data/"+self.data["config"]
+        print(config_url)
+        f = open(config_url)
+        config_json = json.load(f)
+        f.close()
+
+        pairs = self.data["pairs1"]
+        processed_pairs =[]
+        for pair in pairs.split():
+            processed_pairs.append(pair+"/"+fiat_currency)
+        config_json["exchange"]["pair_whitelist"] = processed_pairs
+        config_json = update_config_funds(config_json)
+        try:
+            with open(config_url, 'w') as file:
+                json.dump(config_json, file)
+        except Exception as e:
+            print(e)
+
+    # Loads the pairlist from config to the GUI
+    def load_config_pairs(self):
+        config_url = file_dir+"/user_data/"+self.data["config"]
+        f = open(config_url)
+        config_json = json.load(f)
+        f.close()
+
+        processed_pair_text=""
+
+        for pair in config_json["exchange"]["pair_whitelist"]:
+            processed_pair = pair.strip("/"+fiat_currency)
+            processed_pair_text.append(processed_pair+"/n")
+        self.data["pairs1"] = processed_pair
+
+
     def closeEvent(self, event):
         self.on_click_save_json()
         sys.exit(0)
 
+    # Updates the balance and order size for the config
+def update_config_funds(config_json):
+    config_json["dry_run_wallet"] = len(config_json["exchange"]["pair_whitelist"])*1000
+    config_json["stake_amount"] = 900
+    return config_json
 
 def unix_to_datetime(timestamp,to_string,to_simple):
     if(to_string):

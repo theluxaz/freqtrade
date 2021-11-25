@@ -28,11 +28,11 @@ strategy_json = [{"DEV":"DevLukas15min"},
                  ]
 
 
-timeframes_json = [{"0":"1631232000000"},# 10 september 2021
-                    {"1":"1625097600000"},# 1 july 2021
+timeframes_json = [{"4":"1631232000000"},# 10 september 2021
+                    {"3":"1625097600000"},# 1 july 2021
                  {"2":"1617235200000"},
-                  {"3":"1609464867000"},
-                   {"4":"1600312000000"}
+                  {"1":"1609464867000"},
+                   {"0":"1600312000000"}
                     # {"5":"BuyerDevLow"},
                     #  {"6":"BuyerDevLongUptrend"},
                     #   {"7":"BuyerDevSlowDowntrend"},
@@ -78,7 +78,7 @@ class App(QWidget):
         self.data = json.load(f)
         f.close()
 
-        print(self.data)
+        app.aboutToQuit.connect(self.on_click_save_json)
 
         self.initUI()
 
@@ -86,14 +86,6 @@ class App(QWidget):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
 
-        # Create textbox
-        # self.textbox = QLineEdit(self)
-        # self.textbox.move(20, 70)
-        # self.textbox.resize(150,20)
-
-        # Create a button in the window
-        # self.button = QPushButton('Show text', self)
-        # self.button.move(20,80)
 
         # Label strategy
         self.label_strategy = QLabel(self)
@@ -258,6 +250,24 @@ class App(QWidget):
         self.time_difference_label.move(610, 72)
 
 
+
+        # Download Data label
+        self.label_download_data = QLabel(self)
+        self.label_download_data.setText('Download data:')
+        self.label_download_data.move(726, 12)
+        # Download Data 15m
+        self.backtest_button=QPushButton('15m',self)
+        self.backtest_button.setToolTip('Thank you for thinking about me')
+        self.backtest_button.move(690, 32)
+        self.backtest_button.clicked.connect(self.on_click_15m)
+        # Download Data 1h
+        self.backtest_button=QPushButton('1h',self)
+        self.backtest_button.setToolTip('Thank you for thinking about me')
+        self.backtest_button.move(760, 32)
+        self.backtest_button.clicked.connect(self.on_click_1h)
+
+
+
          # Label Pairs 1
         self.pairs1_label = QLabel(self)
         self.pairs1_label.setText('Pairs:')
@@ -266,6 +276,8 @@ class App(QWidget):
         self.pairs1_textbox = QPlainTextEdit(self)
         self.pairs1_textbox.move(355, 100)
         self.pairs1_textbox.resize(60,246)
+        self.pairs1_textbox.setPlainText(self.data["pairs1"])
+        self.pairs1_textbox.textChanged.connect(self.on_textchange_pairs1)
 
          # Label Cache Pairs 2
         self.pairs2_label = QLabel(self)
@@ -275,6 +287,8 @@ class App(QWidget):
         self.pairs2_textbox = QPlainTextEdit(self)
         self.pairs2_textbox.move(510, 100)
         self.pairs2_textbox.resize(60,246)
+        self.pairs2_textbox.setPlainText(self.data["pairs2"])
+        self.pairs2_textbox.textChanged.connect(self.on_textchange_pairs2)
 
          # Label All Pairs 3
         self.pairs3_label = QLabel(self)
@@ -284,6 +298,8 @@ class App(QWidget):
         self.pairs3_textbox = QPlainTextEdit(self)
         self.pairs3_textbox.move(600, 100)
         self.pairs3_textbox.resize(60,246)
+        self.pairs3_textbox.setPlainText(self.data["pairs3"])
+        self.pairs3_textbox.textChanged.connect(self.on_textchange_pairs3)
 
 
 
@@ -306,7 +322,7 @@ class App(QWidget):
         self.backtest_button=QPushButton('Backtest',self)
         self.backtest_button.setToolTip('Thank you for thinking about me')
         self.backtest_button.move(670,324)
-        #self.backtest_button.clicked.connect(self.on_click)
+        self.backtest_button.clicked.connect(self.on_click_backtest)
 
         ## TEMP ------------------------------------------
         # Button backtest
@@ -318,7 +334,7 @@ class App(QWidget):
         self.plot_button=QPushButton('Show Plot',self)
         self.plot_button.setToolTip('Thank you for thinking about me')
         self.plot_button.move(760,324)
-        #self.plot_button.clicked.connect(self.on_click)
+        self.plot_button.clicked.connect(self.on_click_plot)
 
         # Profit plot label
         self.display_profit_label = QLabel(self)
@@ -327,48 +343,13 @@ class App(QWidget):
         # Time Until Checkbox Date
         self.display_profit_checkbox = QCheckBox(self)
         self.display_profit_checkbox.move(820,302)
-        #self.display_profit_checkbox.stateChanged.connect(self.clickBox)
+        self.display_profit_checkbox.stateChanged.connect(self.checkbox_profit)
 
 
         # Label Run Command args
         self.run_command_args_label = QLabel(self)
         self.run_command_args_label.setText('--Indicator1 test test2 test3 --Indicator2 sma10k rsi macd rsi100')
         self.run_command_args_label.move(18,356)
-
-
-        #         # Label strategy
-        # self.label_strategy = QLabel(self)
-        # self.label_strategy.setText('Strategy:')
-        # self.label_strategy.move(25, 10)
-        # # Dropdown strategy
-        # self.combo_box = QComboBox(self)
-        # self.combo_box.setGeometry(20, 30, 150, 30)
-        # self.combo_box.addItems(strategies)
-        #
-        #
-        # #self.selection, okPressed = QInputDialog.getItem(self, "Select Basic or Advanced", "", strategies, 0, False)
-        #
-        # if self.combo_box == strategies[0]:
-        #     print('DevLukas15min')
-        # if self.combo_box == strategies[1]:
-        #     print('ProdLukas15min')
-        # # connect button to function on_click
-        # #self.button.clicked.connect(self.on_click)
-        #
-        #
-
-        #
-        #
-        # button_plot=QPushButton('Show graph',self)
-        # button_plot.setToolTip('Thank you for thinking about me')
-        # button_plot.move(200,140)
-
-        # try:
-        #     with open(config_file, 'w') as file:
-        #         json.dump(self.data, file)
-        #     print("lol")
-        # except Exception as e:
-        #     print(e)
 
 
         self.show()
@@ -556,74 +537,80 @@ class App(QWidget):
     def update_display_dates(self):
         print("Updating display dates")
         self.time_from_final_date_label.setText(unix_to_datetime(self.data["time_from"],True,True))
+        self.time_from_final_date_label.adjustSize()
         self.time_until_final_date_label.setText(unix_to_datetime(self.data["time_until"],True,True))
+        self.time_until_final_date_label.adjustSize()
         self.time_difference_label.setText("Days: " + str(days_between_timestamps(self.data["time_from"],self.data["time_until"])))
         self.time_difference_label.adjustSize()
 
 
     @pyqtSlot()
     def on_click_save_json(self):
-        #print(self.combobox_strategy.currentText())
-        ## UNIX TO DATE
-        print(str(1625097600000/1000))
-        from_date_s = datetime.datetime.fromtimestamp(1625097600000/1000)#.isoformat()
-        date_str = from_date_s.strftime("%d %b %Y %H:%M:%S")
-        print(date_str)
-
-        ## DATE TO UNIX
-        date_obj = datetime.datetime.strptime(date_str, "%d %b %Y %H:%M:%S")
-        print(str(date_obj))
-        timestamp_date = date_obj.timestamp() * 1000
-        print(str(timestamp_date))
-
-
-        # try:
-        #     with open(config_file, 'w') as file:
-        #         json.dump(self.data, file)
-        # except Exception as e:
-        #     print(e)
+        print("Saving data to JSON")
+        try:
+            with open(config_file, 'w') as file:
+                json.dump(self.data, file)
+        except Exception as e:
+            print(e)
 
     @pyqtSlot()
     def on_click_backtest(self):
-
+        self.on_click_save_json()
         main(["backtesting", "--timeframe" , "15m", "--strategy", "DevLukas15min","--export","trades","--timerange=1625097600000-"])
 
     @pyqtSlot()
     def on_click_plot(self):
-
+        self.on_click_save_json()
         main(["plot-dataframe", "--timeframe" , "15m", "--strategy", "DevLukas15min","--export","trades","--timerange=1625097600000-"])
 
     @pyqtSlot()
     def on_click_hyperopt(self):
+        self.on_click_save_json()
         main(["hyperopt", "--timeframe" , "15m", "--strategy", "DevLukas15min","--export","trades","--timerange=1625097600000-"])
+
+    @pyqtSlot()
+    def on_click_15m(self):
+        self.on_click_save_json()
+        main(["download-data", "--timeframe" , "15m", "--strategy", "DevLukas15min","--export","trades","--timerange=1625097600000-"])
+
+    @pyqtSlot()
+    def on_click_1h(self):
+        self.on_click_save_json()
+        main(["download-data", "--timeframe" , "15m", "--strategy", "DevLukas15min","--export","trades","--timerange=1625097600000-"])
 
     @pyqtSlot()
     def checkbox_indicators1(self):
         if(self.data["indicators1"]["enabled"] == True):
             self.data["indicators1"]["enabled"] = False
+            self.indicator1_textbox.setEnabled(False)
         else:
             self.data["indicators1"]["enabled"] = True
+            self.indicator1_textbox.setEnabled(True)
 
     @pyqtSlot()
     def checkbox_indicators1_default(self):
         if(self.data["indicators1"]["default"] == True):
             self.data["indicators1"]["default"] = False
         else:
-            self.datad["indicators1"]["default"] = True
+            self.data["indicators1"]["default"] = True
 
     @pyqtSlot()
     def checkbox_indicators2(self):
         if(self.data["indicators2"]["enabled"] == True):
             self.data["indicators2"]["enabled"] = False
+            self.indicator2_textbox.setEnabled(False)
         else:
             self.data["indicators2"]["enabled"] = True
+            self.indicator2_textbox.setEnabled(True)
 
     @pyqtSlot()
     def checkbox_indicators3(self):
         if(self.data["indicators3"]["enabled"] == True):
             self.data["indicators3"]["enabled"] = False
+            self.indicator3_textbox.setEnabled(False)
         else:
             self.data["indicators3"]["enabled"] = True
+            self.indicator3_textbox.setEnabled(True)
 
     @pyqtSlot()
     def on_textchange_indicators1(self):
@@ -635,6 +622,16 @@ class App(QWidget):
     def on_textchange_indicators3(self):
         self.data["indicators3"]["text"] = self.indicator3_textbox.text()
 
+
+    @pyqtSlot()
+    def on_textchange_pairs1(self):
+        self.data["pairs1"] = self.pairs1_textbox.toPlainText().upper()
+    @pyqtSlot()
+    def on_textchange_pairs2(self):
+        self.data["pairs2"] = self.pairs2_textbox.toPlainText().upper()
+    @pyqtSlot()
+    def on_textchange_pairs3(self):
+        self.data["pairs3"] = self.pairs3_textbox.toPlainText().upper()
 
 
 
@@ -755,8 +752,15 @@ class App(QWidget):
 
     def on_select_time_from(self,i):
         self.data["time_from_index"] = i
+        timestamp = self.timeframes[i]
+        self.data["time_from"] = timestamp
+        self.update_display_dates()
+
     def on_select_time_until(self,i):
         self.data["time_until_index"] = i
+        timestamp = self.timeframes[i]
+        self.data["time_until"] = timestamp
+        self.update_display_dates()
 
     def on_select_from_date(self,date):
         print("Changing from date")
@@ -788,6 +792,11 @@ class App(QWidget):
         self.data["time_until"] = final_timestamp
         self.update_display_dates()
 
+    def closeEvent(self, event):
+        self.on_click_save_json()
+        sys.exit(0)
+
+
 def unix_to_datetime(timestamp,to_string,to_simple):
     if(to_string):
         from_date_s = datetime.datetime.fromtimestamp(int(timestamp)/1000)
@@ -810,6 +819,7 @@ def days_between_timestamps(from_timestamp,until_timestamp):
     difference = difference /1000
     days = int(difference // (24 * 3600))
     return days
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

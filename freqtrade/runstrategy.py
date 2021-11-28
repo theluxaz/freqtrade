@@ -16,6 +16,8 @@ import math
 from collections import OrderedDict
 
 
+computer_processing_power = 1.3   # 0.00001 to.. 2.0
+
 strategy_json = [{"DEV":"DevLukas15min"},
                  {"PROD":"ProdLukas15min"},
                   {"BUYER HIGH":"BuyerDevHigh"},
@@ -28,11 +30,11 @@ strategy_json = [{"DEV":"DevLukas15min"},
                  ]
 
 
-timeframes_json = [{"4":"1631232000000"},# 10 september 2021
-                    {"3":"1625097600000"},# 1 july 2021
-                 {"2":"1617235200000"},
-                  {"1":"1609464867000"},
-                   {"0":"1600312000000"}
+timeframes_json = [{"4":1631232000000},# 10 september 2021
+                    {"3":1625097600000},# 1 july 2021
+                 {"2":1617235200000},
+                  {"1":1609464867000},
+                   {"0":1600312000000}
                     # {"5":"BuyerDevLow"},
                     #  {"6":"BuyerDevLongUptrend"},
                     #   {"7":"BuyerDevSlowDowntrend"},
@@ -86,11 +88,21 @@ class App(QWidget):
 
         app.aboutToQuit.connect(self.on_click_save_json)
 
+        self.backtesting_clicked = False
+        self.show_plot_clicked = False
+        self.hyperopt_clicked = False
+        self.command_list = []
+
+        self.processing_power = 0
+
+
         self.initUI()
 
     def initUI(self):
         self.setWindowTitle(self.title)
         self.setGeometry(self.left, self.top, self.width, self.height)
+
+        self.command = self.data["command"]
 
 
         # Label strategy
@@ -172,7 +184,7 @@ class App(QWidget):
         self.time_from_dropdown = QComboBox(self)
         self.time_from_dropdown.setGeometry(310, 30, 150, 30)
         self.time_from_dropdown.addItems(self.timeframes_label)
-        self.time_from_dropdown.setCurrentIndex(self.data["time_from_index"])
+        self.time_from_dropdown.setCurrentIndex(self.data["time"]["time_from_index"])
         self.time_from_dropdown.currentIndexChanged.connect(self.on_select_time_from)
         # Time From Calendar
         self.time_from_calendar = QDateEdit(self,calendarPopup=True)
@@ -180,7 +192,7 @@ class App(QWidget):
         self.time_from_calendar.setDateTime(QtCore.QDateTime.currentDateTime())
         self.time_from_calendar.dateChanged.connect(self.on_select_from_date)
         self.time_from_calendar.hide()
-        if(self.data["time_from_date"] == True):
+        if(self.data["time"]["time_from_date"] == True):
             self.time_from_calendar.show()
             self.time_from_dropdown.hide()
         # Time From label checkbox
@@ -190,10 +202,11 @@ class App(QWidget):
         # Time From Checkbox Date
         self.time_from_checkbox_date = QCheckBox(self)
         self.time_from_checkbox_date.move(446, 13)
+        self.time_from_checkbox_date.setChecked(self.data["time"]["time_from_date"])
         self.time_from_checkbox_date.stateChanged.connect(self.checkbox_time_from_date)
         # Time From label
         self.time_from_final_date_label = QLabel(self)
-        self.time_from_final_date_label.setText(unix_to_datetime(self.data["time_from"],True,True))
+        self.time_from_final_date_label.setText(unix_to_datetime(self.data["time"]["time_from"],True,True))
         self.time_from_final_date_label.move(404, 72)
 
         ## ^ ^ WHEN THIS ONE IS UPDATED, UPDATE THE TIME UNTIL TO THE NEXT NUMBER AUTOMATICALLY
@@ -219,12 +232,13 @@ class App(QWidget):
         # Time Until Checkbox Date
         self.time_until_checkbox_date = QCheckBox(self)
         self.time_until_checkbox_date.move(646, 13)
+        self.time_until_checkbox_date.setChecked(self.data["time"]["time_until_date"])
         self.time_until_checkbox_date.stateChanged.connect(self.checkbox_time_until_date)
         # Time Until Dropdown
         self.time_until_dropdown = QComboBox(self)
         self.time_until_dropdown.setGeometry(510, 30, 150, 30)
         self.time_until_dropdown.addItems(self.timeframes_label)
-        self.time_until_dropdown.setCurrentIndex(self.data["time_until_index"])
+        self.time_until_dropdown.setCurrentIndex(self.data["time"]["time_until_index"])
         self.time_until_dropdown.currentIndexChanged.connect(self.on_select_time_until)
         # Time Until Calendar
         self.time_until_calendar = QDateEdit(self,calendarPopup=True)
@@ -232,27 +246,28 @@ class App(QWidget):
         self.time_until_calendar.setDateTime(QtCore.QDateTime.currentDateTime())
         self.time_until_calendar.dateChanged.connect(self.on_select_until_date)
         self.time_until_calendar.hide()
-        if(self.data["time_until_date"] == True):
+        if(self.data["time"]["time_until_date"] == True):
             self.time_until_calendar.show()
             self.time_until_dropdown.hide()
         # Time Until Checkbox
         self.time_until_checkbox = QCheckBox(self)
         self.time_until_checkbox.move(667, 37)
         self.time_until_checkbox.setChecked(True)
+        self.time_until_checkbox.setChecked(self.data["time"]["time_until_enabled"])
         self.time_until_checkbox.stateChanged.connect(self.checkbox_time_until)
-        if(self.data["time_until_enabled"] == False):
+        if(self.data["time"]["time_until_enabled"] == False):
             self.time_until_checkbox_date.setEnabled(False)
-            if(self.data["time_until_date"] == True):
+            if(self.data["time"]["time_until_date"] == True):
                 self.time_until_calendar.setEnabled(False)
             else:
                 self.time_until_dropdown.setEnabled(False)
         # Time From final date label
         self.time_until_final_date_label = QLabel(self)
-        self.time_until_final_date_label.setText(unix_to_datetime(self.data["time_until"],True,True))
+        self.time_until_final_date_label.setText(unix_to_datetime(self.data["time"]["time_until"],True,True))
         self.time_until_final_date_label.move(504, 72)
         # Time difference label
         self.time_difference_label = QLabel(self)
-        self.time_difference_label.setText("Days: " + str(days_between_timestamps(self.data["time_from"],self.data["time_until"])))
+        self.time_difference_label.setText("Days: " + str(days_between_timestamps(self.data["time"]["time_from"],self.data["time"]["time_until"])))
         self.time_difference_label.move(610, 72)
 
 
@@ -263,12 +278,12 @@ class App(QWidget):
         self.label_download_data.move(726, 12)
         # Download Data 15m
         self.backtest_button=QPushButton('15m',self)
-        self.backtest_button.setToolTip('Thank you for thinking about me')
+        self.backtest_button.setToolTip('Download 15m data for the selected pairs')
         self.backtest_button.move(690, 32)
         self.backtest_button.clicked.connect(self.on_click_15m)
         # Download Data 1h
         self.backtest_button=QPushButton('1h',self)
-        self.backtest_button.setToolTip('Thank you for thinking about me')
+        self.backtest_button.setToolTip('Download 1h data for the selected pairs')
         self.backtest_button.move(760, 32)
         self.backtest_button.clicked.connect(self.on_click_1h)
 
@@ -326,18 +341,13 @@ class App(QWidget):
 
         # Button backtest
         self.backtest_button=QPushButton('Backtest',self)
-        self.backtest_button.setToolTip('Thank you for thinking about me')
+        self.backtest_button.setToolTip('Backtest Data')
         self.backtest_button.move(670,324)
         self.backtest_button.clicked.connect(self.on_click_backtest)
 
-        # Button backtest
-        self.backtest_button=QPushButton('Load JSON',self)
-        self.backtest_button.move(670,354)
-        self.backtest_button.clicked.connect(self.update_config_pairs)
-
         # Button Show Plot
         self.plot_button=QPushButton('Show Plot',self)
-        self.plot_button.setToolTip('Thank you for thinking about me')
+        self.plot_button.setToolTip('Create A plot for the selected pair')
         self.plot_button.move(760,324)
         self.plot_button.clicked.connect(self.on_click_plot)
 
@@ -384,6 +394,24 @@ class App(QWidget):
 
 
 
+        # Pairs no label
+        self.label_pairs_no = QLabel(self)
+        self.label_pairs_no.setText(self.get_pairlist_length())
+        self.label_pairs_no.move(690, 126)
+        self.label_pairs_no.adjustSize()
+        # Processing Backtest  label
+        self.label_backtest_process = QLabel(self)
+        self.label_backtest_process.move(690, 155)
+        self.get_backtest_processing_power()
+        # Processing Plot  label
+        self.label_plot_process = QLabel(self)
+        self.label_plot_process.move(690, 175)
+        self.get_plot_processing_power()
+        # Processing Hyperopt  label
+        self.label_hyperopt_process = QLabel(self)
+        self.label_hyperopt_process.move(690, 195)
+        self.get_hyperopt_processing_power()
+
 
         # Profit plot label
         self.display_profit_label = QLabel(self)
@@ -397,21 +425,13 @@ class App(QWidget):
 
         # Label Run Command args
         self.run_command_args_label = QLabel(self)
-        self.run_command_args_label.setText('--Indicator1 test test2 test3 --Indicator2 sma10k rsi macd rsi100')
+
+        self.run_command_args_label.setText(self.data["command"])
         self.run_command_args_label.move(18,356)
 
 
         self.show()
         self.update_hyperopt()
-
-    @pyqtSlot()
-    def on_click(self):
-        print("saving config1")
-        # textboxValue = self.textbox.text()
-        # QMessageBox.question(self, 'Message - pythonspot.com', "You typed: " + textboxValue, QMessageBox.Ok, QMessageBox.Ok)
-        # self.textbox.setText("BACKTESTIIING")
-
-
 
     def addSearchSpace(self):
 
@@ -448,6 +468,7 @@ class App(QWidget):
         # Button Hyperopt
         self.hyperopt_button=QPushButton('Hyperopt',self)
         self.hyperopt_button.move(255,323)
+        self.hyperopt_button.setToolTip('Start Hyperopting')
         self.hyperopt_button.clicked.connect(self.on_click_hyperopt)
 
         # Label ALL Search Space:
@@ -531,9 +552,6 @@ class App(QWidget):
         self.search_space_protections_checkbox.stateChanged.connect(self.checkbox_search_space_protect)
 
 
-
-
-
     def update_hyperopt(self):
         if self.data["hyperopt"]["hyperopt"]== True:
             self.search_space_label.show()
@@ -585,12 +603,15 @@ class App(QWidget):
 
     def update_display_dates(self):
         print("Updating display dates")
-        self.time_from_final_date_label.setText(unix_to_datetime(self.data["time_from"],True,True))
+        self.time_from_final_date_label.setText(unix_to_datetime(self.data["time"]["time_from"],True,True))
         self.time_from_final_date_label.adjustSize()
-        self.time_until_final_date_label.setText(unix_to_datetime(self.data["time_until"],True,True))
+        self.time_until_final_date_label.setText(unix_to_datetime(self.data["time"]["time_until"],True,True))
         self.time_until_final_date_label.adjustSize()
-        self.time_difference_label.setText("Days: " + str(days_between_timestamps(self.data["time_from"],self.data["time_until"])))
+        self.time_difference_label.setText("Days: " + str(days_between_timestamps(self.data["time"]["time_from"],self.data["time"]["time_until"])))
         self.time_difference_label.adjustSize()
+        self.get_backtest_processing_power()
+        self.get_plot_processing_power()
+        self.get_hyperopt_processing_power()
 
 
     @pyqtSlot()
@@ -604,107 +625,145 @@ class App(QWidget):
 
     @pyqtSlot()
     def on_click_backtest(self):
-        self.update_config_pairs(self)
-        self.on_click_save_json()
-        time_until = ""
-        if(self.data["time_until_enabled"]):
-            time_until = self.data["time_until"]
+        if(self.backtesting_clicked):
+            main(self.command_list)
+            self.backtesting_clicked = False
+            self.show_plot_clicked = False
+            self.hyperopt_clicked = False
+        else:
+            self.update_config_pairs()
+            self.on_click_save_json()
+            self.get_backtest_processing_power()
+            time_until = ""
+            if(self.data["time"]["time_until_enabled"]):
+                time_until = self.data["time"]["time_until"]
 
-        command_list = ["backtesting","--config", self.data["config"], "--timeframe" , "15m", "--strategy",self.strategies[self.data["strategy"]],"--export","trades","--timerange="+self.data["time_from"]+"-"+time_until]
 
-        print(command_list)
-        main(command_list)
+            command_list = ["backtesting","--config", "user_data/"+self.data["config"], "--timeframe" , "15m", "--strategy",self.strategies[self.data["strategy"]],"--export","trades","--timerange="+str(self.data["time"]["time_from"])+"-"+str(time_until)]
+
+            print(command_list)
+            self.command_list = command_list
+            self.data["command"] = ' '.join(command_list)
+            self.run_command_args_label.setText(self.data["command"])
+            self.hyperopt_clicked = False
+            self.backtesting_clicked = True
+            self.show_plot_clicked = False
 
     @pyqtSlot()
     def on_click_plot(self):
-        self.update_config_pairs()
-        self.on_click_save_json()
+        if(self.show_plot_clicked):
+            main(self.command_list)
+            self.backtesting_clicked = False
+            self.show_plot_clicked = False
+            self.hyperopt_clicked = False
+        else:
+            self.update_config_pairs()
+            self.on_click_save_json()
+            self.get_plot_processing_power()
+            print("1")
+            time_until = ""
+            if(self.data["time"]["time_until_enabled"]):
+                time_until = self.data["time"]["time_until"]
 
-        time_until = ""
-        if(self.data["time_until_enabled"]):
-            time_until = self.data["time_until"]
+            pair = self.data["pairs1"].split()[self.data["plot_pair"]]
 
-        pair = self.data["pairs1"].split()[self.data["plot_pair"]]
+            command = "plot-dataframe"
+            if(self.data["plot_profit"]):
+                command = "plot-profit"
 
-        command = "plot-dataframe"
-        if(self.data["time_until_enabled"]):
-            command = "plot-profit"
+            print("2")
 
-        indicators1 = []
-        indicators2 = []
-        indicators3 = []
-        if(self.data["indicators1"]["default"]):
-            indicators1 = ["--indicators1"]
-            for item in indicators1_default:
-                indicators1.append(item)
-        if(self.data["indicators1"]["enabled"]):
-            if(len(indicators1) <= 0):
+            indicators1 = []
+            indicators2 = []
+            indicators3 = []
+            if(self.data["indicators1"]["default"] and self.data["plot_profit"]==False):
                 indicators1 = ["--indicators1"]
-            for item in self.data["indicators1"]["text"].split():
-                indicators1.append(item)
+                for item in indicators1_default:
+                    indicators1.append(item)
+            if(self.data["indicators1"]["enabled"] and self.data["plot_profit"]==False):
+                if(len(indicators1) <= 0):
+                    indicators1 = ["--indicators1"]
+                for item in self.data["indicators1"]["text"].split():
+                    indicators1.append(item)
 
-        if(self.data["indicators2"]["enabled"]):
-            indicators2 = ["--indicators2"]
-            for item in self.data["indicators2"]["text"].split():
-                indicators2.append(item)
-        if(self.data["indicators3"]["enabled"]):
-            indicators3 = ["--indicators3"]
-            for item in self.data["indicators3"]["text"].split():
-                indicators3.append(item)
+            if(self.data["indicators2"]["enabled"] and self.data["plot_profit"]==False):
+                indicators2 = ["--indicators2"]
+                for item in self.data["indicators2"]["text"].split():
+                    indicators2.append(item)
+            if(self.data["indicators3"]["enabled"] and self.data["plot_profit"]==False):
+                indicators3 = ["--indicators3"]
+                for item in self.data["indicators3"]["text"].split():
+                    indicators3.append(item)
 
+            print("3")
+            command_list = [command,"--config", "user_data/"+self.data["config"], "--strategy", self.strategies[self.data["strategy"]],"-p",pair+"/"+fiat_currency,"--timerange="+str(self.data["time"]["time_from"])+"-"+str(time_until)]
 
-        command_list = [command,"--config", self.data["config"], "--timeframe" , "15m", "--strategy", self.strategies[self.data["strategy"]],"-p",pair+"/"+fiat_currency,"--timerange="+str(self.data["time_from"])+"-"+str(time_until)]
+            if(len(indicators1)>0):
+                command_list.extend(indicators1)
+            if(len(indicators2)>0):
+                command_list.extend(indicators2)
+            if(len(indicators3)>0):
+                command_list.extend(indicators3)
 
-        if(len(indicators1)>0):
-            command_list.extend(indicators1)
-        if(len(indicators2)>0):
-            command_list.extend(indicators2)
-        if(len(indicators3)>0):
-            command_list.extend(indicators3)
+            print(command_list)
+            self.command_list = command_list
+            self.data["command"] = ' '.join(command_list)
+            self.run_command_args_label.setText(self.data["command"])
+            self.hyperopt_clicked = False
+            self.backtesting_clicked = False
+            self.show_plot_clicked = True
 
-        print(command_list)
-        main(command_list)
-
-    ## TO BE COMPLETED
     @pyqtSlot()
     def on_click_hyperopt(self):
         if(self.data["hyperopt"]["hyperopt"]):
-            self.update_config_pairs()
-            self.on_click_save_json()
-            time_until = ""
-            if(self.data["time_until_enabled"]):
-                time_until = self.data["time_until"]
-
-            search_spaces = ["--spaces"]
-            if(self.data["hyperopt"]["search_space_all"]):
-                search_spaces.append("all")
-            if(self.data["hyperopt"]["search_space_default"]):
-                search_spaces.append("default")
-            if(self.data["hyperopt"]["search_space_buy"]):
-                search_spaces.append("buy")
-            if(self.data["hyperopt"]["search_space_sell"]):
-                search_spaces.append("sell")
-            if(self.data["hyperopt"]["search_space_roi"]):
-                search_spaces.append("roi")
-            if(self.data["hyperopt"]["search_space_stoploss"]):
-                search_spaces.append("stoploss")
-            if(self.data["hyperopt"]["search_space_trailing"]):
-                search_spaces.append("trailing")
-            if(self.data["hyperopt"]["search_space_protect"]):
-                search_spaces.append("protect")
-
-
-
-
-            command_list = ["hyperopt","--config", self.data["config"], "--timeframe" , "15m", "--strategy", self.strategies[self.data["strategy"]],"-e",self.data["hyperopt"]["epochs"],"--timerange="+str(self.data["time_from"])+"-"+str(time_until),"--hyperopt-loss",hyperopt_loss_functions[self.data["hyperopt"]["loss_function"]]]
-
-            if(len(search_spaces)>1):
-                command_list.extend(search_spaces)
+            if(self.hyperopt_clicked):
+                main(self.command_list)
+                self.backtesting_clicked = False
+                self.show_plot_clicked = False
+                self.hyperopt_clicked = False
             else:
-                print("At least one search space should be selected!")
+                self.update_config_pairs()
+                self.on_click_save_json()
+                self.get_hyperopt_processing_power()
+                time_until = ""
+                if(self.data["time"]["time_until_enabled"]):
+                    time_until = self.data["time"]["time_until"]
 
-            print(command_list)
-            main(command_list)
+                search_spaces = ["--spaces"]
+                if(self.data["hyperopt"]["search_space_all"]):
+                    search_spaces.append("all")
+                if(self.data["hyperopt"]["search_space_default"]):
+                    search_spaces.append("default")
+                if(self.data["hyperopt"]["search_space_buy"]):
+                    search_spaces.append("buy")
+                if(self.data["hyperopt"]["search_space_sell"]):
+                    search_spaces.append("sell")
+                if(self.data["hyperopt"]["search_space_roi"]):
+                    search_spaces.append("roi")
+                if(self.data["hyperopt"]["search_space_stoploss"]):
+                    search_spaces.append("stoploss")
+                if(self.data["hyperopt"]["search_space_trailing"]):
+                    search_spaces.append("trailing")
+                if(self.data["hyperopt"]["search_space_protect"]):
+                    search_spaces.append("protect")
+
+
+
+
+                command_list = ["hyperopt","--config", "user_data/"+self.data["config"], "--timeframe" , "15m", "--strategy", self.strategies[self.data["strategy"]],"-e",self.data["hyperopt"]["epochs"],"--timerange="+str(self.data["time"]["time_from"])+"-"+str(time_until),"--hyperopt-loss",hyperopt_loss_functions[self.data["hyperopt"]["loss_function"]], "--print-all"]
+
+                if(len(search_spaces)>1):
+                    command_list.extend(search_spaces)
+                else:
+                    print("At least one search space should be selected!")
+
+                print(command_list)
+                self.command_list = command_list
+                self.data["command"] = ' '.join(command_list)
+                self.run_command_args_label.setText(self.data["command"])
+                self.hyperopt_clicked = True
+                self.backtesting_clicked = False
+                self.show_plot_clicked = False
         else:
             print("Hyperopt is disabled")
 
@@ -768,6 +827,12 @@ class App(QWidget):
     @pyqtSlot()
     def on_textchange_pairs1(self):
         self.data["pairs1"] = self.pairs1_textbox.toPlainText().upper()
+        self.dropdown_plot_pair.clear()
+        self.dropdown_plot_pair.addItems(self.data["pairs1"].split())
+        self.label_pairs_no.setText("Pairs: "+str(len(self.data["pairs1"].split())))
+        self.label_pairs_no.adjustSize()
+        self.get_backtest_processing_power()
+        self.get_hyperopt_processing_power()
     @pyqtSlot()
     def on_textchange_pairs2(self):
         self.data["pairs2"] = self.pairs2_textbox.toPlainText().upper()
@@ -841,41 +906,39 @@ class App(QWidget):
 
     @pyqtSlot()
     def checkbox_time_from_date(self):
-        if(self.data["time_from_date"] == True):
-            self.data["time_from_date"] = False
+        if(self.data["time"]["time_from_date"] == True):
+            self.data["time"]["time_from_date"] = False
             self.time_from_dropdown.show()
             self.time_from_calendar.hide()
         else:
-            self.data["time_from_date"] = True
+            self.data["time"]["time_from_date"] = True
             self.time_from_calendar.show()
             self.time_from_dropdown.hide()
-        #print(self.data["time_from_date"])
 
     @pyqtSlot()
     def checkbox_time_until_date(self):
-        if(self.data["time_until_date"] == True):
-            self.data["time_until_date"] = False
+        if(self.data["time"]["time_until_date"] == True):
+            self.data["time"]["time_until_date"] = False
             self.time_until_dropdown.show()
             self.time_until_calendar.hide()
         else:
-            self.data["time_until_date"] = True
+            self.data["time"]["time_until_date"] = True
             self.time_until_calendar.show()
             self.time_until_dropdown.hide()
-        #print(self.data["time_until_date"])
 
     @pyqtSlot()
     def checkbox_time_until(self):
-        if(self.data["time_until_enabled"] == True):
-            self.data["time_until_enabled"] = False
+        if(self.data["time"]["time_until_enabled"] == True):
+            self.data["time"]["time_until_enabled"] = False
             self.time_until_checkbox_date.setEnabled(False)
-            if(self.data["time_until_date"] == True):
+            if(self.data["time"]["time_until_date"] == True):
                 self.time_until_calendar.setEnabled(False)
             else:
                 self.time_until_dropdown.setEnabled(False)
         else:
-            self.data["time_until_enabled"] = True
+            self.data["time"]["time_until_enabled"] = True
             self.time_until_checkbox_date.setEnabled(True)
-            if(self.data["time_until_date"] == True):
+            if(self.data["time"]["time_until_date"] == True):
                 self.time_until_calendar.setEnabled(True)
             else:
                 self.time_until_dropdown.setEnabled(True)
@@ -903,15 +966,15 @@ class App(QWidget):
         self.data["hyperopt"]["loss_function"] = i
 
     def on_select_time_from(self,i):
-        self.data["time_from_index"] = i
+        self.data["time"]["time_from_index"] = i
         timestamp = self.timeframes[i]
-        self.data["time_from"] = timestamp
+        self.data["time"]["time_from"] = timestamp
         self.update_display_dates()
 
     def on_select_time_until(self,i):
-        self.data["time_until_index"] = i
+        self.data["time"]["time_until_index"] = i
         timestamp = self.timeframes[i]
-        self.data["time_until"] = timestamp
+        self.data["time"]["time_until"] = timestamp
         self.update_display_dates()
 
     def on_select_config(self,i):
@@ -932,14 +995,9 @@ class App(QWidget):
             day=py_date.day,
             )
         final_timestamp = final_date.timestamp() * 1000
-        self.data["time_from"] = final_timestamp
+        self.data["time"]["time_from"] = int(final_timestamp)
         self.update_display_dates()
 
-        # final_date =datetime.date(final_date)
-        # print(type(final_date))
-        # print(str(final_date))
-
-        #self.data["time_until_index"] = i
 
     def on_select_until_date(self,date):
         print("Changing until date")
@@ -950,7 +1008,7 @@ class App(QWidget):
             day=py_date.day,
             )
         final_timestamp = final_date.timestamp() * 1000
-        self.data["time_until"] = final_timestamp
+        self.data["time"]["time_until"] = int(final_timestamp)
         self.update_display_dates()
 
 
@@ -963,10 +1021,13 @@ class App(QWidget):
         config_json = json.load(f)
         f.close()
 
-        pairs = self.data["pairs1"]
+        pairs = self.data["pairs1"].split()
         processed_pairs =[]
-        for pair in pairs.split():
+        for pair in pairs:
             processed_pairs.append(pair+"/"+fiat_currency)
+
+
+
         config_json["exchange"]["pair_whitelist"] = processed_pairs
         config_json = update_config_funds(config_json)
         try:
@@ -986,8 +1047,72 @@ class App(QWidget):
 
         for pair in config_json["exchange"]["pair_whitelist"]:
             processed_pair = pair.strip("/"+fiat_currency)
-            processed_pair_text.append(processed_pair+"/n")
-        self.data["pairs1"] = processed_pair
+            processed_pair_text += (processed_pair+"/n")
+        self.data["pairs1"] = processed_pair_text
+        self.label_pairs_no.setText("Pairs: "+str(len(config_json["exchange"]["pair_whitelist"])))
+        self.label_pairs_no.adjustSize()
+        self.get_backtest_processing_power()
+        self.get_hyperopt_processing_power()
+
+
+    def get_pairlist_length(self):
+        pairs = self.data["pairs1"].split()
+        if(pairs):
+            return "Pairs: "+str(len(pairs))
+        else:
+            return "0"
+
+    def get_backtest_processing_power(self):
+        time=0.1
+        days = days_between_timestamps(self.data["time"]["time_from"],self.data["time"]["time_until"])
+        pairs = len(self.data["pairs1"].split())
+        if(pairs <= 6):
+            days_from_25 = days / 50
+            days_ratio = (1+(0.135 *(days_from_25)))
+            pair_time= pairs *1.8
+            pair_time = pair_time  + (0.4*math.pow( 1.22, pair_time ))
+            time = (pair_time * (days_ratio) )
+            time += 2.5
+        else:
+            days_from_25 = days / 50
+            days_ratio = (1+(0.135 *(days_from_25)))
+            pair_time= pairs *2.0
+            pair_time = pair_time  + (0.10*math.pow( 1.16, pair_time ))
+            time = (pair_time * (days_ratio) )
+            time += 2.0
+        time = round(time +  ((time/2 *((computer_processing_power-1.0)*-1))),1)
+        self.label_backtest_process.setText('Backtest-Pw: '+str(time)+"s")
+
+    def get_plot_processing_power(self):
+        days = days_between_timestamps(self.data["time"]["time_from"],self.data["time"]["time_until"])
+        time1 = 5
+        time1= time1 + (days *0.075)
+        time2 = (0.16*math.pow( 1.05, days/5 ))
+        final_time= time1 + time2
+        final_time = round(final_time +  ((final_time/2 *((computer_processing_power-1.0)*-1))),1)
+        self.label_plot_process.setText('Plotting-Pw:  '+str(final_time)+"s")
+
+    ##TO FINISH LATER
+    def get_hyperopt_processing_power(self):
+        # time=0.1
+        # days = days_between_timestamps(self.data["time"]["time_from"],self.data["time"]["time_until"])
+        # pairs = len(self.data["pairs1"].split())
+        # if(pairs <= 6):
+        #     days_from_25 = days / 50
+        #     days_ratio = (1+(0.135 *(days_from_25)))
+        #     pair_time= pairs *1.8
+        #     pair_time = pair_time  + (0.4*math.pow( 1.22, pair_time ))
+        #     time = (pair_time * (days_ratio) )
+        #     time += 2.5
+        # else:
+        #     days_from_25 = days / 50
+        #     days_ratio = (1+(0.135 *(days_from_25)))
+        #     pair_time= pairs *2.0
+        #     pair_time = pair_time  + (0.10*math.pow( 1.16, pair_time ))
+        #     time = (pair_time * (days_ratio) )
+        #     time += 2.0
+        # time = round(time +  ((time/2 *((computer_processing_power-1.0)*-1))),1)
+        self.label_hyperopt_process.setText('Hyperopt-Pw: '+"??"+"s")
 
 
     def closeEvent(self, event):
@@ -1002,13 +1127,13 @@ def update_config_funds(config_json):
 
 def unix_to_datetime(timestamp,to_string,to_simple):
     if(to_string):
-        from_date_s = datetime.datetime.fromtimestamp(int(timestamp)/1000)
+        from_date_s = datetime.datetime.fromtimestamp(timestamp/1000)
         if(to_simple):
             return from_date_s.strftime("%d %b %Y")
         else:
             return from_date_s.strftime("%d %b %Y %H:%M:%S")
     else:
-        return datetime.datetime.fromtimestamp(int(timestamp)/1000)
+        return datetime.datetime.fromtimestamp(timestamp/1000)
 
 def datetime_to_unix(date,from_string):
     if(from_string):
@@ -1018,7 +1143,7 @@ def datetime_to_unix(date,from_string):
         return date.timestamp() * 1000
 
 def days_between_timestamps(from_timestamp,until_timestamp):
-    difference = int(until_timestamp) - int(from_timestamp)
+    difference = until_timestamp - from_timestamp
     difference = difference /1000
     days = int(difference // (24 * 3600))
     return days

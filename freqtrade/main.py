@@ -56,7 +56,10 @@ def main(sysargv: List[str] = None) -> None:
     except Exception:
         logger.exception('Fatal exception!')
     finally:
-        sys.exit(return_code)
+        logger.info('PROCESS FINISHED')
+        print("PROCESS FINISHED")
+        return True
+        #sys.exit(return_code)
 
 
 if __name__ == '__main__':  # pragma: no cover

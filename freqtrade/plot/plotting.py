@@ -330,13 +330,13 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
 
 
 
-        main_trend_color_hex = {  5:"rgba(143, 188, 143,0.25)",#"name":"UPPER_DANGER_ZONE"}
+        main_trend_color_hex = {  5:"rgba(24, 69, 13,0.4)",#"name":"UPPER_DANGER_ZONE"}
                             3:"rgba(0,128,0, 0.2)",#"name":"LONG_UPTREND"},
                             2:"rgba(70, 130, 180,0.25)",#"name":"DOWNTREND_UPSWING"},
                             0:"rgba(255, 255, 255, 0)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
                             -1:"rgba(233, 150, 122,0.25)",#"name":"SLOW_DOWNTREND"},
                             -2:"rgba(255, 0, 0,0.2)",#"name":"LONG_DOWNTREND"},
-                            -3:"rgba(0, 100, 0,000.25)",#"name":"DANGER_ZONE"},
+                            -3:"rgba(106, 11, 16,0.4)",#"name":"DANGER_ZONE"},
                         }
         main_trend_labels = {  "5":"UPPER_DANGER_ZONE",
                             "3":"LONG_UPTREND",

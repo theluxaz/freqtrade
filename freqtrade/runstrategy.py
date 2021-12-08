@@ -21,25 +21,23 @@ computer_processing_power = 1.3   # 0.00001 to.. 2.0
 strategy_json = [{"DEV":"DevLukas15min"},
                  {"PROD":"ProdLukas15min"},
                   {"BUYER HIGH":"BuyerDevHigh"},
-                   {"BUYER MID":"BuyerDevMid"},
-                    {"BUYER LOW":"BuyerDevLow"},
-                     {"BUYER LONG UPTREND":"BuyerDevLongUptrend"},
-                      {"BUYER SLOW DOWNTREND":"BuyerDevSlowDowntrend"},
-                       {"BUYER LONG DOWNTREND":"BuyerDevLongDowntrend"},
-                        {"BUYER DOWNTREND UPSWING":"BuyerDevDowntrendUpswing"}
+                   {"MID":"BuyerDevMid"},
+                    {"LOW":"BuyerDevLow"},
+                     {"LONG UPTREND":"BuyerDevLongUptrend"},
+                      {"SLOW DOWNTREND":"BuyerDevSlowDowntrend"},
+                       {"LONG DOWNTREND":"BuyerDevLongDowntrend"},
+                        {"DOWNTREND UPSWING":"BuyerDevDowntrendUpswing"},
+                         {"DANGER ZONE":"BuyerDevDangerZone"},
+                         {"UPPER DANGER ZONE":"BuyerDevUpperDangerZone"}
                  ]
 
 
-timeframes_json = [{"4":1631232000000},# 10 september 2021
+timeframes_json = [ {"5":1638835200000},# 7 december 2021
+                    {"4":1631232000000},# 10 september 2021
                     {"3":1625097600000},# 1 july 2021
-                 {"2":1617235200000},
-                  {"1":1609464867000},
-                   {"0":1600312000000}
-                    # {"5":"BuyerDevLow"},
-                    #  {"6":"BuyerDevLongUptrend"},
-                    #   {"7":"BuyerDevSlowDowntrend"},
-                    #    {"8":"BuyerDevLongDowntrend"},
-                    #     {"0":"BuyerDevDowntrendUpswing"}
+                   {"2":1617235200000}, #1 april 2021
+                  {"1":1609464867000}, #1 january 2021
+                   {"0":1600312000000} #17 september 2020
                  ]
 
 configs_json = ["normal","nostalgia","nostalgia-other","older-classic"]
@@ -133,6 +131,10 @@ class App(QWidget):
         self.indicator1_textbox.resize(150,20)
         self.indicator1_textbox.setText(self.data["indicators1"]["text"])
         self.indicator1_textbox.editingFinished.connect(self.on_textchange_indicators1)
+        if(self.data["indicators1"]["enabled"] == True):
+            self.indicator1_textbox.setEnabled(True)
+        else:
+            self.indicator1_textbox.setEnabled(False)
         # Label Indicators 1 Default?
         self.indicator1_default_label = QLabel(self)
         self.indicator1_default_label.setText('Default:')
@@ -160,6 +162,10 @@ class App(QWidget):
         self.indicator2_textbox.resize(150,20)
         self.indicator2_textbox.setText(self.data["indicators2"]["text"])
         self.indicator2_textbox.editingFinished.connect(self.on_textchange_indicators2)
+        if(self.data["indicators2"]["enabled"] == True):
+            self.indicator2_textbox.setEnabled(True)
+        else:
+            self.indicator2_textbox.setEnabled(False)
         # Checkbox Indicators 2 Enable
         self.indicator2_checkbox = QCheckBox(self)
         self.indicator2_checkbox.move(250, 132)
@@ -176,6 +182,10 @@ class App(QWidget):
         self.indicator3_textbox.resize(150,20)
         self.indicator3_textbox.setText(self.data["indicators3"]["text"])
         self.indicator3_textbox.editingFinished.connect(self.on_textchange_indicators3)
+        if(self.data["indicators3"]["enabled"] == True):
+            self.indicator3_textbox.setEnabled(True)
+        else:
+            self.indicator3_textbox.setEnabled(False)
         # Checkbox Indicators 3 Enable
         self.indicator3_checkbox = QCheckBox(self)
         self.indicator3_checkbox.move(250, 162)
@@ -298,7 +308,7 @@ class App(QWidget):
         self.textbox_download_days.move(782, 15)
         self.textbox_download_days.resize(45,18)
         self.textbox_download_days.setText(str(self.data["download"]["days_to_download"]))
-        self.textbox_download_days.editingFinished.connect(self.on_textchange_download_days)
+        self.textbox_download_days.textChanged.connect(self.on_textchange_download_days)
 
 
         # Download Data latest from pairlist label
@@ -470,6 +480,7 @@ class App(QWidget):
         self.run_command_args_label.move(18,356)
 
         self.update_download_data_labels()
+        self.setWindowFlags(QtCore.Qt.Window | QtCore.Qt.WindowStaysOnTopHint)
         self.show()
         self.update_hyperopt()
 
@@ -491,7 +502,7 @@ class App(QWidget):
         self.textbox_epochs.move(54, 266)
         self.textbox_epochs.resize(30,18)
         self.textbox_epochs.setText(self.data["hyperopt"]["epochs"])
-        self.textbox_epochs.editingFinished.connect(self.on_textchange_epochs)
+        self.textbox_epochs.textChanged.connect(self.on_textchange_epochs)
 
 
         # Label Loss Function
@@ -819,6 +830,7 @@ class App(QWidget):
     @pyqtSlot()
     def on_click_download_data(self):
         self.update_config_pairs()
+        self.on_click_save_json()
 
         pairs = self.data["pairs1"].split()
         datetime_now = datetime.datetime.now() - datetime.timedelta(hours=2)
@@ -939,7 +951,6 @@ class App(QWidget):
     @pyqtSlot()
     def on_textchange_download_days(self):
         self.data["download"]["days_to_download"] = int(self.textbox_download_days.text())
-        self.textbox_download_days.setText(self.data["download"]["days_to_download"])
 
     @pyqtSlot()
     def checkbox_search_space_all(self):
@@ -1227,6 +1238,7 @@ class App(QWidget):
 
     # Updates chosen chosen with pairs from GUI
     def update_config_pairs(self):
+        print(self.data["config"])
         config_url = file_dir+"/user_data/"+self.data["config"]
         print(config_url)
         f = open(config_url)

@@ -20,10 +20,10 @@ from freqtrade.strategy import IStrategy
 
 ## List of available main plot render commands
 
-plot_indicators = ["main_trend","main_trend-above","sec_trend","sec_trend-above","volatility",
+plot_indicators = ["sec_trend","sec_trend-above","volatility",
                    "volatility-above","uptrend","uptrend-above","uptrendsmall","uptrendsmall-above"]
 
-default_indicators1 = ['volatility', 'uptrend', 'uptrendsmall', 'sma50', 'sma200', 'sma400', 'sma10k']
+default_indicators1 = ['main', 'volatility', 'sma50', 'sma200', 'sma400', 'sma10k']
 
 default_indicators2 = ["ppo5"]
 
@@ -142,11 +142,12 @@ def add_indicators(fig, row, indicators: Dict[str, Dict], data: pd.DataFrame) ->
             trace = plot_kinds[plot_type](**kwargs)
             fig.add_trace(trace, row, 1)
         else:
-            logger.info(
-                'Indicator "%s" ignored. Reason: This indicator is not found '
-                'in your strategy.',
-                indicator
-            )
+            if(not indicator.startswith('solo') and not indicator != 'main'):
+                logger.info(
+                    'Indicator "%s" ignored. Reason: This indicator is not found '
+                    'in your strategy.',
+                    indicator
+                )
 
     return fig
 
@@ -324,10 +325,7 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
 
     data = data.copy()
 
-    if( label=="main_trend"):
-
-
-
+    if( label=="main"):
 
 
         main_trend_color_hex = {  5:"rgba(24, 69, 13,0.4)",#"name":"UPPER_DANGER_ZONE"}
@@ -403,6 +401,84 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
                     fig.add_trace(trace_b, row, 1)
 
 
+    if( label.startswith('solo')):
+
+        m_trend = int(label.split("-")[1])
+
+
+        main_trend_color_hex = {  5:"rgba(24, 69, 13,0.4)",#"name":"UPPER_DANGER_ZONE"}
+                            3:"rgba(0,128,0, 0.2)",#"name":"LONG_UPTREND"},
+                            2:"rgba(70, 130, 180,0.25)",#"name":"DOWNTREND_UPSWING"},
+                            0:"rgba(255, 255, 255, 0)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
+                            -1:"rgba(233, 150, 122,0.25)",#"name":"SLOW_DOWNTREND"},
+                            -2:"rgba(255, 0, 0,0.2)",#"name":"LONG_DOWNTREND"},
+                            -3:"rgba(106, 11, 16,0.4)",#"name":"DANGER_ZONE"},
+                        }
+        main_trend_labels = {  "5":"UPPER_DANGER_ZONE",
+                            "3":"LONG_UPTREND",
+                            "2":"DOWNTREND_UPSWING",
+                            "0":"NOTREND",
+                            "-1":"SLOW_DOWNTREND",
+                            "-2":"LONG_DOWNTREND",
+                            "-3":"DANGER_ZONE"
+
+                        }
+
+        main_volatility_hex = {
+                    1:"rgba(175, 225, 233, 0.25)",#"name":"LOW"},
+                    2:"rgba(73, 187, 204, 0.25)",#"name":"MID"},
+                    3:"rgba(0, 139, 251, 0.22)",#"name":"HIGH"}
+                        }
+        main_volatility_labels = {
+                    "1":"LOW_VOL",
+                    "2":"MID_VOL",
+                    "3":"HIGH_VOL"
+                        }
+        line = {'color': 'rgba(255,255,255,0)'}
+
+
+        if(m_trend != 0):
+            newframe = data.copy()
+
+            newframe.loc[( newframe['main_trend'] != m_trend), 'bb_upperband'] = newframe['bb_middleband']
+            newframe.loc[( newframe['main_trend'] != m_trend), 'bb_lowerband'] = newframe['bb_middleband']
+
+
+            main_trend_area_style = main_trend_color_hex[m_trend]
+            main_trend_label_style = main_trend_labels[str(m_trend)]
+
+
+            trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
+                             showlegend=False,
+                             line=line)
+            trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=main_trend_label_style,
+                                 fill="tonexty", fillcolor=main_trend_area_style,
+                                 line=line)
+            fig.add_trace(trace_a, row, 1)
+            fig.add_trace(trace_b, row, 1)
+        else:
+            for vol in range(3):
+                vol+=1
+                newframe = data.copy()
+
+                newframe.loc[( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)), 'bb_upperband'] = newframe['bb_middleband']
+                newframe.loc[( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)), 'bb_lowerband'] = newframe['bb_middleband']
+
+
+                vol_area_style = main_volatility_hex[vol]
+                vol_area_labels = main_volatility_labels[str(vol)]
+
+
+                trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
+                                 showlegend=False,
+                                 line=line)
+                trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=vol_area_labels,
+                                     fill="tonexty", fillcolor=vol_area_style,
+                                     line=line)
+                fig.add_trace(trace_a, row, 1)
+                fig.add_trace(trace_b, row, 1)
+
+
 
 
     if label=="Bolinger Bands" and indicator_a in data and indicator_b in data:
@@ -438,6 +514,7 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
     if(len(labels)>1):
         display = labels[1]
 
+    ##not used at the moment
     if( label=="main_trend"):
         distance = 18
 
@@ -980,9 +1057,16 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
         else:
             logger.warning("No sell-signals found.")
 
-    ##Add Bollinger Bands
-    fig = plot_area(fig, 1, data, 'bb_lowerband', 'bb_upperband',
-                    label="main_trend")
+    for  label in indicators1:
+        if(label == "main"):
+            ##Add main trend area
+            fig = plot_area(fig, 1, data, 'bb_lowerband', 'bb_upperband',
+                            label=label)
+        elif(label.startswith('solo') ):
+            ##Add  solo trend area
+            fig = plot_area(fig, 1, data, 'bb_lowerband', 'bb_upperband',
+                            label=label)
+
 
 
     # prevent bb_lower and bb_upper from plotting

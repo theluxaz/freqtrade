@@ -45,7 +45,18 @@ configs_json = ["normal","nostalgia","nostalgia-other","older-classic"]
 hyperopt_loss_functions = ["ShortTradeDurHyperOptLoss","OnlyProfitHyperOptLoss","SharpeHyperOptLoss","SharpeHyperOptLossDaily","SortinoHyperOptLoss",
               "SortinoHyperOptLossDaily","MaxDrawDownHyperOptLoss"]
 
-indicators1_default = ['volatility', 'uptrend', 'uptrendsmall', 'sma50', 'sma200', 'sma400', 'sma10k']
+indicators1_solo_trends = [{"5":"Upper Danger Zone"},
+                         #{"4":"Huge Fall Turnaround"},
+                          {"3":"Long Uptrend"},
+                           {"2":"Downtrend Upswing"},
+                       # {"1":"Small Upswing"},
+                         {"0":"Normal"},
+                          {"-1":"Slow Downtrend"},
+                       {"-2":"Long Downtrend"},
+                        {"-3":"Danger Zone"},
+                 ]
+
+indicators1_default = ['sma50', 'sma200', 'sma400', 'sma10k']
 
 config_file = "run-configuration.json"
 
@@ -79,6 +90,14 @@ class App(QWidget):
                 self.timeframes_label.append(key)
                 self.timeframes.append(value)
 
+        # Set solo trends
+        self.solo_trends = []
+        self.solo_trends_label = []
+        for pair in indicators1_solo_trends:
+            for key, value in pair.items():
+                self.solo_trends.append(key)
+                self.solo_trends_label.append(value)
+
         # Set configs
         self.configs = configs_json
 
@@ -86,7 +105,7 @@ class App(QWidget):
         self.data = json.load(f)
         f.close()
 
-        app.aboutToQuit.connect(self.on_click_save_json)
+        #app.aboutToQuit.connect(self.on_click_save_json)
 
         self.backtesting_clicked = False
         self.show_plot_clicked = False
@@ -135,16 +154,16 @@ class App(QWidget):
             self.indicator1_textbox.setEnabled(True)
         else:
             self.indicator1_textbox.setEnabled(False)
-        # Label Indicators 1 Default?
-        self.indicator1_default_label = QLabel(self)
-        self.indicator1_default_label.setText('Default:')
-        self.indicator1_default_label.move(20, 100)
 
-        # Checkbox Indicators 1 Default?
-        self.indicator1_checkbox_default = QCheckBox(self)
-        self.indicator1_checkbox_default.move(63, 101)
-        self.indicator1_checkbox_default.setChecked(self.data["indicators1"]["default"])
-        self.indicator1_checkbox_default.stateChanged.connect(self.checkbox_indicators1_default)
+
+
+
+
+
+
+
+
+
         # Checkbox Indicators 1 Enable
         self.indicator1_checkbox = QCheckBox(self)
         self.indicator1_checkbox.move(250, 82)
@@ -155,10 +174,10 @@ class App(QWidget):
         # Label Indicators 2
         self.indicator2_label = QLabel(self)
         self.indicator2_label.setText('Indicators 2:')
-        self.indicator2_label.move(20, 130)
+        self.indicator2_label.move(20, 134)
         # Textbox Indicator 2
         self.indicator2_textbox = QLineEdit(self)
-        self.indicator2_textbox.move(90, 128)
+        self.indicator2_textbox.move(90, 132)
         self.indicator2_textbox.resize(150,20)
         self.indicator2_textbox.setText(self.data["indicators2"]["text"])
         self.indicator2_textbox.editingFinished.connect(self.on_textchange_indicators2)
@@ -168,17 +187,17 @@ class App(QWidget):
             self.indicator2_textbox.setEnabled(False)
         # Checkbox Indicators 2 Enable
         self.indicator2_checkbox = QCheckBox(self)
-        self.indicator2_checkbox.move(250, 132)
+        self.indicator2_checkbox.move(250, 136)
         self.indicator2_checkbox.setChecked(self.data["indicators2"]["enabled"])
         self.indicator2_checkbox.stateChanged.connect(self.checkbox_indicators2)
 
         # Label Indicators 3
         self.indicator3_label = QLabel(self)
         self.indicator3_label.setText('Indicators 3:')
-        self.indicator3_label.move(20, 160)
+        self.indicator3_label.move(20, 164)
         # Textbox Indicator 3
         self.indicator3_textbox = QLineEdit(self)
-        self.indicator3_textbox.move(90, 158)
+        self.indicator3_textbox.move(90, 162)
         self.indicator3_textbox.resize(150,20)
         self.indicator3_textbox.setText(self.data["indicators3"]["text"])
         self.indicator3_textbox.editingFinished.connect(self.on_textchange_indicators3)
@@ -188,9 +207,81 @@ class App(QWidget):
             self.indicator3_textbox.setEnabled(False)
         # Checkbox Indicators 3 Enable
         self.indicator3_checkbox = QCheckBox(self)
-        self.indicator3_checkbox.move(250, 162)
+        self.indicator3_checkbox.move(250, 166)
         self.indicator3_checkbox.setChecked(self.data["indicators3"]["enabled"])
         self.indicator3_checkbox.stateChanged.connect(self.checkbox_indicators3)
+
+        # Label Indicators extra Main
+        self.indicator_extra_label_main = QLabel(self)
+        self.indicator_extra_label_main.setText('Main:')
+        self.indicator_extra_label_main.move(20, 106)
+        # Checkbox Indicators extra Main
+        self.indicator_extra_checkbox_main = QCheckBox(self)
+        self.indicator_extra_checkbox_main.move(50, 107)
+        self.indicator_extra_checkbox_main.setChecked(self.data["indicators_extra"]["main"])
+        self.indicator_extra_checkbox_main.stateChanged.connect(self.checkbox_indicators_extra_main)
+        # Label Indicators extra Solo
+        self.indicator_extra_label_solo = QLabel(self)
+        self.indicator_extra_label_solo.setText('Solo Trend:')
+        self.indicator_extra_label_solo.move(75, 106)
+        # Checkbox Indicators extra Solo
+        self.indicator_extra_checkbox_solo = QCheckBox(self)
+        self.indicator_extra_checkbox_solo.move(132, 107)
+        self.indicator_extra_checkbox_solo.setChecked(self.data["indicators_extra"]["solo"])
+        self.indicator_extra_checkbox_solo.stateChanged.connect(self.checkbox_indicators_extra_solo)
+        #Dropdown Indicators extra Solo Trend
+        self.indicator_extra_dropdown_solo = QComboBox(self)
+        self.indicator_extra_dropdown_solo.setGeometry(162, 104, 100, 20)
+        self.indicator_extra_dropdown_solo.addItems(self.solo_trends_label)
+        self.indicator_extra_dropdown_solo.setCurrentIndex(self.data["indicators_extra"]["solo_trend"])
+        self.indicator_extra_dropdown_solo.currentIndexChanged.connect(self.on_select_solo_trend)
+        if(self.data["indicators_extra"]["solo"] != True or self.data["indicators_extra"]["main"] == True ):
+            self.indicator_extra_dropdown_solo.hide()
+        # Label Indicators extra Default
+        self.indicator_extra_label_default = QLabel(self)
+        self.indicator_extra_label_default.setText('Default:')
+        self.indicator_extra_label_default.move(35, 189)
+        # Checkbox Indicators extra Default
+        self.indicator_extra_checkbox_default = QCheckBox(self)
+        self.indicator_extra_checkbox_default.move(78, 190)
+        self.indicator_extra_checkbox_default.setChecked(self.data["indicators_extra"]["default"])
+        self.indicator_extra_checkbox_default.stateChanged.connect(self.checkbox_indicators_extra_default)
+        # Label Indicators extra Volatility
+        self.indicator_extra_label_volatility = QLabel(self)
+        self.indicator_extra_label_volatility.setText('Volatility:')
+        self.indicator_extra_label_volatility.move(103, 189)
+        # Checkbox Indicators extra Volatility
+        self.indicator_extra_checkbox_volatility = QCheckBox(self)
+        self.indicator_extra_checkbox_volatility.move(151, 190)
+        self.indicator_extra_checkbox_volatility.setChecked(self.data["indicators_extra"]["volatility"])
+        self.indicator_extra_checkbox_volatility.stateChanged.connect(self.checkbox_indicators_extra_volatility)
+        # Label Indicators extra Uptrend
+        self.indicator_extra_label_uptrend = QLabel(self)
+        self.indicator_extra_label_uptrend.setText('Uptrend:')
+        self.indicator_extra_label_uptrend.move(176, 189)
+        # Checkbox Indicators extra Uptrend
+        self.indicator_extra_checkbox_uptrend = QCheckBox(self)
+        self.indicator_extra_checkbox_uptrend.move(222, 190)
+        self.indicator_extra_checkbox_uptrend.setChecked(self.data["indicators_extra"]["uptrend"])
+        self.indicator_extra_checkbox_uptrend.stateChanged.connect(self.checkbox_indicators_extra_uptrend)
+        # Label Indicators extra UptrendSmall
+        self.indicator_extra_label_uptrendsmall = QLabel(self)
+        self.indicator_extra_label_uptrendsmall.setText('Small Uptrend:')
+        self.indicator_extra_label_uptrendsmall.move(150, 212)
+        # Checkbox Indicators extra UptrendSmall
+        self.indicator_extra_checkbox_uptrendsmall = QCheckBox(self)
+        self.indicator_extra_checkbox_uptrendsmall.move(222, 212)
+        self.indicator_extra_checkbox_uptrendsmall.setChecked(self.data["indicators_extra"]["uptrendsmall"])
+        self.indicator_extra_checkbox_uptrendsmall.stateChanged.connect(self.checkbox_indicators_extra_uptrendsmall)
+        # Label Indicators extra Sec Trend
+        self.indicator_extra_label_sec_trend = QLabel(self)
+        self.indicator_extra_label_sec_trend.setText('Sec.Trend:')
+        self.indicator_extra_label_sec_trend.move(20, 212)
+        # Checkbox Indicators extra Sec Trend
+        self.indicator_extra_checkbox_sec_trend = QCheckBox(self)
+        self.indicator_extra_checkbox_sec_trend.move(78, 212)
+        self.indicator_extra_checkbox_sec_trend.setChecked(self.data["indicators_extra"]["sec_trend"])
+        self.indicator_extra_checkbox_sec_trend.stateChanged.connect(self.checkbox_indicators_extra_sec_trend)
 
 
         # Time From label
@@ -374,19 +465,10 @@ class App(QWidget):
 
 
 
-        # Label Hyperopt
-        self.hyperopt_label = QLabel(self)
-        self.hyperopt_label.setText('Hyperopt:')
-        self.hyperopt_label.move(20, 220)
-
-        # Checkbox hyperopt
-        self.hyperopt_checkbox = QCheckBox(self)
-        self.hyperopt_checkbox.move(71, 221)
-        self.hyperopt_checkbox.setChecked(self.data["hyperopt"]["hyperopt"])
-        self.hyperopt_checkbox.stateChanged.connect(self.checkbox_hyperopt)
 
 
-        self.addSearchSpace()
+
+        self.addHyperopt()
 
 
         # Button backtest
@@ -484,22 +566,37 @@ class App(QWidget):
         self.show()
         self.update_hyperopt()
 
-    def addSearchSpace(self):
+    def addHyperopt(self):
 
+        # Label Separator
+        self.hyperopt_label = QLabel(self)
+        self.hyperopt_label.setText('--------------------------------------------------------------------------------')
+        self.hyperopt_label.move(20, 227)
 
-        # Label Search Space:
-        self.search_space_label = QLabel(self)
-        self.search_space_label.setText('Search Space')
-        self.search_space_label.move(190, 230)
+        # Label Hyperopt
+        self.hyperopt_label = QLabel(self)
+        self.hyperopt_label.setText('Hyperopt:')
+        self.hyperopt_label.move(20, 260)
+
+        # Checkbox hyperopt
+        self.hyperopt_checkbox = QCheckBox(self)
+        self.hyperopt_checkbox.move(71, 261)
+        self.hyperopt_checkbox.setChecked(self.data["hyperopt"]["hyperopt"])
+        self.hyperopt_checkbox.stateChanged.connect(self.checkbox_hyperopt)
+
+        # # Label Search Space:
+        # self.search_space_label = QLabel(self)
+        # self.search_space_label.setText('Search Space')
+        # self.search_space_label.move(190, 230)
 
 
         # Label Epochs
         self.label_epochs = QLabel(self)
         self.label_epochs.setText('Epochs:')
-        self.label_epochs.move(50, 250)
+        self.label_epochs.move(144, 300)
         # Textbox Epochs
         self.textbox_epochs = QLineEdit(self)
-        self.textbox_epochs.move(54, 266)
+        self.textbox_epochs.move(187, 298)#x was 170
         self.textbox_epochs.resize(30,18)
         self.textbox_epochs.setText(self.data["hyperopt"]["epochs"])
         self.textbox_epochs.textChanged.connect(self.on_textchange_epochs)
@@ -605,7 +702,7 @@ class App(QWidget):
 
     def update_hyperopt(self):
         if self.data["hyperopt"]["hyperopt"]== True:
-            self.search_space_label.show()
+            # self.search_space_label.show()
             self.label_loss_function.show()
             self.combobox_loss_function.show()
             self.hyperopt_button.show()
@@ -629,7 +726,7 @@ class App(QWidget):
             self.label_epochs.show()
             self.textbox_epochs.show()
         else:
-            self.search_space_label.hide()
+            # self.search_space_label.hide()
             self.label_loss_function.hide()
             self.combobox_loss_function.hide()
             self.hyperopt_button.hide()
@@ -720,7 +817,6 @@ class App(QWidget):
             self.update_config_pairs()
             self.on_click_save_json()
             self.get_plot_processing_power()
-            print("1")
             time_until = ""
             if(self.data["time"]["time_until_enabled"]):
                 time_until = self.data["time"]["time_until"]
@@ -731,31 +827,46 @@ class App(QWidget):
             if(self.data["plot_profit"]):
                 command = "plot-profit"
 
-            print("2")
-
+            indicators1_temp = []
             indicators1 = []
             indicators2 = []
             indicators3 = []
-            if(self.data["indicators1"]["default"] and self.data["plot_profit"]==False):
-                indicators1 = ["--indicators1"]
-                for item in indicators1_default:
-                    indicators1.append(item)
-            if(self.data["indicators1"]["enabled"] and self.data["plot_profit"]==False):
-                if(len(indicators1) <= 0):
-                    indicators1 = ["--indicators1"]
-                for item in self.data["indicators1"]["text"].split():
-                    indicators1.append(item)
+            if self.data["plot_profit"]==False:
 
-            if(self.data["indicators2"]["enabled"] and self.data["plot_profit"]==False):
+                if(self.data["indicators_extra"]["main"] ):
+                    indicators1_temp.append("main")
+                if(self.data["indicators_extra"]["solo"] ):
+                    indicators1_temp.append("solo-"+str(self.solo_trends[self.data["indicators_extra"]["solo_trend"]]))
+                if(self.data["indicators_extra"]["default"] ):
+                    for item in indicators1_default:
+                        indicators1_temp.append(item)
+                if(self.data["indicators_extra"]["volatility"] ):
+                    indicators1_temp.append("volatility")
+                if(self.data["indicators_extra"]["uptrend"] ):
+                    indicators1_temp.append("uptrend")
+                if(self.data["indicators_extra"]["uptrendsmall"] ):
+                    indicators1_temp.append("uptrendsmall")
+                if(self.data["indicators_extra"]["sec_trend"] ):
+                    indicators1_temp.append("sec_trend")
+                if(self.data["indicators1"]["enabled"]):
+                    if(self.data["indicators1"]["text"] and len(self.data["indicators1"]["text"]) > 2):
+                            for item in self.data["indicators1"]["text"].split():
+                                indicators1_temp.append(item)
+                if(len(indicators1_temp) >= 0):
+                    indicators1 = ["--indicators1"]
+                    for indicator in indicators1_temp:
+                        indicators1.append(indicator)
+
+
+            if(self.data["indicators2"]["enabled"]):
                 indicators2 = ["--indicators2"]
                 for item in self.data["indicators2"]["text"].split():
                     indicators2.append(item)
-            if(self.data["indicators3"]["enabled"] and self.data["plot_profit"]==False):
+            if(self.data["indicators3"]["enabled"]):
                 indicators3 = ["--indicators3"]
                 for item in self.data["indicators3"]["text"].split():
                     indicators3.append(item)
 
-            print("3")
             command_list = [command,"--config", "user_data/"+self.data["config"], "--strategy", self.strategies[self.data["strategy"]],"-p",pair+"/"+fiat_currency,"--timerange="+str(self.data["time"]["time_from"])+"-"+str(time_until)]
 
             if(len(indicators1)>0):
@@ -879,13 +990,6 @@ class App(QWidget):
             self.indicator1_textbox.setEnabled(True)
 
     @pyqtSlot()
-    def checkbox_indicators1_default(self):
-        if(self.data["indicators1"]["default"] == True):
-            self.data["indicators1"]["default"] = False
-        else:
-            self.data["indicators1"]["default"] = True
-
-    @pyqtSlot()
     def checkbox_indicators2(self):
         if(self.data["indicators2"]["enabled"] == True):
             self.data["indicators2"]["enabled"] = False
@@ -902,6 +1006,73 @@ class App(QWidget):
         else:
             self.data["indicators3"]["enabled"] = True
             self.indicator3_textbox.setEnabled(True)
+
+    @pyqtSlot()
+    def checkbox_indicators_extra_main(self):
+        if(self.data["indicators_extra"]["main"] == True):
+            self.data["indicators_extra"]["main"] = False
+        else:
+            self.data["indicators_extra"]["main"] = True
+            if(self.data["indicators_extra"]["solo"] == True):
+                self.indicator_extra_checkbox_solo.setChecked(False)
+            self.indicator_extra_dropdown_solo.hide()
+        print("---")
+        print("main= "+str(self.data["indicators_extra"]["main"]))
+        print("solo= "+str(self.data["indicators_extra"]["solo"]))
+        print("-----------")
+
+    @pyqtSlot()
+    def checkbox_indicators_extra_solo(self):
+        if(self.data["indicators_extra"]["solo"] == True):
+            self.data["indicators_extra"]["solo"] = False
+            self.indicator_extra_dropdown_solo.hide()
+        else:
+            self.data["indicators_extra"]["solo"] = True
+            if(self.data["indicators_extra"]["main"] == True):
+                self.indicator_extra_checkbox_main.setChecked(False)
+            self.indicator_extra_dropdown_solo.show()
+        print("-----------")
+        print("solo= "+str(self.data["indicators_extra"]["solo"]))
+        print("main= "+str(self.data["indicators_extra"]["main"]))
+        print("---")
+
+    @pyqtSlot()
+    def checkbox_indicators_extra_default(self):
+        if(self.data["indicators_extra"]["default"] == True):
+            self.data["indicators_extra"]["default"] = False
+        else:
+            self.data["indicators_extra"]["default"] = True
+
+    @pyqtSlot()
+    def checkbox_indicators_extra_volatility(self):
+        if(self.data["indicators_extra"]["volatility"] == True):
+            self.data["indicators_extra"]["volatility"] = False
+        else:
+            self.data["indicators_extra"]["volatility"] = True
+
+    @pyqtSlot()
+    def checkbox_indicators_extra_uptrend(self):
+        if(self.data["indicators_extra"]["uptrend"] == True):
+            self.data["indicators_extra"]["uptrend"] = False
+        else:
+            self.data["indicators_extra"]["uptrend"] = True
+
+    @pyqtSlot()
+    def checkbox_indicators_extra_uptrendsmall(self):
+        if(self.data["indicators_extra"]["uptrendsmall"] == True):
+            self.data["indicators_extra"]["uptrendsmall"] = False
+        else:
+            self.data["indicators_extra"]["uptrendsmall"] = True
+
+    @pyqtSlot()
+    def checkbox_indicators_extra_sec_trend(self):
+        if(self.data["indicators_extra"]["sec_trend"] == True):
+            self.data["indicators_extra"]["sec_trend"] = False
+        else:
+            self.data["indicators_extra"]["sec_trend"] = True
+
+    def on_select_solo_trend(self,i):
+        self.data["indicators_extra"]["solo_trend"] = i
 
     @pyqtSlot()
     def on_textchange_indicators1(self):

@@ -752,7 +752,7 @@ class App(QWidget):
 
 
     def update_display_dates(self):
-        print("Updating display dates")
+        #print("Updating display dates")
         self.time_from_final_date_label.setText(unix_to_datetime(self.data["time"]["time_from"],True,True))
         self.time_from_final_date_label.adjustSize()
         self.time_until_final_date_label.setText(unix_to_datetime(self.data["time"]["time_until"],True,True))
@@ -773,7 +773,7 @@ class App(QWidget):
 
     @pyqtSlot()
     def on_click_save_json(self):
-        print("Saving data to JSON")
+        #print("Saving data to JSON")
         try:
             with open(config_file, 'w') as file:
                 json.dump(self.data, file)
@@ -810,6 +810,13 @@ class App(QWidget):
     def on_click_plot(self):
         if(self.show_plot_clicked):
             main(self.command_list)
+            # Opens the plot in the default browser
+            if (self.data["plot_profit"]==False):
+                pair = self.data["pairs1"].split()[self.data["plot_pair"]]
+                url = file_dir+"/user_data/plot/freqtrade-plot-"+pair+"_"+fiat_currency+'-15m.html'
+            else:
+                url = file_dir+'/user_data/plot/freqtrade-profit-plot.html'
+            os.system('cmd /c start '+url)
             self.backtesting_clicked = False
             self.show_plot_clicked = False
             self.hyperopt_clicked = False
@@ -1016,10 +1023,6 @@ class App(QWidget):
             if(self.data["indicators_extra"]["solo"] == True):
                 self.indicator_extra_checkbox_solo.setChecked(False)
             self.indicator_extra_dropdown_solo.hide()
-        print("---")
-        print("main= "+str(self.data["indicators_extra"]["main"]))
-        print("solo= "+str(self.data["indicators_extra"]["solo"]))
-        print("-----------")
 
     @pyqtSlot()
     def checkbox_indicators_extra_solo(self):
@@ -1031,10 +1034,6 @@ class App(QWidget):
             if(self.data["indicators_extra"]["main"] == True):
                 self.indicator_extra_checkbox_main.setChecked(False)
             self.indicator_extra_dropdown_solo.show()
-        print("-----------")
-        print("solo= "+str(self.data["indicators_extra"]["solo"]))
-        print("main= "+str(self.data["indicators_extra"]["main"]))
-        print("---")
 
     @pyqtSlot()
     def checkbox_indicators_extra_default(self):
@@ -1187,7 +1186,6 @@ class App(QWidget):
 
     @pyqtSlot()
     def checkbox_time_until_date(self):
-        print(self.data["time"]["time_until_date"])
         if(self.data["time"]["time_until_date"] == True):
             self.data["time"]["time_until_date"] = False
             self.time_until_dropdown.show()
@@ -1381,7 +1379,6 @@ class App(QWidget):
         self.label_download_data_latest.setText('Latest: '+unix_to_datetime(lowest,True,True))
 
     def on_select_from_date(self,date):
-        print("Changing from date")
         py_date = date.toPyDate()
         final_date = datetime.datetime(
             year=py_date.year,
@@ -1394,7 +1391,6 @@ class App(QWidget):
 
 
     def on_select_until_date(self,date):
-        print("Changing until date")
         py_date = date.toPyDate()
         final_date = datetime.datetime(
             year=py_date.year,
@@ -1409,9 +1405,9 @@ class App(QWidget):
 
     # Updates chosen chosen with pairs from GUI
     def update_config_pairs(self):
-        print(self.data["config"])
+        #print(self.data["config"])
         config_url = file_dir+"/user_data/"+self.data["config"]
-        print(config_url)
+        #print(config_url)
         f = open(config_url)
         config_json = json.load(f)
         f.close()

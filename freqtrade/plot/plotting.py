@@ -142,7 +142,7 @@ def add_indicators(fig, row, indicators: Dict[str, Dict], data: pd.DataFrame) ->
             trace = plot_kinds[plot_type](**kwargs)
             fig.add_trace(trace, row, 1)
         else:
-            if(not indicator.startswith('solo') and not indicator != 'main'):
+            if(not indicator.startswith('solo') and not indicator == 'main'):
                 logger.info(
                     'Indicator "%s" ignored. Reason: This indicator is not found '
                     'in your strategy.',

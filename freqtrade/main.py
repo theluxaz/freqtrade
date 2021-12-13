@@ -59,7 +59,7 @@ def main(sysargv: List[str] = None) -> None:
         logger.info('PROCESS FINISHED')
         print("PROCESS FINISHED")
         return True
-        #sys.exit(return_code)
+        # sys.exit(return_code)
 
 
 if __name__ == '__main__':  # pragma: no cover

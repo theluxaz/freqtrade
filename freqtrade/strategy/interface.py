@@ -137,6 +137,8 @@ class IStrategy(ABC, HyperStrategyMixin):
         self._last_candle_seen_per_pair: Dict[str, datetime] = {}
         super().__init__(config)
 
+        self.reload_imports()
+
         # Gather informative pairs from @informative-decorated methods.
         self._ft_informative: List[Tuple[InformativeData, PopulateIndicators]] = []
         for attr_name in dir(self.__class__):
@@ -154,6 +156,10 @@ class IStrategy(ABC, HyperStrategyMixin):
                     raise OperationalException('Informative timeframe must be equal or higher than '
                                                'strategy timeframe!')
                 self._ft_informative.append((informative_data, cls_method))
+
+    @abstractmethod
+    def reload_imports(self):
+        return True
 
     @abstractmethod
     def populate_indicators(self, dataframe: DataFrame, metadata: dict) -> DataFrame:

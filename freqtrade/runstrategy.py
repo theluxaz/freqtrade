@@ -10,12 +10,14 @@ from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAc
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSlot, QDate, QDateTime
 from PyQt5 import QtCore, QtWidgets
+from importlib import reload
 from main import main
 import json
 import time
 import datetime
 import math
-from collections import OrderedDict
+
+
 
 computer_processing_power = 1.3  # 0.00001 to.. 2.0
 
@@ -65,8 +67,6 @@ fiat_currency = "USDT"
 
 # date_until_gap = 5259492000 # 2 months
 date_until_gap = 7889238000  # 3 months
-
-
 # date_until_gap = 9289238000  # 3.5 months
 
 
@@ -75,8 +75,8 @@ class App(QWidget):
     def __init__(self):
         super().__init__()
         self.title = 'Freqtrade Strategy Tester'
-        self.left = 300
-        self.top = 200
+        self.left = 15
+        self.top = 20
         self.width = 850
         self.height = 380
 
@@ -776,6 +776,7 @@ class App(QWidget):
     @pyqtSlot()
     def on_click_backtest(self):
         if (self.backtesting_clicked):
+
             main(self.command_list)
             self.backtesting_clicked = False
             self.show_plot_clicked = False
@@ -804,6 +805,8 @@ class App(QWidget):
     def on_click_plot(self):
         if (self.show_plot_clicked):
             main(self.command_list)
+            # commands = "main.py " +' '.join(self.command_list)
+            # os.system('cmd /c python ' + commands)
             # Opens the plot in the default browser
             if (self.data["plot_profit"] == False):
                 pair = self.data["pairs1"].split()[self.data["plot_pair"]]
@@ -1630,6 +1633,8 @@ def days_between_timestamps(from_timestamp, until_timestamp):
     days = int(difference // (24 * 3600))
     return days
 
+def run_commands(command_list):
+    main(command_list)
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

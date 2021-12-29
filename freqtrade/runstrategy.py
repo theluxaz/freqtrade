@@ -35,7 +35,17 @@ strategy_json = [{"DEV": "DevLukas15min"},
                  {"LONG DOWNTREND": "BuyerDevLongDowntrend"},
                  {"DOWNTREND UPSWING": "BuyerDevDowntrendUpswing"},
                  {"DANGER ZONE": "BuyerDevDangerZone"},
-                 {"UPPER DANGER ZONE": "BuyerDevUpperDangerZone"}
+                 {"UPPER DANGER ZONE": "BuyerDevUpperDangerZone"},
+                 {"BUY 1": "Buy1"},
+                 {"BUY 2": "Buy2"},
+                 {"BUY 3": "Buy3"},
+                 {"BUY 4": "Buy4"},
+                 {"BUY 5": "Buy5"},
+                 {"SELL 1": "Sell1"},
+                 {"SELL 2": "Sell2"},
+                 {"SELL 3": "Sell3"},
+                 {"SELL 4": "Sell4"},
+                 {"SELL 5": "Sell5"}
                  ]
 
 timeframes_json = [{"5": 1638835200000},  # 7 december 2021

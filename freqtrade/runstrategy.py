@@ -17,13 +17,17 @@ import time
 import datetime
 import math
 
+## use __ autopep8 __ formatter for the whole project (apart from this file)
+## --in-place --aggressive --ignore E402 $FilePath$
+
+
 
 
 computer_processing_power = 1.3  # 0.00001 to.. 2.0
 
 strategy_json = [{"DEV": "DevLukas15min"},
                  {"PROD": "ProdLukas15min"},
-                 {"BUYER HIGH": "BuyerDevHigh"},
+                 {"HIGH": "BuyerDevHigh"},
                  {"MID": "BuyerDevMid"},
                  {"LOW": "BuyerDevLow"},
                  {"LONG UPTREND": "BuyerDevLongUptrend"},

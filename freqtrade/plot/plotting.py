@@ -976,11 +976,7 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
     )
     fig.add_trace(candles, 1, 1)
 
-    if 'buy' in data.columns:
-        df_buy = data[data['buy'] == 1]
-        if len(df_buy) > 0:
-            index = 0
-            buy_colours_hex=["#7CFC00"  ,  "#32CD32"  , "#006400" , "#9ACD32" , "#00FA9A" , "#8FBC8F" ,     #green colours
+    buy_colours_hex=["#7CFC00"  ,  "#32CD32"  , "#006400" , "#9ACD32" , "#00FA9A" , "#8FBC8F" ,     #green colours
                          "#20B2AA" , "#00FFFF" , "#00CED1" , "#008B8B",   ##electric color
                          "#556B2F" , "#808000",#brownish olive green
                          "#E6E6FA", "#B0E0E6" , "#00BFFF" , "#1E90FF" , "#0000FF" , "#000080" , "#7B68EE" , "#8A2BE2",  # blue to purple
@@ -989,6 +985,12 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
                          "#FFFAFA", "#F0FFF0" , "#F0FFFF" ,"#F0F8FF" , "#F5F5DC" ,"#FFFFF0" ,"#FAEBD7" ,"#FFE4E1" , "#FFDEAD", #white - little orange shades in end
                          "#FFFACD", "#F0E68C" , "#FFFF00", "#FFD700"  #yellow
                              ]
+
+    if 'buy' in data.columns:
+        df_buy = data[data['buy'] == 1]
+        if len(df_buy) > 0:
+            index = 0
+
             random.shuffle(buy_colours_hex)
 
             buy_symbols=["circle"  ,  "square"  , "diamond" , "cross" , "pentagon" , "star" ,
@@ -998,6 +1000,7 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
 
             for buy_tag in df_buy.buy_tag.copy().drop_duplicates():
                 buy_tag_series = df_buy[df_buy['buy_tag'] == buy_tag]
+                #buy_tag_style="circle"
                 buy_tag_style = generate_buy_tag_style(buy_tag, buy_colours_hex[index%len(buy_colours_hex)], buy_symbols[index%len(buy_symbols)])
                 buys = go.Scatter(
                     x=buy_tag_series.date,
@@ -1038,6 +1041,7 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
             if("exit_tag" in df_sell):
                 for exit_tag in df_sell.exit_tag.copy().drop_duplicates():
                     sell_reason_series = df_sell[df_sell['exit_tag'] == exit_tag]
+                    #sell_reason_style="circle"
                     sell_reason_style = generate_sell_reason_style(exit_tag, sell_colours_hex[index%len(buy_colours_hex)], sell_symbols[index%len(sell_symbols)])
                     sells = go.Scatter(
                         x=sell_reason_series.date,

@@ -25,6 +25,10 @@ import math
 
 computer_processing_power = 1.3  # 0.00001 to.. 2.0
 
+balance_per_pair=1000
+
+stake_amount=800
+
 strategy_json = [{"DEV": "DevLukas15min"},
                  {"PROD": "ProdLukas15min"},
                  {"HIGH": "BuyerDevHigh"},
@@ -36,16 +40,16 @@ strategy_json = [{"DEV": "DevLukas15min"},
                  {"DOWNTREND UPSWING": "BuyerDevDowntrendUpswing"},
                  {"DANGER ZONE": "BuyerDevDangerZone"},
                  {"UPPER DANGER ZONE": "BuyerDevUpperDangerZone"},
-                 {"BUY 1": "Buy1"},
-                 {"BUY 2": "Buy2"},
-                 {"BUY 3": "Buy3"},
-                 {"BUY 4": "Buy4"},
-                 {"BUY 5": "Buy5"},
-                 {"SELL 1": "Sell1"},
-                 {"SELL 2": "Sell2"},
-                 {"SELL 3": "Sell3"},
-                 {"SELL 4": "Sell4"},
-                 {"SELL 5": "Sell5"}
+                 {"BUY 1": "x_Buy1"},
+                 {"BUY 2": "x_Buy2"},
+                 {"BUY 3": "x_Buy3"},
+                 {"BUY 4": "x_Buy4"},
+                 {"BUY 5": "x_Buy5"},
+                 {"SELL 1": "x_Sell1"},
+                 {"SELL 2": "x_Sell2"},
+                 {"SELL 3": "x_Sell3"},
+                 {"SELL 4": "x_Sell4"},
+                 {"SELL 5": "x_Sell5"}
                  ]
 
 timeframes_json = [{"5": 1638835200000},  # 7 december 2021
@@ -1284,7 +1288,6 @@ class App(QWidget):
 
     def on_select_time_from(self, i):
         if (i <= self.data["time"]["time_until_index"]):
-            print("111")
             self.data["time"]["time_from_index"] = i
             timestamp = self.timeframes[i]
 
@@ -1307,7 +1310,6 @@ class App(QWidget):
                             self.time_until_dropdown.setCurrentIndex(self.data["time"]["time_until_index"])
                             self.time_until_dropdown.setMaxVisibleItems(self.data["time"]["time_from_index"])
         else:
-            print("333")
             self.data["time"]["time_from_index"] = i
             timestamp = self.timeframes[i]
             self.time_until_dropdown.setMaxVisibleItems(self.data["time"]["time_from_index"])
@@ -1617,8 +1619,8 @@ class App(QWidget):
 
 
 def update_config_funds(config_json):
-    config_json["dry_run_wallet"] = len(config_json["exchange"]["pair_whitelist"]) * 1000
-    config_json["stake_amount"] = 900
+    config_json["dry_run_wallet"] = len(config_json["exchange"]["pair_whitelist"]) * balance_per_pair
+    config_json["stake_amount"] = stake_amount
     return config_json
 
 

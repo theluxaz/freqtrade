@@ -17,6 +17,8 @@ import time
 import datetime
 import math
 
+from importlib import reload, import_module
+
 ## use __ autopep8 __ formatter for the whole project (apart from this file)
 ## --in-place --aggressive --ignore E402 $FilePath$
 
@@ -76,6 +78,27 @@ indicators1_solo_trends = [{"5": "Upper Danger Zone"},
                            {"-2": "Long Downtrend"},
                            {"-3": "Danger Zone"},
                            ]
+
+
+MODULE_LIST = ["BUY_SIGNALS.LOW","TREND_BUY.BUYER_LOW","LOW","BUY_SIGNALS.MID","TREND_BUY.BUYER_MID", "MID", "BUY_SIGNALS.HIGH","TREND_BUY.BUYER_HIGH","HIGH",
+                            "BUY_SIGNALS.LONG_UPTREND","TREND_BUY.BUYER_LONG_UPTREND","LONG_UPTREND","BUY_SIGNALS.LONG_DOWNTREND","TREND_BUY.BUYER_LONG_DOWNTREND","LONG_DOWNTREND",
+                            "BUY_SIGNALS.SLOW_DOWNTREND","TREND_BUY.BUYER_SLOW_DOWNTREND","SLOW_DOWNTREND","BUY_SIGNALS.DOWNTREND_UPSWING","TREND_BUY.BUYER_DOWNTREND_UPSWING","DOWNTREND_UPSWING",
+                            "BUY_SIGNALS.DANGER_ZONE","TREND_BUY.BUYER_DANGER_ZONE","DANGER_ZONE","BUY_SIGNALS.UPPER_DANGER_ZONE","TREND_BUY.BUYER_UPPER_DANGER_ZONE","UPPER_DANGER_ZONE",
+                            "COMMON_BUY.COMMON_BUYERS","COMMON_BUY.COMMON_BUYERS_LOW", "COMMON_BUY.COMMON_BUYERS_MID", "COMMON_BUY.COMMON_BUYERS_HIGH",
+
+                            "SELL_SIGNALS.SELLER_LOW","SELL_SIGNALS.SELLER_MID","SELL_SIGNALS.SELLER_HIGH","SELL_SIGNALS.SELLER_LONG_DOWNTREND","SELL_SIGNALS.SELLER_SLOW_DOWNTREND",
+                            "SELL_SIGNALS.SELLER_LONG_UPTREND","SELL_SIGNALS.SELLER_DOWNTREND_UPSWING", "SELL_SIGNALS.SELLER_DANGER_ZONE","SELL_SIGNALS.SELLER_UPPER_DANGER_ZONE",
+                            "COMMON_SELL.COMMON_SELLERS", "COMMON_SELL.COMMON_SELLERS_LOW","COMMON_SELL.COMMON_SELLERS_MID","COMMON_SELL.COMMON_SELLERS_HIGH",
+
+                            "COMMON.COMMON_FUNCTIONS", "COMMON.CONSTANTS","COMMON.TA_FUNCTIONS","COMMON.POPULATE_INDICATORS",
+                            "COMMON_FUNCTIONS", "CONSTANTS","TA_FUNCTIONS","POPULATE_INDICATORS",
+
+                            "DevLukas15min",
+                            "Buy1","Buy2","Buy3","Buy4","Buy5","Sell1","Sell2","Sell3","Sell4","Sell5",
+
+                            "Common","CommonBuyerLOW","CommonBuyerMID","CommonBuyerHIGH","Constants",
+                            ]
+
 
 indicators1_default = ['sma50', 'sma200', 'sma400', 'sma10k']
 
@@ -818,6 +841,7 @@ class App(QWidget):
             self.hyperopt_clicked = False
             self.backtesting_clicked = True
             self.show_plot_clicked = False
+            self.reload_imports()
 
     @pyqtSlot()
     def on_click_plot(self):
@@ -907,6 +931,7 @@ class App(QWidget):
             self.hyperopt_clicked = False
             self.backtesting_clicked = False
             self.show_plot_clicked = True
+            self.reload_imports()
 
     @pyqtSlot()
     def on_click_hyperopt(self):
@@ -961,6 +986,7 @@ class App(QWidget):
                 self.hyperopt_clicked = True
                 self.backtesting_clicked = False
                 self.show_plot_clicked = False
+                self.reload_imports()
         else:
             print("Hyperopt is disabled")
 
@@ -1611,9 +1637,21 @@ class App(QWidget):
         # time = round(time +  ((time/2 *((computer_processing_power-1.0)*-1))),1)
         self.label_hyperopt_process.setText('Hyperopt-Pw: ' + "??" + "s")
 
+
+
+    # RESETS ALL IMPORTS BEFORE RUNNING ANY COMMANDS
+    def reload_imports(self):
+        modules_copy =    sys.modules.copy()
+        for item  in modules_copy:
+            if(item in MODULE_LIST):
+                reload(sys.modules[item])
+        return True
+
+
     def closeEvent(self, event):
         self.on_click_save_json()
         sys.exit(0)
+
 
     # Updates the balance and order size for the config
 

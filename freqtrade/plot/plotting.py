@@ -331,6 +331,7 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
         main_trend_color_hex = {  5:"rgba(24, 69, 13,0.4)",#"name":"UPPER_DANGER_ZONE"}
                             3:"rgba(0,128,0, 0.2)",#"name":"LONG_UPTREND"},
                             2:"rgba(70, 130, 180,0.25)",#"name":"DOWNTREND_UPSWING"},
+                            1:"rgba(255,255,159,0.25)",#"name":"DATA_NOT_LOADED"}, #"rgba(255,255,159,0.1)",
                             0:"rgba(255, 255, 255, 0)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
                             -1:"rgba(233, 150, 122,0.25)",#"name":"SLOW_DOWNTREND"},
                             -2:"rgba(255, 0, 0,0.2)",#"name":"LONG_DOWNTREND"},
@@ -339,6 +340,7 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
         main_trend_labels = {  "5":"UPPER_DANGER_ZONE",
                             "3":"LONG_UPTREND",
                             "2":"DOWNTREND_UPSWING",
+                            "1":"DATA_NOT_LOADED",
                             "0":"NOTREND",
                             "-1":"SLOW_DOWNTREND",
                             "-2":"LONG_DOWNTREND",
@@ -347,11 +349,13 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
                         }
 
         main_volatility_hex = {
+                    0:"rgba(0, 0, 0, 0)",#"name":"NONE"},
                     1:"rgba(175, 225, 233, 0.25)",#"name":"LOW"},
                     2:"rgba(73, 187, 204, 0.25)",#"name":"MID"},
                     3:"rgba(0, 139, 251, 0.22)",#"name":"HIGH"}
                         }
         main_volatility_labels = {
+                    "0":"NONE",
                     "1":"LOW_VOL",
                     "2":"MID_VOL",
                     "3":"HIGH_VOL"
@@ -383,8 +387,8 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
                     vol+=1
                     newframe = data.copy()
 
-                    newframe.loc[( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)), 'bb_upperband'] = newframe['bb_middleband']
-                    newframe.loc[( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)), 'bb_lowerband'] = newframe['bb_middleband']
+                    newframe.loc[(( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)&(newframe['volatility'] != 0))), 'bb_upperband'] = newframe['bb_middleband']
+                    newframe.loc[(( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)&(newframe['volatility'] != 0))), 'bb_lowerband'] = newframe['bb_middleband']
 
 
                     vol_area_style = main_volatility_hex[vol]
@@ -409,6 +413,7 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
         main_trend_color_hex = {  5:"rgba(24, 69, 13,0.4)",#"name":"UPPER_DANGER_ZONE"}
                             3:"rgba(0,128,0, 0.2)",#"name":"LONG_UPTREND"},
                             2:"rgba(70, 130, 180,0.25)",#"name":"DOWNTREND_UPSWING"},
+                            1:"rgba(255,255,159,0.25)",#"name":"DATA_NOT_LOADED"}, #"rgba(255,255,159,0.1)",
                             0:"rgba(255, 255, 255, 0)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
                             -1:"rgba(233, 150, 122,0.25)",#"name":"SLOW_DOWNTREND"},
                             -2:"rgba(255, 0, 0,0.2)",#"name":"LONG_DOWNTREND"},
@@ -417,6 +422,7 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
         main_trend_labels = {  "5":"UPPER_DANGER_ZONE",
                             "3":"LONG_UPTREND",
                             "2":"DOWNTREND_UPSWING",
+                            "1":"DATA_NOT_LOADED",
                             "0":"NOTREND",
                             "-1":"SLOW_DOWNTREND",
                             "-2":"LONG_DOWNTREND",
@@ -425,11 +431,13 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
                         }
 
         main_volatility_hex = {
+                    0:"rgba(0, 0, 0, 0)",#"name":"NONE"},
                     1:"rgba(175, 225, 233, 0.25)",#"name":"LOW"},
                     2:"rgba(73, 187, 204, 0.25)",#"name":"MID"},
                     3:"rgba(0, 139, 251, 0.22)",#"name":"HIGH"}
                         }
         main_volatility_labels = {
+                    "0":"NONE",
                     "1":"LOW_VOL",
                     "2":"MID_VOL",
                     "3":"HIGH_VOL"
@@ -461,8 +469,8 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
                 vol+=1
                 newframe = data.copy()
 
-                newframe.loc[( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)), 'bb_upperband'] = newframe['bb_middleband']
-                newframe.loc[( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)), 'bb_lowerband'] = newframe['bb_middleband']
+                newframe.loc[(( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)&(newframe['volatility'] != 0))), 'bb_upperband'] = newframe['bb_middleband']
+                newframe.loc[(( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)&(newframe['volatility'] != 0))), 'bb_lowerband'] = newframe['bb_middleband']
 
 
                 vol_area_style = main_volatility_hex[vol]
@@ -617,12 +625,14 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
         distance = 14
 
         main_volatility_hex = {
+                    "0":"rgba(0, 0, 0, 0)",#"name":"NONE"},
                     "1":"rgba(175, 225, 233, 0.5)",#"name":"LOW"},
                     "2":"rgba(73, 187, 204, 0.5)",#"name":"MID"},
                     "3":"rgba(0, 139, 251, 0.5)",#"name":"HIGH"}
                 }
 
         main_volatility_symbols = {
+                    "0":"square",#"name":"NONE"},
                     "1":"circle-open",#"name":"LOW"},
                     "2":"circle-open-dot",#"name":"MID"},
                     "3":"circle",#"name":"HIGH"}

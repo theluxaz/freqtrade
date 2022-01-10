@@ -99,6 +99,8 @@ MODULE_LIST = ["BUY_SIGNALS.LOW","TREND_BUY.BUYER_LOW","LOW","BUY_SIGNALS.MID","
                             "Common","CommonBuyerLOW","CommonBuyerMID","CommonBuyerHIGH","Constants",
                             ]
 
+data_loading_time_ms = 905000000
+
 
 indicators1_default = ['sma50', 'sma200', 'sma400', 'sma10k']
 
@@ -832,7 +834,7 @@ class App(QWidget):
 
             command_list = ["backtesting", "--config", "user_data/" + self.data["config"], "--timeframe", "15m",
                             "--strategy", self.strategies[self.data["strategy"]], "--export", "trades",
-                            "--timerange=" + str(self.data["time"]["time_from"]) + "-" + str(time_until)]
+                            "--timerange=" + str(self.data["time"]["time_from"]-data_loading_time_ms) + "-" + str(time_until)]
 
             print(command_list)
             self.command_list = command_list
@@ -915,7 +917,7 @@ class App(QWidget):
 
             command_list = [command, "--config", "user_data/" + self.data["config"], "--strategy",
                             self.strategies[self.data["strategy"]], "-p", pair + "/" + fiat_currency,
-                            "--timerange=" + str(self.data["time"]["time_from"]) + "-" + str(time_until)]
+                            "--timerange=" + str(self.data["time"]["time_from"]-data_loading_time_ms) + "-" + str(time_until)]
 
             if (len(indicators1) > 0):
                 command_list.extend(indicators1)
@@ -970,7 +972,7 @@ class App(QWidget):
                 command_list = ["hyperopt", "--config", "user_data/" + self.data["config"], "--timeframe", "15m",
                                 "--strategy", self.strategies[self.data["strategy"]], "-e",
                                 self.data["hyperopt"]["epochs"],
-                                "--timerange=" + str(self.data["time"]["time_from"]) + "-" + str(time_until),
+                                "--timerange=" + str(self.data["time"]["time_from"]-data_loading_time_ms) + "-" + str(time_until),
                                 "--hyperopt-loss", hyperopt_loss_functions[self.data["hyperopt"]["loss_function"]],
                                 "--print-all"]
 

@@ -28,9 +28,10 @@ Please read the [exchange specific notes](docs/exchanges.md) to learn about even
 
 - [X] [Binance](https://www.binance.com/) ([*Note for binance users](docs/exchanges.md#binance-blacklist))
 - [X] [Bittrex](https://bittrex.com/)
-- [X] [Kraken](https://kraken.com/)
 - [X] [FTX](https://ftx.com)
 - [X] [Gate.io](https://www.gate.io/ref/6266643)
+- [X] [Kraken](https://kraken.com/)
+- [X] [OKEX](https://www.okex.com/)
 - [ ] [potentially many others](https://github.com/ccxt/ccxt/). _(We cannot guarantee they will work)_
 
 ### Community tested
@@ -48,7 +49,7 @@ Please find the complete documentation on the [freqtrade website](https://www.fr
 
 ## Features
 
-- [x] **Based on Python 3.7+**: For botting on any operating system - Windows, macOS and Linux.
+- [x] **Based on Python 3.8+**: For botting on any operating system - Windows, macOS and Linux.
 - [x] **Persistence**: Persistence is achieved through sqlite.
 - [x] **Dry-run**: Run the bot without paying money.
 - [x] **Backtesting**: Run a simulation of your buy/sell strategy.
@@ -196,7 +197,7 @@ To run this bot we recommend you a cloud instance with a minimum of:
 
 ### Software requirements
 
-- [Python 3.7.x](http://docs.python-guide.org/en/latest/starting/installation/)
+- [Python >= 3.8](http://docs.python-guide.org/en/latest/starting/installation/)
 - [pip](https://pip.pypa.io/en/stable/installing/)
 - [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
 - [TA-Lib](https://mrjbq7.github.io/ta-lib/install.html)

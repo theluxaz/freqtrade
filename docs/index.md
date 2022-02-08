@@ -11,7 +11,7 @@
 
 ## Introduction
 
-Freqtrade is a crypto-currency algorithmic trading software developed in python (3.7+) and supported on Windows, macOS and Linux.
+Freqtrade is a crypto-currency algorithmic trading software developed in python (3.8+) and supported on Windows, macOS and Linux.
 
 !!! Danger "DISCLAIMER"
     This software is for educational purposes only. Do not risk money which you are afraid to lose. USE THE SOFTWARE AT YOUR OWN RISK. THE AUTHORS AND ALL AFFILIATES ASSUME NO RESPONSIBILITY FOR YOUR TRADING RESULTS.
@@ -36,11 +36,12 @@ Freqtrade is a crypto-currency algorithmic trading software developed in python 
 
 Please read the [exchange specific notes](exchanges.md) to learn about eventual, special configurations needed for each exchange.
 
-- [X] [Binance](https://www.binance.com/) ([*Note for binance users](docs/exchanges.md#binance-blacklist))
+- [X] [Binance](https://www.binance.com/) ([*Note for binance users](exchanges.md#binance-blacklist))
 - [X] [Bittrex](https://bittrex.com/)
 - [X] [FTX](https://ftx.com)
-- [X] [Kraken](https://kraken.com/)
 - [X] [Gate.io](https://www.gate.io/ref/6266643)
+- [X] [Kraken](https://kraken.com/)
+- [X] [OKEX](https://www.okex.com/)
 - [ ] [potentially many others through <img alt="ccxt" width="30px" src="assets/ccxt-logo.svg" />](https://github.com/ccxt/ccxt/). _(We cannot guarantee they will work)_
 
 ### Community tested
@@ -66,7 +67,7 @@ To run this bot we recommend you a linux cloud instance with a minimum of:
 
 Alternatively
 
-- Python 3.7+
+- Python 3.8+
 - pip (pip3)
 - git
 - TA-Lib

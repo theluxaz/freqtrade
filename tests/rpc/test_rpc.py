@@ -108,6 +108,14 @@ def test_rpc_trade_status(default_conf, ticker, fee, mocker) -> None:
         'stoploss_entry_dist_ratio': -0.10448878,
         'open_order': None,
         'exchange': 'binance',
+        'filled_entry_orders': [{
+            'amount': 91.07468123, 'average': 1.098e-05,
+            'cost': 0.0009999999999054, 'filled': 91.07468123, 'ft_order_side': 'buy',
+            'order_date': ANY, 'order_timestamp': ANY, 'order_filled_date': ANY,
+            'order_filled_timestamp': ANY, 'order_type': 'limit', 'price': 1.098e-05,
+            'is_open': False, 'pair': 'ETH/BTC',
+            'remaining': ANY, 'status': ANY}],
+        'filled_exit_orders': []
     }
 
     mocker.patch('freqtrade.exchange.Exchange.get_rate',
@@ -175,6 +183,14 @@ def test_rpc_trade_status(default_conf, ticker, fee, mocker) -> None:
         'stoploss_entry_dist_ratio': -0.10448878,
         'open_order': None,
         'exchange': 'binance',
+        'filled_entry_orders': [{
+            'amount': 91.07468123, 'average': 1.098e-05,
+            'cost': 0.0009999999999054, 'filled': 91.07468123, 'ft_order_side': 'buy',
+            'order_date': ANY, 'order_timestamp': ANY, 'order_filled_date': ANY,
+            'order_filled_timestamp': ANY, 'order_type': 'limit', 'price': 1.098e-05,
+            'is_open': False, 'pair': 'ETH/BTC',
+            'remaining': ANY, 'status': ANY}],
+        'filled_exit_orders': []
     }
 
 
@@ -214,10 +230,20 @@ def test_rpc_status_table(default_conf, ticker, fee, mocker) -> None:
     result, headers, fiat_profit_sum = rpc._rpc_status_table(default_conf['stake_currency'], 'USD')
     assert "Since" in headers
     assert "Pair" in headers
+    assert len(result[0]) == 4
     assert 'instantly' == result[0][2]
     assert 'ETH/BTC' in result[0][1]
     assert '-0.41% (-0.06)' == result[0][3]
     assert '-0.06' == f'{fiat_profit_sum:.2f}'
+
+    rpc._config['position_adjustment_enable'] = True
+    rpc._config['max_entry_position_adjustment'] = 3
+    result, headers, fiat_profit_sum = rpc._rpc_status_table(default_conf['stake_currency'], 'USD')
+    assert "# Entries" in headers
+    assert len(result[0]) == 5
+    # 4th column should be 1/4 - as 1 order filled (a total of 4 is possible)
+    # 3 on top of the initial one.
+    assert result[0][4] == '1/4'
 
     mocker.patch('freqtrade.exchange.Exchange.get_rate',
                  MagicMock(side_effect=ExchangeError("Pair 'ETH/BTC' not available")))
@@ -424,7 +450,7 @@ def test_rpc_trade_statistics(default_conf, ticker, ticker_sell_up, fee,
     assert stats['trade_count'] == 2
     assert stats['first_trade_date'] == 'just now'
     assert stats['latest_trade_date'] == 'just now'
-    assert stats['avg_duration'] in ('0:00:00', '0:00:01')
+    assert stats['avg_duration'] in ('0:00:00', '0:00:01', '0:00:02')
     assert stats['best_pair'] == 'ETH/BTC'
     assert prec_satoshi(stats['best_rate'], 6.2)
 
@@ -435,7 +461,7 @@ def test_rpc_trade_statistics(default_conf, ticker, ticker_sell_up, fee,
     assert stats['trade_count'] == 2
     assert stats['first_trade_date'] == 'just now'
     assert stats['latest_trade_date'] == 'just now'
-    assert stats['avg_duration'] in ('0:00:00', '0:00:01')
+    assert stats['avg_duration'] in ('0:00:00', '0:00:01', '0:00:02')
     assert stats['best_pair'] == 'ETH/BTC'
     assert prec_satoshi(stats['best_rate'], 6.2)
     assert isnan(stats['profit_all_coin'])
@@ -1004,7 +1030,7 @@ def test_mix_tag_performance_handle(default_conf, ticker, limit_buy_order, fee,
     assert len(res) == 1
     assert res[0]['mix_tag'] == 'Other Other'
     assert res[0]['count'] == 1
-    assert prec_satoshi(res[0]['profit'], 6.2)
+    assert prec_satoshi(res[0]['profit_pct'], 6.2)
 
     trade.buy_tag = "TESTBUY"
     trade.sell_reason = "TESTSELL"
@@ -1013,7 +1039,7 @@ def test_mix_tag_performance_handle(default_conf, ticker, limit_buy_order, fee,
     assert len(res) == 1
     assert res[0]['mix_tag'] == 'TESTBUY TESTSELL'
     assert res[0]['count'] == 1
-    assert prec_satoshi(res[0]['profit'], 6.2)
+    assert prec_satoshi(res[0]['profit_pct'], 6.2)
 
 
 def test_mix_tag_performance_handle_2(mocker, default_conf, markets, fee):
@@ -1032,10 +1058,10 @@ def test_mix_tag_performance_handle_2(mocker, default_conf, markets, fee):
     assert len(res) == 2
     assert res[0]['mix_tag'] == 'TEST1 sell_signal'
     assert res[0]['count'] == 1
-    assert prec_satoshi(res[0]['profit'], 0.5)
+    assert prec_satoshi(res[0]['profit_pct'], 0.5)
     assert res[1]['mix_tag'] == 'Other roi'
     assert res[1]['count'] == 1
-    assert prec_satoshi(res[1]['profit'], 1.0)
+    assert prec_satoshi(res[1]['profit_pct'], 1.0)
 
     # Test for a specific pair
     res = rpc._rpc_mix_tag_performance('ETC/BTC')
@@ -1043,7 +1069,7 @@ def test_mix_tag_performance_handle_2(mocker, default_conf, markets, fee):
     assert len(res) == 1
     assert res[0]['count'] == 1
     assert res[0]['mix_tag'] == 'TEST1 sell_signal'
-    assert prec_satoshi(res[0]['profit'], 0.5)
+    assert prec_satoshi(res[0]['profit_pct'], 0.5)
 
 
 def test_rpc_count(mocker, default_conf, ticker, fee) -> None:
@@ -1093,7 +1119,7 @@ def test_rpcforcebuy(mocker, default_conf, ticker, fee, limit_buy_order_open) ->
     with pytest.raises(RPCException, match=r'position for ETH/BTC already open - id: 1'):
         rpc._rpc_forcebuy(pair, 0.0001)
     pair = 'XRP/BTC'
-    trade = rpc._rpc_forcebuy(pair, 0.0001)
+    trade = rpc._rpc_forcebuy(pair, 0.0001, order_type='limit')
     assert isinstance(trade, Trade)
     assert trade.pair == pair
     assert trade.open_rate == 0.0001
@@ -1102,9 +1128,14 @@ def test_rpcforcebuy(mocker, default_conf, ticker, fee, limit_buy_order_open) ->
     with pytest.raises(RPCException,
                        match=r'Wrong pair selected. Only pairs with stake-currency.*'):
         rpc._rpc_forcebuy('LTC/ETH', 0.0001)
-    pair = 'XRP/BTC'
+
+    # Test with defined stake_amount
+    pair = 'LTC/BTC'
+    trade = rpc._rpc_forcebuy(pair, 0.0001, order_type='limit', stake_amount=0.05)
+    assert trade.stake_amount == 0.05
 
     # Test not buying
+    pair = 'XRP/BTC'
     freqtradebot = get_patched_freqtradebot(mocker, default_conf)
     freqtradebot.config['stake_amount'] = 0
     patch_get_signal(freqtradebot)
@@ -1225,6 +1256,16 @@ def test_rpc_blacklist(mocker, default_conf) -> None:
     assert 'errors' in ret
     assert isinstance(ret['errors'], dict)
 
+    ret = rpc._rpc_blacklist_delete(["DOGE/BTC", 'HOT/BTC'])
+
+    assert 'StaticPairList' in ret['method']
+    assert len(ret['blacklist']) == 2
+    assert ret['blacklist'] == default_conf['exchange']['pair_blacklist']
+    assert ret['blacklist'] == ['ETH/BTC', 'XRP/.*']
+    assert ret['blacklist_expanded'] == ['ETH/BTC', 'XRP/BTC', 'XRP/USDT']
+    assert 'errors' in ret
+    assert isinstance(ret['errors'], dict)
+
 
 def test_rpc_edge_disabled(mocker, default_conf) -> None:
     mocker.patch('freqtrade.rpc.telegram.Telegram', MagicMock())
@@ -1251,3 +1292,13 @@ def test_rpc_edge_enabled(mocker, edge_conf) -> None:
     assert ret[0]['Winrate'] == 0.66
     assert ret[0]['Expectancy'] == 1.71
     assert ret[0]['Stoploss'] == -0.02
+
+
+def test_rpc_health(mocker, default_conf) -> None:
+    mocker.patch('freqtrade.rpc.telegram.Telegram', MagicMock())
+
+    freqtradebot = get_patched_freqtradebot(mocker, default_conf)
+    rpc = RPC(freqtradebot)
+    result = rpc._health()
+    assert result['last_process'] == '1970-01-01 00:00:00+00:00'
+    assert result['last_process_ts'] == 0

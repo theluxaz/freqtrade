@@ -26,7 +26,7 @@ HYPEROPT_LOSS_BUILTIN = ['ShortTradeDurHyperOptLoss', 'OnlyProfitHyperOptLoss',
                          'SharpeHyperOptLoss', 'SharpeHyperOptLossDaily',
                          'SortinoHyperOptLoss', 'SortinoHyperOptLossDaily',
                          'CalmarHyperOptLoss',
-                         'MaxDrawDownHyperOptLoss']
+                         'MaxDrawDownHyperOptLoss', 'ProfitDrawDownHyperOptLoss']
 AVAILABLE_PAIRLISTS = ['StaticPairList', 'VolumePairList',
                        'AgeFilter', 'OffsetFilter', 'PerformanceFilter',
                        'PrecisionFilter', 'PriceFilter', 'RangeStabilityFilter',
@@ -34,6 +34,8 @@ AVAILABLE_PAIRLISTS = ['StaticPairList', 'VolumePairList',
 AVAILABLE_PROTECTIONS = ['CooldownPeriod', 'LowProfitPairs', 'MaxDrawdown', 'StoplossGuard']
 AVAILABLE_DATAHANDLERS = ['json', 'jsongz', 'hdf5']
 BACKTEST_BREAKDOWNS = ['day', 'week', 'month']
+BACKTEST_CACHE_AGE = ['none', 'day', 'week', 'month']
+BACKTEST_CACHE_DEFAULT = 'day'
 DRY_RUN_WALLET = 1000
 DATETIME_PRINT_FORMAT = '%Y-%m-%d %H:%M:%S'
 MATH_CLOSE_PREC = 1e-14  # Precision used for float comparisons
@@ -50,6 +52,8 @@ USERPATH_STRATEGIES = 'strategies'
 USERPATH_NOTEBOOKS = 'notebooks'
 
 TELEGRAM_SETTING_OPTIONS = ['on', 'off', 'silent']
+WEBHOOK_FORMAT_OPTIONS = ['form', 'json', 'raw']
+
 ENV_VAR_PREFIX = 'FREQTRADE__'
 
 NON_OPEN_EXCHANGE_STATES = ('cancelled', 'canceled', 'closed', 'expired')
@@ -156,6 +160,7 @@ CONF_SCHEMA = {
             'properties': {
                 'buy': {'type': 'number', 'minimum': 1},
                 'sell': {'type': 'number', 'minimum': 1},
+                'exit_timeout_count': {'type': 'number', 'minimum': 0, 'default': 0},
                 'unit': {'type': 'string', 'enum': TIMEOUT_UNITS, 'default': 'minutes'}
             }
         },
@@ -206,7 +211,10 @@ CONF_SCHEMA = {
                 'sell': {'type': 'string', 'enum': ORDERTYPE_POSSIBILITIES},
                 'forcesell': {'type': 'string', 'enum': ORDERTYPE_POSSIBILITIES},
                 'forcebuy': {'type': 'string', 'enum': ORDERTYPE_POSSIBILITIES},
-                'emergencysell': {'type': 'string', 'enum': ORDERTYPE_POSSIBILITIES},
+                'emergencysell': {
+                    'type': 'string',
+                    'enum': ORDERTYPE_POSSIBILITIES,
+                    'default': 'market'},
                 'stoploss': {'type': 'string', 'enum': ORDERTYPE_POSSIBILITIES},
                 'stoploss_on_exchange': {'type': 'boolean'},
                 'stoploss_on_exchange_interval': {'type': 'number'},
@@ -308,10 +316,16 @@ CONF_SCHEMA = {
             'type': 'object',
             'properties': {
                 'enabled': {'type': 'boolean'},
+                'url': {'type': 'string'},
+                'format': {'type': 'string', 'enum': WEBHOOK_FORMAT_OPTIONS, 'default': 'form'},
+                'retries': {'type': 'integer', 'minimum': 0},
+                'retry_delay': {'type': 'number', 'minimum': 0},
                 'webhookbuy': {'type': 'object'},
                 'webhookbuycancel': {'type': 'object'},
+                'webhookbuyfill': {'type': 'object'},
                 'webhooksell': {'type': 'object'},
                 'webhooksellcancel': {'type': 'object'},
+                'webhooksellfill': {'type': 'object'},
                 'webhookstatus': {'type': 'object'},
             },
         },
@@ -357,7 +371,9 @@ CONF_SCHEMA = {
             'type': 'string',
             'enum': AVAILABLE_DATAHANDLERS,
             'default': 'jsongz'
-        }
+        },
+        'position_adjustment_enable': {'type': 'boolean'},
+        'max_entry_position_adjustment': {'type': ['integer', 'number'], 'minimum': -1},
     },
     'definitions': {
         'exchange': {
@@ -383,6 +399,7 @@ CONF_SCHEMA = {
                     },
                     'uniqueItems': True
                 },
+                'unknown_fee_rate': {'type': 'number'},
                 'outdated_offset': {'type': 'integer', 'minimum': 1},
                 'markets_refresh_interval': {'type': 'integer'},
                 'ccxt_config': {'type': 'object'},

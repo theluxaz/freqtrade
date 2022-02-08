@@ -76,17 +76,14 @@ def ask_user_config() -> Dict[str, Any]:
         {
             "type": "text",
             "name": "max_open_trades",
-            "message": f"Please insert max_open_trades (Integer or '{UNLIMITED_STAKE_AMOUNT}'):",
+            "message": "Please insert max_open_trades (Integer or -1 for unlimited open trades):",
             "default": "3",
-            "validate": lambda val: val == UNLIMITED_STAKE_AMOUNT or validate_is_int(val),
-            "filter": lambda val: '"' + UNLIMITED_STAKE_AMOUNT + '"'
-            if val == UNLIMITED_STAKE_AMOUNT
-            else val
+            "validate": lambda val: validate_is_int(val)
         },
         {
             "type": "select",
             "name": "timeframe_in_config",
-            "message": "Tim",
+            "message": "Time",
             "choices": ["Have the strategy define timeframe.", "Override in configuration."]
         },
         {
@@ -115,6 +112,7 @@ def ask_user_config() -> Dict[str, Any]:
                 "ftx",
                 "kucoin",
                 "gateio",
+                "okex",
                 Separator(),
                 "other",
             ],
@@ -142,7 +140,7 @@ def ask_user_config() -> Dict[str, Any]:
             "type": "password",
             "name": "exchange_key_password",
             "message": "Insert Exchange API Key password",
-            "when": lambda x: not x['dry_run'] and x['exchange_name'] == 'kucoin'
+            "when": lambda x: not x['dry_run'] and x['exchange_name'] in ('kucoin', 'okex')
         },
         {
             "type": "confirm",

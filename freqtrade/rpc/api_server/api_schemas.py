@@ -4,6 +4,7 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel
 
 from freqtrade.constants import DATETIME_PRINT_FORMAT
+from freqtrade.enums import OrderTypeValues
 
 
 class Ping(BaseModel):
@@ -95,6 +96,7 @@ class Profit(BaseModel):
     avg_duration: str
     best_pair: str
     best_rate: float
+    best_pair_profit_ratio: float
     winning_trades: int
     losing_trades: int
 
@@ -123,7 +125,28 @@ class Daily(BaseModel):
     stake_currency: str
 
 
+class UnfilledTimeout(BaseModel):
+    buy: Optional[int]
+    sell: Optional[int]
+    unit: Optional[str]
+    exit_timeout_count: Optional[int]
+
+
+class OrderTypes(BaseModel):
+    buy: OrderTypeValues
+    sell: OrderTypeValues
+    emergencysell: Optional[OrderTypeValues]
+    forcesell: Optional[OrderTypeValues]
+    forcebuy: Optional[OrderTypeValues]
+    stoploss: OrderTypeValues
+    stoploss_on_exchange: bool
+    stoploss_on_exchange_interval: Optional[int]
+
+
 class ShowConfig(BaseModel):
+    version: str
+    strategy_version: Optional[str]
+    api_version: float
     dry_run: bool
     stake_currency: str
     stake_amount: Union[float, str]
@@ -136,6 +159,8 @@ class ShowConfig(BaseModel):
     trailing_stop_positive: Optional[float]
     trailing_stop_positive_offset: Optional[float]
     trailing_only_offset_is_reached: Optional[bool]
+    unfilledtimeout: UnfilledTimeout
+    order_types: Optional[OrderTypes]
     use_custom_stoploss: Optional[bool]
     timeframe: Optional[str]
     timeframe_ms: int
@@ -148,6 +173,8 @@ class ShowConfig(BaseModel):
     bot_name: str
     state: str
     runmode: str
+    position_adjustment_enable: bool
+    max_entry_position_adjustment: int
 
 
 class TradeSchema(BaseModel):
@@ -251,10 +278,13 @@ class Logs(BaseModel):
 class ForceBuyPayload(BaseModel):
     pair: str
     price: Optional[float]
+    ordertype: Optional[OrderTypeValues]
+    stakeamount: Optional[float]
 
 
 class ForceSellPayload(BaseModel):
     tradeid: str
+    ordertype: Optional[OrderTypeValues]
 
 
 class BlacklistPayload(BaseModel):
@@ -354,3 +384,8 @@ class BacktestResponse(BaseModel):
 class SysInfo(BaseModel):
     cpu_pct: List[float]
     ram_pct: float
+
+
+class Health(BaseModel):
+    last_process: datetime
+    last_process_ts: int

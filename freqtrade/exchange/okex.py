@@ -8,11 +8,11 @@ logger = logging.getLogger(__name__)
 
 
 class Okex(Exchange):
-    """
-    Okex exchange class. Contains adjustments needed for Freqtrade to work
-    with this exchange.
+    """Okex exchange class.
+
+    Contains adjustments needed for Freqtrade to work with this exchange.
     """
 
     _ft_has: Dict = {
-        "ohlcv_candle_limit": 100,
+        "ohlcv_candle_limit": 300,
     }

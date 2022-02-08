@@ -202,10 +202,10 @@ class FreqtradeBot(LoggingMixin):
             msg = {
                 'type': RPCMessageType.WARNING,
                 'status': f"{len(open_trades)} open trades active.\n\n"
-                f"Handle these trades manually on {self.exchange.name}, "
-                f"or '/start' the bot again and use '/stopbuy' "
-                f"to handle open trades gracefully. \n"
-                f"{'Trades are simulated.' if self.config['dry_run'] else ''}",
+                          f"Handle these trades manually on {self.exchange.name}, "
+                          f"or '/start' the bot again and use '/stopbuy' "
+                          f"to handle open trades gracefully. \n"
+                          f"{'Trades are simulated.' if self.config['dry_run'] else ''}",
             }
             self.rpc.send_msg(msg)
 
@@ -420,7 +420,7 @@ class FreqtradeBot(LoggingMixin):
             return False
 
         # running get_signal on historical data fetched
-        (buy, sell, buy_tag, exit_tag) = self.strategy.get_signal(
+        (buy, sell, buy_tag, _) = self.strategy.get_signal(
             pair,
             self.strategy.timeframe,
             analyzed_df
@@ -707,7 +707,7 @@ class FreqtradeBot(LoggingMixin):
             analyzed_df, _ = self.dataprovider.get_analyzed_dataframe(trade.pair,
                                                                       self.strategy.timeframe)
 
-            (buy, sell, buy_tag, exit_tag) = self.strategy.get_signal(
+            (buy, sell, _, exit_tag) = self.strategy.get_signal(
                 trade.pair,
                 self.strategy.timeframe,
                 analyzed_df
@@ -1149,9 +1149,7 @@ class FreqtradeBot(LoggingMixin):
         trade.open_order_id = order['id']
         trade.sell_order_status = ''
         trade.close_rate_requested = limit
-        trade.sell_reason = sell_reason.sell_reason
-        if(exit_tag is not None):
-            trade.sell_reason = exit_tag
+        trade.sell_reason = exit_tag or sell_reason.sell_reason
         # In case of market sell orders the order can be closed immediately
         if order.get('status', 'unknown') in ('closed', 'expired'):
             self.update_trade_state(trade, trade.open_order_id, order)

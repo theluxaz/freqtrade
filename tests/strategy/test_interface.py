@@ -30,7 +30,7 @@ _STRATEGY = StrategyTestV2(config={})
 _STRATEGY.dp = DataProvider({}, None, None)
 
 
-def test_returns_latest_signal(mocker, default_conf, ohlcv_history):
+def test_returns_latest_signal(ohlcv_history):
     ohlcv_history.loc[1, 'date'] = arrow.utcnow()
     # Take a copy to correctly modify the call
     mocked_history = ohlcv_history.copy()
@@ -59,6 +59,18 @@ def test_returns_latest_signal(mocker, default_conf, ohlcv_history):
         False,
         'buy_signal_01',
         None)
+
+    mocked_history.loc[1, 'buy_tag'] = None
+    mocked_history.loc[1, 'exit_tag'] = 'sell_signal_01'
+
+    assert _STRATEGY.get_signal(
+        'ETH/BTC',
+        '5m',
+        mocked_history) == (
+        True,
+        False,
+        None,
+        'sell_signal_01')
 
 
 def test_analyze_pair_empty(default_conf, mocker, caplog, ohlcv_history):
@@ -587,6 +599,13 @@ def test_is_pair_locked(default_conf):
     # Unlock original pair
     pair = 'ETH/BTC'
     strategy.unlock_pair(pair)
+    assert not strategy.is_pair_locked(pair)
+
+    # Lock with reason
+    reason = "TestLockR"
+    strategy.lock_pair(pair, arrow.now(timezone.utc).shift(minutes=4).datetime, reason)
+    assert strategy.is_pair_locked(pair)
+    strategy.unlock_reason(reason)
     assert not strategy.is_pair_locked(pair)
 
     pair = 'BTC/USDT'

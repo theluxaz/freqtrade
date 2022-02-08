@@ -179,7 +179,8 @@ class Telegram(RPCHandler):
             CallbackQueryHandler(self._balance, pattern='update_balance'),
             CallbackQueryHandler(self._performance, pattern='update_performance'),
             CallbackQueryHandler(self._buy_tag_performance, pattern='update_buy_tag_performance'),
-            CallbackQueryHandler(self._sell_reason_performance, pattern='update_sell_reason_performance'),
+            CallbackQueryHandler(self._sell_reason_performance,
+                                 pattern='update_sell_reason_performance'),
             CallbackQueryHandler(self._mix_tag_performance, pattern='update_mix_tag_performance'),
             CallbackQueryHandler(self._count, pattern='update_count'),
             CallbackQueryHandler(self._forcebuy_inline),
@@ -860,7 +861,7 @@ class Telegram(RPCHandler):
                 stat_line = (
                     f"{i+1}.\t <code>{trade['pair']}\t"
                     f"{round_coin_value(trade['profit_abs'], self._config['stake_currency'])} "
-                    f"({trade['profit']:.2f}%) "
+                    f"({trade['profit_pct']:.2f}%) "
                     f"({trade['count']})</code>\n")
 
                 if len(output + stat_line) >= MAX_TELEGRAM_MESSAGE_LENGTH:
@@ -886,7 +887,7 @@ class Telegram(RPCHandler):
         """
         try:
             pair = None
-            if context.args:
+            if context.args and isinstance(context.args[0], str):
                 pair = context.args[0]
 
             trades = self._rpc._rpc_buy_tag_performance(pair)
@@ -895,7 +896,7 @@ class Telegram(RPCHandler):
                 stat_line = (
                     f"{i+1}.\t <code>{trade['buy_tag']}\t"
                     f"{round_coin_value(trade['profit_abs'], self._config['stake_currency'])} "
-                    f"({trade['profit']:.2f}%) "
+                    f"({trade['profit_pct']:.2f}%) "
                     f"({trade['count']})</code>\n")
 
                 if len(output + stat_line) >= MAX_TELEGRAM_MESSAGE_LENGTH:
@@ -921,7 +922,7 @@ class Telegram(RPCHandler):
         """
         try:
             pair = None
-            if context.args:
+            if context.args and isinstance(context.args[0], str):
                 pair = context.args[0]
 
             trades = self._rpc._rpc_sell_reason_performance(pair)
@@ -930,7 +931,7 @@ class Telegram(RPCHandler):
                 stat_line = (
                     f"{i+1}.\t <code>{trade['sell_reason']}\t"
                     f"{round_coin_value(trade['profit_abs'], self._config['stake_currency'])} "
-                    f"({trade['profit']:.2f}%) "
+                    f"({trade['profit_pct']:.2f}%) "
                     f"({trade['count']})</code>\n")
 
                 if len(output + stat_line) >= MAX_TELEGRAM_MESSAGE_LENGTH:
@@ -956,7 +957,7 @@ class Telegram(RPCHandler):
         """
         try:
             pair = None
-            if context.args:
+            if context.args and isinstance(context.args[0], str):
                 pair = context.args[0]
 
             trades = self._rpc._rpc_mix_tag_performance(pair)
@@ -1146,7 +1147,8 @@ class Telegram(RPCHandler):
         :return: None
         """
         forcebuy_text = ("*/forcebuy <pair> [<rate>]:* `Instantly buys the given pair. "
-                         "Optionally takes a rate at which to buy.` \n")
+                         "Optionally takes a rate at which to buy "
+                         "(only applies to limit orders).` \n")
         message = ("*/start:* `Starts the trader`\n"
                    "*/stop:* `Stops the trader`\n"
                    "*/status <trade_id>|[table]:* `Lists all open trades`\n"
@@ -1157,7 +1159,7 @@ class Telegram(RPCHandler):
                    "                `pending sell orders are marked with a double asterisk (**)`\n"
                    "*/buys <pair|none>:* `Shows the buy_tag performance`\n"
                    "*/sells <pair|none>:* `Shows the sell reason performance`\n"
-                   "*/mix_tag <pair|none>:* `Shows combined buy tag + sell reason performance`\n"
+                   "*/mix_tags <pair|none>:* `Shows combined buy tag + sell reason performance`\n"
                    "*/trades [limit]:* `Lists last closed trades (limited to 10 by default)`\n"
                    "*/profit [<n>]:* `Lists cumulative profit from all finished trades, "
                    "over the last n days`\n"

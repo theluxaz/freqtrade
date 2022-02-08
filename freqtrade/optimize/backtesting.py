@@ -315,7 +315,9 @@ class Backtesting:
                     # Worst case: price ticks tiny bit above open and dives down.
                     stop_rate = sell_row[OPEN_IDX] * (1 - abs(trade.stop_loss_pct))
                     assert stop_rate < sell_row[HIGH_IDX]
-                return stop_rate
+                # Limit lower-end to candle low to avoid sells below the low.
+                # This still remains "worst case" - but "worst realistic case".
+                return max(sell_row[LOW_IDX], stop_rate)
 
             # Set close_rate to stoploss
             return trade.stop_loss
@@ -364,7 +366,11 @@ class Backtesting:
 
             # Checks and adds an exit tag, after checking that the length of the
             # sell_row has the length for an exit tag column
-            if(len(sell_row) > EXIT_TAG_IDX and sell_row[EXIT_TAG_IDX] is not None and len(sell_row[EXIT_TAG_IDX]) > 0):
+            if(
+                len(sell_row) > EXIT_TAG_IDX
+                and sell_row[EXIT_TAG_IDX] is not None
+                and len(sell_row[EXIT_TAG_IDX]) > 0
+            ):
                 trade.sell_reason = sell_row[EXIT_TAG_IDX]
 
             trade_dur = int((trade.close_date_utc - trade.open_date_utc).total_seconds() // 60)

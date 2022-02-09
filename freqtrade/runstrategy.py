@@ -54,7 +54,9 @@ strategy_json = [{"DEV": "DevLukas15min"},
                  {"SELL 5": "x_Sell5"}
                  ]
 
-timeframes_json = [{"5": 1638835200000},  # 7 december 2021
+timeframes_json = [
+                    {"6": 1644278400000},  # 8 february 2022
+                    {"5": 1638835200000},  # 7 december 2021
                    {"4": 1631232000000},  # 10 september 2021
                    {"3": 1625097600000},  # 1 july 2021
                    {"2": 1617235200000},  # 1 april 2021
@@ -771,6 +773,11 @@ class App(QWidget):
             self.label_epochs.hide()
             self.textbox_epochs.hide()
 
+    def update_onclick_triggers(self):
+        self.backtesting_clicked = False
+        self.show_plot_clicked = False
+        self.hyperopt_clicked = False
+
     def update_display_dates(self):
         # print("Updating display dates")
         self.time_from_final_date_label.setText(unix_to_datetime(self.data["time"]["time_from"], True, True))
@@ -1139,10 +1146,12 @@ class App(QWidget):
         self.dropdown_plot_pair.clear()
         self.dropdown_plot_pair.addItems(self.data["pairs1"].split())
         self.label_pairs_no.setText("Pairs: " + str(len(self.data["pairs1"].split())))
+        self.data["max_open_trades"] = len(self.data["pairs1"].split())
         self.label_pairs_no.adjustSize()
         self.get_backtest_processing_power()
         self.get_hyperopt_processing_power()
         self.update_download_data_labels()
+        self.update_onclick_triggers()
 
     @pyqtSlot()
     def on_textchange_pairs2(self):
@@ -1551,12 +1560,15 @@ class App(QWidget):
             processed_pairs.append(pair + "/" + fiat_currency)
 
         config_json["exchange"]["pair_whitelist"] = processed_pairs
+        config_json["max_open_trades"] = self.data["max_open_trades"]
         config_json = update_config_funds(config_json)
         try:
             with open(config_url, 'w') as file:
                 json.dump(config_json, file)
         except Exception as e:
             print(e)
+
+        self.update_onclick_triggers()
 
     # Loads the pairlist from config to the GUI
     def load_config_pairs(self):
@@ -1579,6 +1591,7 @@ class App(QWidget):
         if self.backtest_data_enabled == True:
             self.hide_download_data_details()
         self.update_download_data_labels()
+        self.update_onclick_triggers()
 
     def get_pairlist_length(self):
         pairs = self.data["pairs1"].split()

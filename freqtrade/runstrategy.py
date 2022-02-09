@@ -839,7 +839,7 @@ class App(QWidget):
             if (self.data["time"]["time_until_enabled"]):
                 time_until = self.data["time"]["time_until"]
 
-            command_list = ["backtesting", "--config", "user_data/" + self.data["config"], "--timeframe", "15m",
+            command_list = ["backtesting", "--config", "user_data/" + self.data["config"], "--timeframe", "15m","--cache","none",
                             "--strategy", self.strategies[self.data["strategy"]], "--export", "trades",
                             "--timerange=" + str(self.data["time"]["time_from"]-data_loading_time_ms) + "-" + str(time_until)]
 

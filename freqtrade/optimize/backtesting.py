@@ -346,6 +346,9 @@ class Backtesting:
                 close_rate = - (trade.open_rate * roi + trade.open_rate *
                                 (1 + trade.fee_open)) / (trade.fee_close - 1)
 
+                #TODO ADDS FEES TO ROI CALCULATIONS
+                close_rate = close_rate - (close_rate * self.fee )
+
                 if (trade_dur > 0 and trade_dur == roi_entry
                         and roi_entry % self.timeframe_min == 0
                         and sell_row[OPEN_IDX] > close_rate):

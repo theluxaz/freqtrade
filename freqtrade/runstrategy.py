@@ -27,9 +27,12 @@ from importlib import reload, import_module
 
 computer_processing_power = 1.3  # 0.00001 to.. 2.0
 
-balance_per_pair=1000
+balance_per_pair=2000
 
 stake_amount=800
+
+fee_enable = True
+fee_amount = 0.003   # 3% fees or so amount to about 0.4% percent profit
 
 strategy_json = [{"DEV": "DevLukas15min"},
                  {"PROD": "ProdLukas15min"},
@@ -54,7 +57,9 @@ strategy_json = [{"DEV": "DevLukas15min"},
                  {"SELL 5": "x_Sell5"}
                  ]
 
-timeframes_json = [
+timeframes_json = [ {"LATEST": 1649116800000}, # 15 march 2022
+                    {"TEST END":1650073800000},#16 march 2022
+                    {"TEST START":1648600200000},#30 feb 2022
                     {"6": 1644278400000},  # 8 february 2022
                     {"5": 1638835200000},  # 7 december 2021
                    {"4": 1631232000000},  # 10 september 2021
@@ -839,7 +844,12 @@ class App(QWidget):
             if (self.data["time"]["time_until_enabled"]):
                 time_until = self.data["time"]["time_until"]
 
-            command_list = ["backtesting", "--config", "user_data/" + self.data["config"], "--timeframe", "15m","--cache","none",
+            if( fee_enable):
+                command_list = ["backtesting", "--config", "user_data/" + self.data["config"],"--fee", str(fee_amount), "--timeframe", "15m","--cache","none",
+                            "--strategy", self.strategies[self.data["strategy"]], "--export", "trades",
+                            "--timerange=" + str(self.data["time"]["time_from"]-data_loading_time_ms) + "-" + str(time_until)]
+            else:
+                command_list = ["backtesting", "--config", "user_data/" + self.data["config"], "--timeframe", "15m","--cache","none",
                             "--strategy", self.strategies[self.data["strategy"]], "--export", "trades",
                             "--timerange=" + str(self.data["time"]["time_from"]-data_loading_time_ms) + "-" + str(time_until)]
 
@@ -976,7 +986,15 @@ class App(QWidget):
                 if (self.data["hyperopt"]["search_space_protect"]):
                     search_spaces.append("protect")
 
-                command_list = ["hyperopt", "--config", "user_data/" + self.data["config"], "--timeframe", "15m",
+                if( fee_enable):
+                    command_list = ["hyperopt", "--config", "user_data/" + self.data["config"], "--timeframe", "15m",
+                                "--strategy", self.strategies[self.data["strategy"]], "-e",
+                                self.data["hyperopt"]["epochs"],"--fee", str(fee_amount),
+                                "--timerange=" + str(self.data["time"]["time_from"]-data_loading_time_ms) + "-" + str(time_until),
+                                "--hyperopt-loss", hyperopt_loss_functions[self.data["hyperopt"]["loss_function"]],
+                                "--print-all"]
+                else:
+                    command_list = ["hyperopt", "--config", "user_data/" + self.data["config"], "--timeframe", "15m",
                                 "--strategy", self.strategies[self.data["strategy"]], "-e",
                                 self.data["hyperopt"]["epochs"],
                                 "--timerange=" + str(self.data["time"]["time_from"]-data_loading_time_ms) + "-" + str(time_until),

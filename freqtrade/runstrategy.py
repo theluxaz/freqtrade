@@ -45,11 +45,123 @@ strategy_json = [{"DEV": "DevLukas15min"},
                  {"DOWNTREND UPSWING": "BuyerDevDowntrendUpswing"},
                  {"DANGER ZONE": "BuyerDevDangerZone"},
                  {"UPPER DANGER ZONE": "BuyerDevUpperDangerZone"},
+
+
+                #DRAFT RULES
                  {"BUY 1": "x_Buy1"},
                  {"BUY 2": "x_Buy2"},
                  {"BUY 3": "x_Buy3"},
                  {"BUY 4": "x_Buy4"},
                  {"BUY 5": "x_Buy5"},
+
+
+
+                #LOW RULES
+                 {"LOW BUY 1": "x_BUY_LOW1"},
+                 {"LOW BUY 2": "x_BUY_LOW2"},
+                 {"LOW BUY 3": "x_BUY_LOW3"},
+                 {"LOW BUY 4": "x_BUY_LOW4"},
+                 {"LOW BUY 5": "x_BUY_LOW5"},
+                 {"LOW BUY 6": "x_BUY_LOW6"},
+                 # {"LOW BUY 7": "x_BUY_LOW7"},
+                 # {"LOW BUY 8": "x_BUY_LOW8"},
+                 # {"LOW BUY 9": "x_BUY_LOW9"},
+                 # {"LOW BUY 10": "x_BUY_LOW10"},
+
+                #MID RULES
+                 {"MID BUY 1": "x_BUY_MID1"},
+                 {"MID BUY 2": "x_BUY_MID2"},
+                 {"MID BUY 3": "x_BUY_MID3"},
+                 {"MID BUY 4": "x_BUY_MID4"},
+                 {"MID BUY 5": "x_BUY_MID5"},
+                 # {"MID BUY 6": "x_BUY_MID6"},
+                 # {"MID BUY 7": "x_BUY_MID7"},
+                 # {"MID BUY 8": "x_BUY_MID8"},
+                 # {"MID BUY 9": "x_BUY_MID9"},
+                 # {"MID BUY 10": "x_BUY_MID10"},
+
+                #HIGH RULES
+                 {"HIGH BUY 1": "x_BUY_HIGH1"},
+                 {"HIGH BUY 2": "x_BUY_HIGH2"},
+                 {"HIGH BUY 3": "x_BUY_HIGH3"},
+                 {"HIGH BUY 4": "x_BUY_HIGH4"},
+                 {"HIGH BUY 5": "x_BUY_HIGH5"},
+                 # {"HIGH BUY 6": "x_BUY_HIGH6"},
+                 # {"HIGH BUY 7": "x_BUY_HIGH7"},
+                 # {"HIGH BUY 8": "x_BUY_HIGH8"},
+                 # {"HIGH BUY 9": "x_BUY_HIGH9"},
+                 # {"HIGH BUY 10": "x_BUY_HIGH10"},
+
+                #LONG UPTREND RULES
+                 {"LONG UPTREND BUY 1": "x_BUY_LONG_UPTREND1"},
+                 {"LONG UPTREND BUY 2": "x_BUY_LONG_UPTREND2"},
+                 {"LONG UPTREND BUY 3": "x_BUY_LONG_UPTREND3"},
+                 {"LONG UPTREND BUY 4": "x_BUY_LONG_UPTREND4"},
+                 {"LONG UPTREND BUY 5": "x_BUY_LONG_UPTREND5"},
+                 {"LONG UPTREND BUY 6": "x_BUY_LONG_UPTREND6"},
+                 {"LONG UPTREND BUY 7": "x_BUY_LONG_UPTREND7"},
+                 {"LONG UPTREND BUY 8": "x_BUY_LONG_UPTREND8"},
+                 {"LONG UPTREND BUY 9": "x_BUY_LONG_UPTREND9"},
+                 {"LONG UPTREND BUY 10": "x_BUY_LONG_UPTREND10"},
+                 # {"LONG UPTREND BUY 11": "x_BUY_LONG_UPTREND11"},
+                 # {"LONG UPTREND BUY 12": "x_BUY_LONG_UPTREND12"},
+                 # {"LONG UPTREND BUY 13": "x_BUY_LONG_UPTREND13"},
+                 # {"LONG UPTREND BUY 14": "x_BUY_LONG_UPTREND14"},
+                 # {"LONG UPTREND BUY 15": "x_BUY_LONG_UPTREND15"},
+                 # {"LONG UPTREND BUY 16": "x_BUY_LONG_UPTREND16"},
+                 # {"LONG UPTREND BUY 17": "x_BUY_LONG_UPTREND17"},
+                 # {"LONG UPTREND BUY 18": "x_BUY_LONG_UPTREND18"},
+                 # {"LONG UPTREND BUY 19": "x_BUY_LONG_UPTREND19"},
+                 # {"LONG UPTREND BUY 20": "x_BUY_LONG_UPTREND20"},
+
+
+                #LONG DOWNTREND RULES
+                 {"LONG DOWNTREND BUY 1": "x_BUY_LONG_DOWNTREND1"},
+                 {"LONG DOWNTREND BUY 2": "x_BUY_LONG_DOWNTREND2"},
+                 {"LONG DOWNTREND BUY 3": "x_BUY_LONG_DOWNTREND3"},
+                 {"LONG DOWNTREND BUY 4": "x_BUY_LONG_DOWNTREND4"},
+                 {"LONG DOWNTREND BUY 5": "x_BUY_LONG_DOWNTREND5"},
+                 {"LONG DOWNTREND BUY 6": "x_BUY_LONG_DOWNTREND6"},
+                 {"LONG DOWNTREND BUY 7": "x_BUY_LONG_DOWNTREND7"},
+                 {"LONG DOWNTREND BUY 8": "x_BUY_LONG_DOWNTREND8"},
+                 {"LONG DOWNTREND BUY 9": "x_BUY_LONG_DOWNTREND9"},
+                 {"LONG DOWNTREND BUY 10": "x_BUY_LONG_DOWNTREND10"},
+                 # {"LONG DOWNTREND BUY 11": "x_BUY_LONG_DOWNTREND11"},
+                 # {"LONG DOWNTREND BUY 12": "x_BUY_LONG_DOWNTREND12"},
+                 # {"LONG DOWNTREND BUY 13": "x_BUY_LONG_DOWNTREND13"},
+                 # {"LONG DOWNTREND BUY 14": "x_BUY_LONG_DOWNTREND14"},
+                 # {"LONG DOWNTREND BUY 15": "x_BUY_LONG_DOWNTREND15"},
+                 # {"LONG DOWNTREND BUY 16": "x_BUY_LONG_DOWNTREND16"},
+                 # {"LONG DOWNTREND BUY 17": "x_BUY_LONG_DOWNTREND17"},
+                 # {"LONG DOWNTREND BUY 18": "x_BUY_LONG_DOWNTREND18"},
+                 # {"LONG DOWNTREND BUY 19": "x_BUY_LONG_DOWNTREND19"},
+                 # {"LONG DOWNTREND BUY 20": "x_BUY_LONG_DOWNTREND20"},
+
+                #SLOW DOWNTREND RULES
+                 {"SLOW DOWNTREND BUY 1": "x_BUY_SLOW_DOWNTREND1"},
+                 {"SLOW DOWNTREND BUY 2": "x_BUY_SLOW_DOWNTREND2"},
+                 {"SLOW DOWNTREND BUY 3": "x_BUY_SLOW_DOWNTREND3"},
+                 {"SLOW DOWNTREND BUY 4": "x_BUY_SLOW_DOWNTREND4"},
+                 {"SLOW DOWNTREND BUY 5": "x_BUY_SLOW_DOWNTREND5"},
+                 {"SLOW DOWNTREND BUY 6": "x_BUY_SLOW_DOWNTREND6"},
+                 {"SLOW DOWNTREND BUY 7": "x_BUY_SLOW_DOWNTREND7"},
+                 {"SLOW DOWNTREND BUY 8": "x_BUY_SLOW_DOWNTREND8"},
+                 {"SLOW DOWNTREND BUY 9": "x_BUY_SLOW_DOWNTREND9"},
+                 {"SLOW DOWNTREND BUY 10": "x_BUY_SLOW_DOWNTREND10"},
+                 # {"SLOW DOWNTREND BUY 11": "x_BUY_SLOW_DOWNTREND11"},
+                 # {"SLOW DOWNTREND BUY 12": "x_BUY_SLOW_DOWNTREND12"},
+                 # {"SLOW DOWNTREND BUY 13": "x_BUY_SLOW_DOWNTREND13"},
+                 # {"SLOW DOWNTREND BUY 14": "x_BUY_SLOW_DOWNTREND14"},
+                 # {"SLOW DOWNTREND BUY 15": "x_BUY_SLOW_DOWNTREND15"},
+                 # {"SLOW DOWNTREND BUY 16": "x_BUY_SLOW_DOWNTREND16"},
+                 # {"SLOW DOWNTREND BUY 17": "x_BUY_SLOW_DOWNTREND17"},
+                 # {"SLOW DOWNTREND BUY 18": "x_BUY_SLOW_DOWNTREND18"},
+                 # {"SLOW DOWNTREND BUY 19": "x_BUY_SLOW_DOWNTREND19"},
+                 # {"SLOW DOWNTREND BUY 20": "x_BUY_SLOW_DOWNTREND20"},
+
+
+
+
                  {"SELL 1": "x_Sell1"},
                  {"SELL 2": "x_Sell2"},
                  {"SELL 3": "x_Sell3"},
@@ -1027,7 +1139,7 @@ class App(QWidget):
         timestamp = int(datetime_to_unix(datetime_now, False))
         if (timestamp > self.data["download"]["absolute_latest_update"]):
             self.data["download"]["absolute_latest_update"] = timestamp
-        days = self.data["download"]["days"]
+        days = self.data["download"]["days_to_download"]
         self.data["download"]["days"] = int(days)
         for pair in pairs:
             found = False
@@ -1047,9 +1159,9 @@ class App(QWidget):
         self.update_download_data_labels()
         self.on_click_save_json()
         print("Downloading data for 15m")
-        main(["download-data", "-t", "15m"])
+        main(["download-data", "-t", "15m","--days",str(days)])
         print("Downloading data for 1h")
-        main(["download-data", "-t", "1h"])
+        main(["download-data", "-t", "1h","--days",str(days)])
         print("FINISHED DOWNLOADING DATA")
 
     # @pyqtSlot()

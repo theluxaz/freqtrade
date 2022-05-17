@@ -35,6 +35,7 @@ fee_enable = True
 fee_amount = 0.003   # 3% fees or so amount to about 0.4% percent profit
 
 strategy_json = [{"DEV": "DevLukas15min"},
+                 {"DEVNFI":"DevLukas15minWithNFI"},
                  {"PROD": "ProdLukas15min"},
                  {"HIGH": "BuyerDevHigh"},
                  {"MID": "BuyerDevMid"},
@@ -47,7 +48,7 @@ strategy_json = [{"DEV": "DevLukas15min"},
                  {"UPPER DANGER ZONE": "BuyerDevUpperDangerZone"},
 
 
-                #DRAFT RULES
+                 #DRAFT RULES
                  {"BUY 1": "x_Buy1"},
                  {"BUY 2": "x_Buy2"},
                  {"BUY 3": "x_Buy3"},
@@ -56,7 +57,7 @@ strategy_json = [{"DEV": "DevLukas15min"},
 
 
 
-                #LOW RULES
+                 #LOW RULES
                  {"LOW BUY 1": "x_BUY_LOW1"},
                  {"LOW BUY 2": "x_BUY_LOW2"},
                  {"LOW BUY 3": "x_BUY_LOW3"},
@@ -68,7 +69,7 @@ strategy_json = [{"DEV": "DevLukas15min"},
                  {"LOW BUY 9": "x_BUY_LOW9"},
                  {"LOW BUY 10": "x_BUY_LOW10"},
 
-                #MID RULES
+                 #MID RULES
                  {"MID BUY 1": "x_BUY_MID1"},
                  {"MID BUY 2": "x_BUY_MID2"},
                  {"MID BUY 3": "x_BUY_MID3"},
@@ -80,7 +81,7 @@ strategy_json = [{"DEV": "DevLukas15min"},
                  {"MID BUY 9": "x_BUY_MID9"},
                  {"MID BUY 10": "x_BUY_MID10"},
 
-                #HIGH RULES
+                 #HIGH RULES
                  {"HIGH BUY 1": "x_BUY_HIGH1"},
                  {"HIGH BUY 2": "x_BUY_HIGH2"},
                  {"HIGH BUY 3": "x_BUY_HIGH3"},
@@ -92,7 +93,7 @@ strategy_json = [{"DEV": "DevLukas15min"},
                  {"HIGH BUY 9": "x_BUY_HIGH9"},
                  {"HIGH BUY 10": "x_BUY_HIGH10"},
 
-                #LONG UPTREND RULES
+                 #LONG UPTREND RULES
                  {"LONG UPTREND BUY 1": "x_BUY_LONG_UPTREND1"},
                  {"LONG UPTREND BUY 2": "x_BUY_LONG_UPTREND2"},
                  {"LONG UPTREND BUY 3": "x_BUY_LONG_UPTREND3"},
@@ -115,7 +116,7 @@ strategy_json = [{"DEV": "DevLukas15min"},
                  # {"LONG UPTREND BUY 20": "x_BUY_LONG_UPTREND20"},
 
 
-                #LONG DOWNTREND RULES
+                 #LONG DOWNTREND RULES
                  {"LONG DOWNTREND BUY 1": "x_BUY_LONG_DOWNTREND1"},
                  {"LONG DOWNTREND BUY 2": "x_BUY_LONG_DOWNTREND2"},
                  {"LONG DOWNTREND BUY 3": "x_BUY_LONG_DOWNTREND3"},
@@ -137,7 +138,7 @@ strategy_json = [{"DEV": "DevLukas15min"},
                  # {"LONG DOWNTREND BUY 19": "x_BUY_LONG_DOWNTREND19"},
                  # {"LONG DOWNTREND BUY 20": "x_BUY_LONG_DOWNTREND20"},
 
-                #SLOW DOWNTREND RULES
+                 #SLOW DOWNTREND RULES
                  {"SLOW DOWNTREND BUY 1": "x_BUY_SLOW_DOWNTREND1"},
                  {"SLOW DOWNTREND BUY 2": "x_BUY_SLOW_DOWNTREND2"},
                  {"SLOW DOWNTREND BUY 3": "x_BUY_SLOW_DOWNTREND3"},
@@ -159,19 +160,186 @@ strategy_json = [{"DEV": "DevLukas15min"},
                  # {"SLOW DOWNTREND BUY 19": "x_BUY_SLOW_DOWNTREND19"},
                  # {"SLOW DOWNTREND BUY 20": "x_BUY_SLOW_DOWNTREND20"},
 
+                 # DOWNTREND_UPSWING RULES
+                 {"DOWNTREND_UPSWING BUY 1": "x_BUY_DOWNTREND_UPSWING1"},
+                 {"DOWNTREND_UPSWING BUY 2": "x_BUY_DOWNTREND_UPSWING2"},
+                 {"DOWNTREND_UPSWING BUY 3": "x_BUY_DOWNTREND_UPSWING3"},
+                 {"DOWNTREND_UPSWING BUY 4": "x_BUY_DOWNTREND_UPSWING4"},
+                 {"DOWNTREND_UPSWING BUY 5": "x_BUY_DOWNTREND_UPSWING5"},
+                 # {"DOWNTREND_UPSWING BUY 6": "x_BUY_DOWNTREND_UPSWING6"},
+                 # {"DOWNTREND_UPSWING BUY 7": "x_BUY_DOWNTREND_UPSWING7"},
+                 # {"DOWNTREND_UPSWING BUY 8": "x_BUY_DOWNTREND_UPSWING8"},
+                 # {"DOWNTREND_UPSWING BUY 9": "x_BUY_DOWNTREND_UPSWING9"},
+                 # {"DOWNTREND_UPSWING BUY 10": "x_BUY_DOWNTREND_UPSWING10"},
+
+                 # ANY RULES
+                 {"ANY BUY 1": "x_BUY_ANY1"},
+                 {"ANY BUY 2": "x_BUY_ANY2"},
+                 {"ANY BUY 3": "x_BUY_ANY3"},
+                 {"ANY BUY 4": "x_BUY_ANY4"},
+                 {"ANY BUY 5": "x_BUY_ANY5"},
+                 # {"ANY BUY 6": "x_BUY_ANY6"},
+                 # {"ANY BUY 7": "x_BUY_ANY7"},
+                 # {"ANY BUY 8": "x_BUY_ANY8"},
+                 # {"ANY BUY 9": "x_BUY_ANY9"},
+                 # {"ANY BUY 10": "x_BUY_ANY10"},
+
+                 # NOTREND RULES
+                 {"NOTREND BUY 1": "x_BUY_NOTREND1"},
+                 {"NOTREND BUY 2": "x_BUY_NOTREND2"},
+                 {"NOTREND BUY 3": "x_BUY_NOTREND3"},
+                 {"NOTREND BUY 4": "x_BUY_NOTREND4"},
+                 {"NOTREND BUY 5": "x_BUY_NOTREND5"},
+                 # {"NOTREND BUY 6": "x_BUY_NOTREND6"},
+                 # {"NOTREND BUY 7": "x_BUY_NOTREND7"},
+                 # {"NOTREND BUY 8": "x_BUY_NOTREND8"},
+                 # {"NOTREND BUY 9": "x_BUY_NOTREND9"},
+                 # {"NOTREND BUY 10": "x_BUY_NOTREND10"},
 
 
 
+
+
+                 #DRAFT SELL RULES
                  {"SELL 1": "x_Sell1"},
                  {"SELL 2": "x_Sell2"},
                  {"SELL 3": "x_Sell3"},
                  {"SELL 4": "x_Sell4"},
-                 {"SELL 5": "x_Sell5"}
+                 {"SELL 5": "x_Sell5"},
+
+
+                 # LOW SELL RULES
+                 {"LOW SELL 1": "x_SELL_LOW1"},
+                 {"LOW SELL 2": "x_SELL_LOW2"},
+                 {"LOW SELL 3": "x_SELL_LOW3"},
+                 {"LOW SELL 4": "x_SELL_LOW4"},
+                 {"LOW SELL 5": "x_SELL_LOW5"},
+                 {"LOW SELL 6": "x_SELL_LOW6"},
+                 {"LOW SELL 7": "x_SELL_LOW7"},
+                 {"LOW SELL 8": "x_SELL_LOW8"},
+                 {"LOW SELL 9": "x_SELL_LOW9"},
+                 {"LOW SELL 10": "x_SELL_LOW10"},
+
+                 # MID SELL RULES
+                 {"MID SELL 1": "x_SELL_MID1"},
+                 {"MID SELL 2": "x_SELL_MID2"},
+                 {"MID SELL 3": "x_SELL_MID3"},
+                 {"MID SELL 4": "x_SELL_MID4"},
+                 {"MID SELL 5": "x_SELL_MID5"},
+                 {"MID SELL 6": "x_SELL_MID6"},
+                 {"MID SELL 7": "x_SELL_MID7"},
+                 {"MID SELL 8": "x_SELL_MID8"},
+                 {"MID SELL 9": "x_SELL_MID9"},
+                 {"MID SELL 10": "x_SELL_MID10"},
+
+                 # HIGH SELL RULES
+                 {"HIGH SELL 1": "x_SELL_HIGH1"},
+                 {"HIGH SELL 2": "x_SELL_HIGH2"},
+                 {"HIGH SELL 3": "x_SELL_HIGH3"},
+                 {"HIGH SELL 4": "x_SELL_HIGH4"},
+                 {"HIGH SELL 5": "x_SELL_HIGH5"},
+                 {"HIGH SELL 6": "x_SELL_HIGH6"},
+                 {"HIGH SELL 7": "x_SELL_HIGH7"},
+                 {"HIGH SELL 8": "x_SELL_HIGH8"},
+                 {"HIGH SELL 9": "x_SELL_HIGH9"},
+                 {"HIGH SELL 10": "x_SELL_HIGH10"},
+
+                 # LONG UPTREND SELL RULES
+                 {"LONG UPTREND SELL 1": "x_SELL_LONG_UPTREND1"},
+                 {"LONG UPTREND SELL 2": "x_SELL_LONG_UPTREND2"},
+                 {"LONG UPTREND SELL 3": "x_SELL_LONG_UPTREND3"},
+                 {"LONG UPTREND SELL 4": "x_SELL_LONG_UPTREND4"},
+                 {"LONG UPTREND SELL 5": "x_SELL_LONG_UPTREND5"},
+                 {"LONG UPTREND SELL 6": "x_SELL_LONG_UPTREND6"},
+                 {"LONG UPTREND SELL 7": "x_SELL_LONG_UPTREND7"},
+                 {"LONG UPTREND SELL 8": "x_SELL_LONG_UPTREND8"},
+                 {"LONG UPTREND SELL 9": "x_SELL_LONG_UPTREND9"},
+                 {"LONG UPTREND SELL 10": "x_SELL_LONG_UPTREND10"},
+                 # {"LONG UPTREND SELL 11": "x_SELL_LONG_UPTREND11"},
+                 # {"LONG UPTREND SELL 12": "x_SELL_LONG_UPTREND12"},
+                 # {"LONG UPTREND SELL 13": "x_SELL_LONG_UPTREND13"},
+                 # {"LONG UPTREND SELL 14": "x_SELL_LONG_UPTREND14"},
+                 # {"LONG UPTREND SELL 15": "x_SELL_LONG_UPTREND15"},
+                 # {"LONG UPTREND SELL 16": "x_SELL_LONG_UPTREND16"},
+                 # {"LONG UPTREND SELL 17": "x_SELL_LONG_UPTREND17"},
+                 # {"LONG UPTREND SELL 18": "x_SELL_LONG_UPTREND18"},
+                 # {"LONG UPTREND SELL 19": "x_SELL_LONG_UPTREND19"},
+                 # {"LONG UPTREND SELL 20": "x_SELL_LONG_UPTREND20"},
+
+                 # LONG DOWNTREND SELL RULES
+                 {"LONG DOWNTREND SELL 1": "x_SELL_LONG_DOWNTREND1"},
+                 {"LONG DOWNTREND SELL 2": "x_SELL_LONG_DOWNTREND2"},
+                 {"LONG DOWNTREND SELL 3": "x_SELL_LONG_DOWNTREND3"},
+                 {"LONG DOWNTREND SELL 4": "x_SELL_LONG_DOWNTREND4"},
+                 {"LONG DOWNTREND SELL 5": "x_SELL_LONG_DOWNTREND5"},
+                 {"LONG DOWNTREND SELL 6": "x_SELL_LONG_DOWNTREND6"},
+                 {"LONG DOWNTREND SELL 7": "x_SELL_LONG_DOWNTREND7"},
+                 {"LONG DOWNTREND SELL 8": "x_SELL_LONG_DOWNTREND8"},
+                 {"LONG DOWNTREND SELL 9": "x_SELL_LONG_DOWNTREND9"},
+                 {"LONG DOWNTREND SELL 10": "x_SELL_LONG_DOWNTREND10"},
+                 # {"LONG DOWNTREND SELL 11": "x_SELL_LONG_DOWNTREND11"},
+                 # {"LONG DOWNTREND SELL 12": "x_SELL_LONG_DOWNTREND12"},
+                 # {"LONG DOWNTREND SELL 13": "x_SELL_LONG_DOWNTREND13"},
+                 # {"LONG DOWNTREND SELL 14": "x_SELL_LONG_DOWNTREND14"},
+                 # {"LONG DOWNTREND SELL 15": "x_SELL_LONG_DOWNTREND15"},
+                 # {"LONG DOWNTREND SELL 16": "x_SELL_LONG_DOWNTREND16"},
+                 # {"LONG DOWNTREND SELL 17": "x_SELL_LONG_DOWNTREND17"},
+                 # {"LONG DOWNTREND SELL 18": "x_SELL_LONG_DOWNTREND18"},
+                 # {"LONG DOWNTREND SELL 19": "x_SELL_LONG_DOWNTREND19"},
+                 # {"LONG DOWNTREND SELL 20": "x_SELL_LONG_DOWNTREND20"},
+
+                 # SLOW DOWNTREND SELL RULES
+                 {"SLOW DOWNTREND SELL 1": "x_SELL_SLOW_DOWNTREND1"},
+                 {"SLOW DOWNTREND SELL 2": "x_SELL_SLOW_DOWNTREND2"},
+                 {"SLOW DOWNTREND SELL 3": "x_SELL_SLOW_DOWNTREND3"},
+                 {"SLOW DOWNTREND SELL 4": "x_SELL_SLOW_DOWNTREND4"},
+                 {"SLOW DOWNTREND SELL 5": "x_SELL_SLOW_DOWNTREND5"},
+                 {"SLOW DOWNTREND SELL 6": "x_SELL_SLOW_DOWNTREND6"},
+                 {"SLOW DOWNTREND SELL 7": "x_SELL_SLOW_DOWNTREND7"},
+                 {"SLOW DOWNTREND SELL 8": "x_SELL_SLOW_DOWNTREND8"},
+                 {"SLOW DOWNTREND SELL 9": "x_SELL_SLOW_DOWNTREND9"},
+                 {"SLOW DOWNTREND SELL 10": "x_SELL_SLOW_DOWNTREND10"},
+                 # {"SLOW DOWNTREND SELL 11": "x_SELL_SLOW_DOWNTREND11"},
+                 # {"SLOW DOWNTREND SELL 12": "x_SELL_SLOW_DOWNTREND12"},
+                 # {"SLOW DOWNTREND SELL 13": "x_SELL_SLOW_DOWNTREND13"},
+                 # {"SLOW DOWNTREND SELL 14": "x_SELL_SLOW_DOWNTREND14"},
+                 # {"SLOW DOWNTREND SELL 15": "x_SELL_SLOW_DOWNTREND15"},
+                 # {"SLOW DOWNTREND SELL 16": "x_SELL_SLOW_DOWNTREND16"},
+                 # {"SLOW DOWNTREND SELL 17": "x_SELL_SLOW_DOWNTREND17"},
+                 # {"SLOW DOWNTREND SELL 18": "x_SELL_SLOW_DOWNTREND18"},
+                 # {"SLOW DOWNTREND SELL 19": "x_SELL_SLOW_DOWNTREND19"},
+                 # {"SLOW DOWNTREND SELL 20": "x_SELL_SLOW_DOWNTREND20"},
+
+                 # ANY RULES
+                 {"ANY SELL 1": "x_SELL_ANY1"},
+                 {"ANY SELL 2": "x_SELL_ANY2"},
+                 {"ANY SELL 3": "x_SELL_ANY3"},
+                 {"ANY SELL 4": "x_SELL_ANY4"},
+                 {"ANY SELL 5": "x_SELL_ANY5"},
+                 # {"ANY SELL 6": "x_SELL_ANY6"},
+                 # {"ANY SELL 7": "x_SELL_ANY7"},
+                 # {"ANY SELL 8": "x_SELL_ANY8"},
+                 # {"ANY SELL 9": "x_SELL_ANY9"},
+                 # {"ANY SELL 10": "x_SELL_ANY10"},
+
+                 # NOTREND RULES
+                 {"NOTREND SELL 1": "x_SELL_NOTREND1"},
+                 {"NOTREND SELL 2": "x_SELL_NOTREND2"},
+                 {"NOTREND SELL 3": "x_SELL_NOTREND3"},
+                 {"NOTREND SELL 4": "x_SELL_NOTREND4"},
+                 {"NOTREND SELL 5": "x_SELL_NOTREND5"},
+                 # {"NOTREND SELL 6": "x_SELL_NOTREND6"},
+                 # {"NOTREND SELL 7": "x_SELL_NOTREND7"},
+                 # {"NOTREND SELL 8": "x_SELL_NOTREND8"},
+                 # {"NOTREND SELL 9": "x_SELL_NOTREND9"},
+                 # {"NOTREND SELL 10": "x_SELL_NOTREND10"},
+
+
                  ]
 
-timeframes_json = [ {"LATEST": 1649116800000}, # 15 march 2022
-                    {"TEST END":1650073800000},#16 march 2022
-                    {"TEST START":1648600200000},#30 feb 2022
+timeframes_json = [ {"7": 1652514252769}, # 14 may 2022 12:00 midday - AFTER HUGE CRASH
+                    # {"TEST END":1650073800000},#16 march 2022
+                    # {"TEST START":1648600200000},#30 feb 2022
                     {"6": 1644278400000},  # 8 february 2022
                     {"5": 1638835200000},  # 7 december 2021
                    {"4": 1631232000000},  # 10 september 2021
@@ -199,23 +367,24 @@ indicators1_solo_trends = [{"5": "Upper Danger Zone"},
                            ]
 
 
-MODULE_LIST = ["BUY_SIGNALS.LOW","BUY_TRENDS.BUYER_LOW","LOW","BUY_SIGNALS.MID","BUY_TRENDS.BUYER_MID", "MID", "BUY_SIGNALS.HIGH","BUY_TRENDS.BUYER_HIGH","HIGH",
-                            "BUY_SIGNALS.LONG_UPTREND","BUY_TRENDS.BUYER_LONG_UPTREND","LONG_UPTREND","BUY_SIGNALS.LONG_DOWNTREND","BUY_TRENDS.BUYER_LONG_DOWNTREND","LONG_DOWNTREND",
-                            "BUY_SIGNALS.SLOW_DOWNTREND","BUY_TRENDS.BUYER_SLOW_DOWNTREND","SLOW_DOWNTREND","BUY_SIGNALS.DOWNTREND_UPSWING","BUY_TRENDS.BUYER_DOWNTREND_UPSWING","DOWNTREND_UPSWING",
-                            "BUY_SIGNALS.DANGER_ZONE","BUY_TRENDS.BUYER_DANGER_ZONE","DANGER_ZONE","BUY_TRENDS.BUYER_NOSTALGIA","BUYER_NOSTALGIA","BUY_SIGNALS.UPPER_DANGER_ZONE","BUY_TRENDS.BUYER_UPPER_DANGER_ZONE","UPPER_DANGER_ZONE",
-                            "BUY_xCOMMON.COMMON_BUYERS","BUY_xCOMMON.COMMON_BUYERS_LOW", "BUY_xCOMMON.COMMON_BUYERS_MID", "BUY_xCOMMON.COMMON_BUYERS_HIGH",
+MODULE_LIST = ["x_other.BUY_SIGNALS.LOW","x_other.BUY_TRENDS.BUYER_LOW","LOW","x_other.BUY_SIGNALS.MID","x_other.BUY_TRENDS.BUYER_MID", "MID", "x_other.BUY_SIGNALS.HIGH","x_other.BUY_TRENDS.BUYER_HIGH","HIGH",
+                            "x_other.BUY_SIGNALS.LONG_UPTREND","x_other.BUY_TRENDS.BUYER_LONG_UPTREND","LONG_UPTREND","x_other.BUY_SIGNALS.LONG_DOWNTREND","x_other.BUY_TRENDS.BUYER_LONG_DOWNTREND","LONG_DOWNTREND",
+                            "x_other.BUY_SIGNALS.SLOW_DOWNTREND","x_other.BUY_TRENDS.BUYER_SLOW_DOWNTREND","SLOW_DOWNTREND","x_other.BUY_SIGNALS.DOWNTREND_UPSWING","x_other.BUY_TRENDS.BUYER_DOWNTREND_UPSWING","DOWNTREND_UPSWING",
+                            "x_other.BUY_SIGNALS.DANGER_ZONE","x_other.BUY_TRENDS.BUYER_DANGER_ZONE","DANGER_ZONE","x_other.BUY_TRENDS.BUYER_NOSTALGIA","x_other.BUY_SIGNALS.UPPER_DANGER_ZONE","x_other.BUY_TRENDS.BUYER_UPPER_DANGER_ZONE","UPPER_DANGER_ZONE",
+                            "x_other.BUY_xCOMMON.COMMON_BUYERS","x_other.BUY_xCOMMON.COMMON_BUYERS_LOW", "x_other.BUY_xCOMMON.COMMON_BUYERS_MID", "BUY_xCOMMON.COMMON_BUYERS_HIGH",
 
-                            "SELL_SIGNALS.SELLER_LOW","SELL_SIGNALS.SELLER_MID","SELL_SIGNALS.SELLER_HIGH","SELL_SIGNALS.SELLER_LONG_DOWNTREND","SELL_SIGNALS.SELLER_SLOW_DOWNTREND",
-                            "SELL_SIGNALS.SELLER_LONG_UPTREND","SELL_SIGNALS.SELLER_DOWNTREND_UPSWING", "SELL_SIGNALS.SELLER_DANGER_ZONE","SELL_SIGNALS.SELLER_UPPER_DANGER_ZONE",
+                            "OLD_SELL_SIGNALS.SELLER_LOW","OLD_SELL_SIGNALS.SELLER_MID","OLD_SELL_SIGNALS.SELLER_HIGH","OLD_SELL_SIGNALS.SELLER_LONG_DOWNTREND","OLD_SELL_SIGNALS.SELLER_SLOW_DOWNTREND",
+                            "OLD_SELL_SIGNALS.SELLER_LONG_UPTREND","OLD_SELL_SIGNALS.SELLER_DOWNTREND_UPSWING", "OLD_SELL_SIGNALS.SELLER_DANGER_ZONE","OLD_SELL_SIGNALS.SELLER_UPPER_DANGER_ZONE",
                             "COMMON_SELL.COMMON_SELLERS", "COMMON_SELL.COMMON_SELLERS_LOW","COMMON_SELL.COMMON_SELLERS_MID","COMMON_SELL.COMMON_SELLERS_HIGH","SELL_TRENDS.SELLER_NOSTALGIA","SELLER_NOSTALGIA",
 
 
+                            #BUY RULE MODULES
                              "RULES.LOW.x_BUY_LOW1", "x_BUY_LOW1","RULES.LOW.x_BUY_LOW2", "x_BUY_LOW2","RULES.LOW.x_BUY_LOW3", "x_BUY_LOW3",
                              "RULES.LOW.x_BUY_LOW4", "x_BUY_LOW4","RULES.LOW.x_BUY_LOW5", "x_BUY_LOW5","RULES.LOW.x_BUY_LOW6", "x_BUY_LOW6",
                              "RULES.LOW.x_BUY_LOW7", "x_BUY_LOW7","RULES.LOW.x_BUY_LOW8", "x_BUY_LOW8","RULES.LOW.x_BUY_LOW9", "x_BUY_LOW9",
                              "RULES.LOW.x_BUY_LOW10", "x_BUY_LOW10","RULES.LOW.x_BUY_LOW11", "x_BUY_LOW11","RULES.LOW.x_BUY_LOW12", "x_BUY_LOW12",
                              "RULES.LOW.x_BUY_LOW13", "x_BUY_LOW13","RULES.LOW.x_BUY_LOW14", "x_BUY_LOW14","RULES.LOW.x_BUY_LOW15", "x_BUY_LOW15",
-                             "RULES.LONG_DOWNTREND.x_BUY_LOW16", "x_BUY_LOW16","RULES.LOW.x_BUY_LOW17", "x_BUY_LOW17","RULES.LOW.x_BUY_LOW18", "x_BUY_LOW18",
+                             "RULES.LOW.x_BUY_LOW16", "x_BUY_LOW16","RULES.LOW.x_BUY_LOW17", "x_BUY_LOW17","RULES.LOW.x_BUY_LOW18", "x_BUY_LOW18",
                              "RULES.LOW.x_BUY_LOW19", "x_BUY_LOW19","RULES.LOW.x_BUY_LOW20", "x_BUY_LOW20",
 
 
@@ -265,14 +434,120 @@ MODULE_LIST = ["BUY_SIGNALS.LOW","BUY_TRENDS.BUYER_LOW","LOW","BUY_SIGNALS.MID",
                              "RULES.SLOW_DOWNTREND.x_BUY_SLOW_DOWNTREND19", "x_BUY_SLOW_DOWNTREND19","RULES.SLOW_DOWNTREND.x_BUY_SLOW_DOWNTREND20", "x_BUY_SLOW_DOWNTREND20",
 
 
-                            "COMMON.COMMON_FUNCTIONS", "COMMON.CONSTANTS","COMMON.TA_FUNCTIONS","COMMON.POPULATE_INDICATORS",
-                            "COMMON_FUNCTIONS", "CONSTANTS","TA_FUNCTIONS","POPULATE_INDICATORS",
+                             "RULES.ANY.x_BUY_ANY1", "x_BUY_ANY1","RULES.ANY.x_BUY_ANY2", "x_BUY_ANY2","RULES.ANY.x_BUY_ANY3", "x_BUY_ANY3",
+                             "RULES.ANY.x_BUY_ANY4", "x_BUY_ANY4","RULES.ANY.x_BUY_ANY5", "x_BUY_ANY5","RULES.ANY.x_BUY_ANY6", "x_BUY_ANY6",
+                             "RULES.ANY.x_BUY_ANY7", "x_BUY_ANY7","RULES.ANY.x_BUY_ANY8", "x_BUY_ANY8","RULES.ANY.x_BUY_ANY9", "x_BUY_ANY9",
+                             "RULES.ANY.x_BUY_ANY10", "x_BUY_ANY10","RULES.ANY.x_BUY_ANY11", "x_BUY_ANY11","RULES.ANY.x_BUY_ANY12", "x_BUY_ANY12",
+                             "RULES.ANY.x_BUY_ANY13", "x_BUY_ANY13","RULES.ANY.x_BUY_ANY14", "x_BUY_ANY14","RULES.ANY.x_BUY_ANY15", "x_BUY_ANY15",
+                             "RULES.ANY.x_BUY_ANY16", "x_BUY_ANY16","RULES.ANY.x_BUY_ANY17", "x_BUY_ANY17","RULES.ANY.x_BUY_ANY18", "x_BUY_ANY18",
+                             "RULES.ANY.x_BUY_ANY19", "x_BUY_ANY19","RULES.ANY.x_BUY_ANY20", "x_BUY_ANY20",
 
-                            "DevLukas15min",
+
+                             "RULES.NOTREND.x_BUY_NOTREND1", "x_BUY_NOTREND1","RULES.NOTREND.x_BUY_NOTREND2", "x_BUY_NOTREND2","RULES.NOTREND.x_BUY_NOTREND3", "x_BUY_NOTREND3",
+                             "RULES.NOTREND.x_BUY_NOTREND4", "x_BUY_NOTREND4","RULES.NOTREND.x_BUY_NOTREND5", "x_BUY_NOTREND5","RULES.NOTREND.x_BUY_NOTREND6", "x_BUY_NOTREND6",
+                             "RULES.NOTREND.x_BUY_NOTREND7", "x_BUY_NOTREND7","RULES.NOTREND.x_BUY_NOTREND8", "x_BUY_NOTREND8","RULES.NOTREND.x_BUY_NOTREND9", "x_BUY_NOTREND9",
+                             "RULES.NOTREND.x_BUY_NOTREND10", "x_BUY_NOTREND10","RULES.NOTREND.x_BUY_NOTREND11", "x_BUY_NOTREND11","RULES.NOTREND.x_BUY_NOTREND12", "x_BUY_NOTREND12",
+                             "RULES.NOTREND.x_BUY_NOTREND13", "x_BUY_NOTREND13","RULES.NOTREND.x_BUY_NOTREND14", "x_BUY_NOTREND14","RULES.NOTREND.x_BUY_NOTREND15", "x_BUY_NOTREND15",
+                             "RULES.NOTREND.x_BUY_NOTREND16", "x_BUY_NOTREND16","RULES.NOTREND.x_BUY_NOTREND17", "x_BUY_NOTREND17","RULES.NOTREND.x_BUY_NOTREND18", "x_BUY_NOTREND18",
+                             "RULES.NOTREND.x_BUY_NOTREND19", "x_BUY_NOTREND19","RULES.NOTREND.x_BUY_NOTREND20", "x_BUY_HIGH20",
+
+                            "RULES.CUSTOM.BUYER_NOSTALGIA", "BUYER_NOSTALGIA","RULES.CUSTOM.BUYER_NOSTALGIA15", "BUYER_NOSTALGIA15",
+
+
+
+
+                            #SELL RULE MODULES
+                            "SELL_RULES.LOW.x_SELL_LOW1", "x_SELL_LOW1","SELL_RULES.LOW.x_SELL_LOW2", "x_SELL_LOW2","SELL_RULES.LOW.x_SELL_LOW3", "x_SELL_LOW3",
+                             "SELL_RULES.LOW.x_SELL_LOW4", "x_SELL_LOW4","SELL_RULES.LOW.x_SELL_LOW5", "x_SELL_LOW5","SELL_RULES.LOW.x_SELL_LOW6", "x_SELL_LOW6",
+                             "SELL_RULES.LOW.x_SELL_LOW7", "x_SELL_LOW7","SELL_RULES.LOW.x_SELL_LOW8", "x_SELL_LOW8","SELL_RULES.LOW.x_SELL_LOW9", "x_SELL_LOW9",
+                             "SELL_RULES.LOW.x_SELL_LOW10", "x_SELL_LOW10","SELL_RULES.LOW.x_SELL_LOW11", "x_SELL_LOW11","SELL_RULES.LOW.x_SELL_LOW12", "x_SELL_LOW12",
+                             "SELL_RULES.LOW.x_SELL_LOW13", "x_SELL_LOW13","SELL_RULES.LOW.x_SELL_LOW14", "x_SELL_LOW14","SELL_RULES.LOW.x_SELL_LOW15", "x_SELL_LOW15",
+                             "SELL_RULES.LOW.x_SELL_LOW16", "x_SELL_LOW16","SELL_RULES.LOW.x_SELL_LOW17", "x_SELL_LOW17","SELL_RULES.LOW.x_SELL_LOW18", "x_SELL_LOW18",
+                             "SELL_RULES.LOW.x_SELL_LOW19", "x_SELL_LOW19","SELL_RULES.LOW.x_SELL_LOW20", "x_SELL_LOW20",
+
+
+                             "SELL_RULES.MID.x_SELL_MID1", "x_SELL_MID1","SELL_RULES.MID.x_SELL_MID2", "x_SELL_MID2","SELL_RULES.MID.x_SELL_MID3", "x_SELL_MID3",
+                             "SELL_RULES.MID.x_SELL_MID4", "x_SELL_MID4","SELL_RULES.MID.x_SELL_MID5", "x_SELL_MID5","SELL_RULES.MID.x_SELL_MID6", "x_SELL_MID6",
+                             "SELL_RULES.MID.x_SELL_MID7", "x_SELL_MID7","SELL_RULES.MID.x_SELL_MID8", "x_SELL_MID8","SELL_RULES.MID.x_SELL_MID9", "x_SELL_MID9",
+                             "SELL_RULES.MID.x_SELL_MID10", "x_SELL_MID10","SELL_RULES.MID.x_SELL_MID11", "x_SELL_MID11","SELL_RULES.MID.x_SELL_MID12", "x_SELL_MID12",
+                             "SELL_RULES.MID.x_SELL_MID13", "x_SELL_MID13","SELL_RULES.MID.x_SELL_MID14", "x_SELL_MID14","SELL_RULES.MID.x_SELL_MID15", "x_SELL_MID15",
+                             "SELL_RULES.MID.x_SELL_MID16", "x_SELL_MID16","SELL_RULES.MID.x_SELL_MID17", "x_SELL_MID17","SELL_RULES.MID.x_SELL_MID18", "x_SELL_MID18",
+                             "SELL_RULES.MID.x_SELL_MID19", "x_SELL_MID19","SELL_RULES.MID.x_SELL_MID20", "x_SELL_MID20",
+
+
+                             "SELL_RULES.HIGH.x_SELL_HIGH1", "x_SELL_HIGH1","SELL_RULES.HIGH.x_SELL_HIGH2", "x_SELL_HIGH2","SELL_RULES.HIGH.x_SELL_HIGH3", "x_SELL_HIGH3",
+                             "SELL_RULES.HIGH.x_SELL_HIGH4", "x_SELL_HIGH4","SELL_RULES.HIGH.x_SELL_HIGH5", "x_SELL_HIGH5","SELL_RULES.HIGH.x_SELL_HIGH6", "x_SELL_HIGH6",
+                             "SELL_RULES.HIGH.x_SELL_HIGH7", "x_SELL_HIGH7","SELL_RULES.HIGH.x_SELL_HIGH8", "x_SELL_HIGH8","SELL_RULES.HIGH.x_SELL_HIGH9", "x_SELL_HIGH9",
+                             "SELL_RULES.HIGH.x_SELL_HIGH10", "x_SELL_HIGH10","SELL_RULES.HIGH.x_SELL_HIGH11", "x_SELL_HIGH11","SELL_RULES.HIGH.x_SELL_HIGH12", "x_SELL_HIGH12",
+                             "SELL_RULES.HIGH.x_SELL_HIGH13", "x_SELL_HIGH13","SELL_RULES.HIGH.x_SELL_HIGH14", "x_SELL_HIGH14","SELL_RULES.HIGH.x_SELL_HIGH15", "x_SELL_HIGH15",
+                             "SELL_RULES.HIGH.x_SELL_HIGH16", "x_SELL_HIGH16","SELL_RULES.HIGH.x_SELL_HIGH17", "x_SELL_HIGH17","SELL_RULES.HIGH.x_SELL_HIGH18", "x_SELL_HIGH18",
+                             "SELL_RULES.HIGH.x_SELL_HIGH19", "x_SELL_HIGH19","SELL_RULES.HIGH.x_SELL_HIGH20", "x_SELL_HIGH20",
+
+
+
+                             "SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND1", "x_SELL_LONG_UPTREND1","SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND2", "x_SELL_LONG_UPTREND2","SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND3", "x_SELL_LONG_UPTREND3",
+                             "SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND4", "x_SELL_LONG_UPTREND4","SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND5", "x_SELL_LONG_UPTREND5","SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND6", "x_SELL_LONG_UPTREND6",
+                             "SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND7", "x_SELL_LONG_UPTREND7","SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND8", "x_SELL_LONG_UPTREND8","SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND9", "x_SELL_LONG_UPTREND9",
+                             "SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND10", "x_SELL_LONG_UPTREND10","SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND11", "x_SELL_LONG_UPTREND11","SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND12", "x_SELL_LONG_UPTREND12",
+                             "SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND13", "x_SELL_LONG_UPTREND13","SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND14", "x_SELL_LONG_UPTREND14","SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND15", "x_SELL_LONG_UPTREND15",
+                             "SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND16", "x_SELL_LONG_UPTREND16","SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND17", "x_SELL_LONG_UPTREND17","SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND18", "x_SELL_LONG_UPTREND18",
+                             "SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND19", "x_SELL_LONG_UPTREND19","SELL_RULES.LONG_UPTREND.x_SELL_LONG_UPTREND20", "x_SELL_LONG_UPTREND20",
+
+
+                             "SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND1" ,"x_SELL_LONG_DOWNTREND1","SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND2" ,"x_SELL_LONG_DOWNTREND2","SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND3" ,"x_SELL_LONG_DOWNTREND3",
+                             "SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND4", "x_SELL_LONG_DOWNTREND4","SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND5" ,"x_SELL_LONG_DOWNTREND5","SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND6" ,"x_SELL_LONG_DOWNTREND6",
+                             "SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND7", "x_SELL_LONG_DOWNTREND7","SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND8" ,"x_SELL_LONG_DOWNTREND8","SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND9" ,"x_SELL_LONG_DOWNTREND9",
+                             "SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND10", "x_SELL_LONG_DOWNTREND10","SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND11" ,"x_SELL_LONG_DOWNTREND11","SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND12" ,"x_SELL_LONG_DOWNTREND12",
+                             "SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND13", "x_SELL_LONG_DOWNTREND13","SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND14" ,"x_SELL_LONG_DOWNTREND14","SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND15" ,"x_SELL_LONG_DOWNTREND15",
+                             "SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND16", "x_SELL_LONG_DOWNTREND16","SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND17" ,"x_SELL_LONG_DOWNTREND17","SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND18" ,"x_SELL_LONG_DOWNTREND18",
+                             "SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND19", "x_SELL_LONG_DOWNTREND19","SELL_RULES.LONG_DOWNTREND.x_SELL_LONG_DOWNTREND20" ,"x_SELL_LONG_DOWNTREND20",
+
+
+                             "SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND1", "x_SELL_SLOW_DOWNTREND1","SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND2", "x_SELL_SLOW_DOWNTREND2","SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND3", "x_SELL_SLOW_DOWNTREND3",
+                             "SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND4", "x_SELL_SLOW_DOWNTREND4","SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND5", "x_SELL_SLOW_DOWNTREND5","SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND6", "x_SELL_SLOW_DOWNTREND6",
+                             "SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND7", "x_SELL_SLOW_DOWNTREND7","SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND8", "x_SELL_SLOW_DOWNTREND8","SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND9", "x_SELL_SLOW_DOWNTREND9",
+                             "SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND10", "x_SELL_SLOW_DOWNTREND10","SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND11", "x_SELL_SLOW_DOWNTREND11","SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND12", "x_SELL_SLOW_DOWNTREND12",
+                             "SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND13", "x_SELL_SLOW_DOWNTREND13","SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND14", "x_SELL_SLOW_DOWNTREND14","SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND15", "x_SELL_SLOW_DOWNTREND15",
+                             "SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND16", "x_SELL_SLOW_DOWNTREND16","SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND17", "x_SELL_SLOW_DOWNTREND17","SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND18", "x_SELL_SLOW_DOWNTREND18",
+                             "SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND19", "x_SELL_SLOW_DOWNTREND19","SELL_RULES.SLOW_DOWNTREND.x_SELL_SLOW_DOWNTREND20", "x_SELL_SLOW_DOWNTREND20",
+
+
+                             "SELL_RULES.ANY.x_SELL_ANY1", "x_SELL_ANY1","SELL_RULES.ANY.x_SELL_ANY2", "x_SELL_ANY2","SELL_RULES.ANY.x_SELL_ANY3", "x_SELL_ANY3",
+                             "SELL_RULES.ANY.x_SELL_ANY4", "x_SELL_ANY4","SELL_RULES.ANY.x_SELL_ANY5", "x_SELL_ANY5","SELL_RULES.ANY.x_SELL_ANY6", "x_SELL_ANY6",
+                             "SELL_RULES.ANY.x_SELL_ANY7", "x_SELL_ANY7","SELL_RULES.ANY.x_SELL_ANY8", "x_SELL_ANY8","SELL_RULES.ANY.x_SELL_ANY9", "x_SELL_ANY9",
+                             "SELL_RULES.ANY.x_SELL_ANY10", "x_SELL_ANY10","SELL_RULES.ANY.x_SELL_ANY11", "x_SELL_ANY11","SELL_RULES.ANY.x_SELL_ANY12", "x_SELL_ANY12",
+                             "SELL_RULES.ANY.x_SELL_ANY13", "x_SELL_ANY13","SELL_RULES.ANY.x_SELL_ANY14", "x_SELL_ANY14","SELL_RULES.ANY.x_SELL_ANY15", "x_SELL_ANY15",
+                             "SELL_RULES.ANY.x_SELL_ANY16", "x_SELL_ANY16","SELL_RULES.ANY.x_SELL_ANY17", "x_SELL_ANY17","SELL_RULES.ANY.x_SELL_ANY18", "x_SELL_ANY18",
+                             "SELL_RULES.ANY.x_SELL_ANY19", "x_SELL_ANY19","SELL_RULES.ANY.x_SELL_ANY20", "x_SELL_ANY20",
+
+
+                             "SELL_RULES.NOTREND.x_SELL_NOTREND1", "x_SELL_NOTREND1","SELL_RULES.NOTREND.x_SELL_NOTREND2", "x_SELL_NOTREND2","SELL_RULES.NOTREND.x_SELL_NOTREND3", "x_SELL_NOTREND3",
+                             "SELL_RULES.NOTREND.x_SELL_NOTREND4", "x_SELL_NOTREND4","SELL_RULES.NOTREND.x_SELL_NOTREND5", "x_SELL_NOTREND5","SELL_RULES.NOTREND.x_SELL_NOTREND6", "x_SELL_NOTREND6",
+                             "SELL_RULES.NOTREND.x_SELL_NOTREND7", "x_SELL_NOTREND7","SELL_RULES.NOTREND.x_SELL_NOTREND8", "x_SELL_NOTREND8","SELL_RULES.NOTREND.x_SELL_NOTREND9", "x_SELL_NOTREND9",
+                             "SELL_RULES.NOTREND.x_SELL_NOTREND10", "x_SELL_NOTREND10","SELL_RULES.NOTREND.x_SELL_NOTREND11", "x_SELL_NOTREND11","SELL_RULES.NOTREND.x_SELL_NOTREND12", "x_SELL_NOTREND12",
+                             "SELL_RULES.NOTREND.x_SELL_NOTREND13", "x_SELL_NOTREND13","SELL_RULES.NOTREND.x_SELL_NOTREND14", "x_SELL_NOTREND14","SELL_RULES.NOTREND.x_SELL_NOTREND15", "x_SELL_NOTREND15",
+                             "SELL_RULES.NOTREND.x_SELL_NOTREND16", "x_SELL_NOTREND16","SELL_RULES.NOTREND.x_SELL_NOTREND17", "x_SELL_NOTREND17","SELL_RULES.NOTREND.x_SELL_NOTREND18", "x_SELL_NOTREND18",
+                             "SELL_RULES.NOTREND.x_SELL_NOTREND19", "x_SELL_NOTREND19","SELL_RULES.NOTREND.x_SELL_NOTREND20", "x_SELL_NOTREND20",
+
+                            "SELL_RULES.CUSTOM.SELLER_NOSTALGIA", "SELLER_NOSTALGIA","SELL_RULES.CUSTOM.SELLER_NOSTALGIA15", "SELLER_NOSTALGIA15",
+
+                            "COMMON.COMMON_FUNCTIONS", "COMMON.CONSTANTS","COMMON.TA_FUNCTIONS","COMMON.POPULATE_INDICATORS",
+                            "COMMON_FUNCTIONS", "CONSTANTS","TA_FUNCTIONS","POPULATE_INDICATORS", "COMMON.BUYS","COMMON.SELLS",
+
+                            "DevLukas15min","DevLukas15minWithNFI",
                             "x_Buy1","x_Buy2","x_Buy3","x_Buy4","x_Buy5","x_Sell1","x_Sell2","x_Sell3","x_Sell4","x_Sell5",
                             "x_Buys_ANY","x_Buys_NOTREND","x_Buys_LOW","x_Buys_MID","x_Buys_HIGH","x_Buys_LONG_UPTREND","x_Buys_LONG_DOWNTREND","x_Buys_SLOW_DOWNTREND","x_Buys_DOWNTREND_UPSWING",
+                            "x_Sells_ANY","x_Sells_NOTREND","x_Sells_LOW","x_Sells_MID","x_Sells_HIGH","x_Sells_LONG_UPTREND","x_Sells_LONG_DOWNTREND","x_Sells_SLOW_DOWNTREND","x_Sells_DOWNTREND_UPSWING",
 
-                            "Common","CommonBuyerLOW","CommonBuyerMID","CommonBuyerHIGH","Constants"
+                            "BuyerDevDangerZone","buyer_dev_DANGER_ZONE","BuyerDevDowntrendUpswing","buyer_dev_DOWNTREND_UPSWING","BuyerDevHigh","buyer_dev_HIGH",
+                            "BuyerDevLongDowntrend","buyer_dev_LONG_DOWNTREND","BuyerDevLongUptrend","buyer_dev_LONG_UPTREND","BuyerDevLow","buyer_dev_LOW",
+                            "BuyerDevMid","buyer_dev_MID","BuyerDevSlowDowntrend","buyer_dev_SLOW_DOWNTREND","BuyerDevUpperDangerZone","buyer_dev_UPPER_DANGE_ZONE",
+
+                            "SellerDevDangerZone","seller_dev_DANGER_ZONE","SellerDevDowntrendUpswing","seller_dev_DOWNTREND_UPSWING","SellerDevHigh","seller_dev_HIGH",
+                            "SellerDevLongDowntrend","seller_dev_LONG_DOWNTREND","SellerDevLongUptrend","seller_dev_LONG_UPTREND","SellerDevLow","seller_dev_LOW",
+                            "SellerDevMid","seller_dev_MID","SellerDevSlowDowntrend","seller_dev_SLOW_DOWNTREND","SellerDevUpperDangerZone","seller_dev_UPPER_DANGE_ZONE",
+
+                            "Common","CommonBuyerLOW","CommonBuyerMID","CommonBuyerHIGH","Constants","BUYS","SELLS"
                             ]
 
 data_loading_time_ms = 905000000
@@ -1219,6 +1494,8 @@ class App(QWidget):
         main(["download-data", "-t", "15m","--days",str(days)])
         print("Downloading data for 1h")
         main(["download-data", "-t", "1h","--days",str(days)])
+        print("Downloading data for 1d")
+        main(["download-data", "-t", "1d","--days",str(days)])
         print("FINISHED DOWNLOADING DATA")
 
     # @pyqtSlot()

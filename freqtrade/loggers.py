@@ -126,7 +126,13 @@ def setup_logging(config: Dict[str, Any]) -> None:
             handler_rf.setFormatter(Formatter(LOGFORMAT))
             logging.root.addHandler(handler_rf)
 
-    logging.root.setLevel(logging.INFO if verbosity < 1 else logging.DEBUG)
+    #DISABLE logging here
+    logging.root.setLevel(logging.ERROR)
+    #DISABLE most logging here
+    # logging.root.setLevel(logging.WARNING)
+    #ENABLE logging here
+    #logging.root.setLevel(logging.INFO if verbosity < 1 else logging.DEBUG)
+
     _set_loggers(verbosity, config.get('api_server', {}).get('verbosity', 'info'))
 
     logger.info('Verbosity set to %s', verbosity)

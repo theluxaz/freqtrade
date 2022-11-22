@@ -11,6 +11,7 @@ from typing import Any, List
 if sys.version_info < (3, 8):  # pragma: no cover
     sys.exit("Freqtrade requires Python version >= 3.8")
 
+from freqtrade import __version__
 from freqtrade.commands import Arguments
 from freqtrade.exceptions import FreqtradeException, OperationalException
 from freqtrade.loggers import setup_logging_pre
@@ -33,6 +34,7 @@ def main(sysargv: List[str] = None) -> None:
 
         # Call subcommand.
         if 'func' in args:
+            logger.info(f'freqtrade {__version__}')
             return_code = args['func'](args)
         else:
             # No subcommand was issued.

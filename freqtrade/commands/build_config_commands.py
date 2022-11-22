@@ -67,7 +67,7 @@ def ask_user_config() -> Dict[str, Any]:
             "type": "text",
             "name": "stake_amount",
             "message": f"Please insert your stake amount (Number or '{UNLIMITED_STAKE_AMOUNT}'):",
-            "default": "100",
+            "default": "unlimited",
             "validate": lambda val: val == UNLIMITED_STAKE_AMOUNT or validate_is_float(val),
             "filter": lambda val: '"' + UNLIMITED_STAKE_AMOUNT + '"'
             if val == UNLIMITED_STAKE_AMOUNT
@@ -104,18 +104,27 @@ def ask_user_config() -> Dict[str, Any]:
             "type": "select",
             "name": "exchange_name",
             "message": "Select exchange",
-            "choices": [
+            "choices": lambda x: [
                 "binance",
                 "binanceus",
                 "bittrex",
-                "kraken",
                 "ftx",
-                "kucoin",
                 "gateio",
-                "okex",
-                Separator(),
+                "huobi",
+                "kraken",
+                "kucoin",
+                "okx",
+                Separator("------------------"),
                 "other",
             ],
+        },
+        {
+            "type": "confirm",
+            "name": "trading_mode",
+            "message": "Do you want to trade Perpetual Swaps (perpetual futures)?",
+            "default": False,
+            "filter": lambda val: 'futures' if val else 'spot',
+            "when": lambda x: x["exchange_name"] in ['binance', 'gateio', 'okx'],
         },
         {
             "type": "autocomplete",
@@ -140,7 +149,7 @@ def ask_user_config() -> Dict[str, Any]:
             "type": "password",
             "name": "exchange_key_password",
             "message": "Insert Exchange API Key password",
-            "when": lambda x: not x['dry_run'] and x['exchange_name'] in ('kucoin', 'okex')
+            "when": lambda x: not x['dry_run'] and x['exchange_name'] in ('kucoin', 'okx')
         },
         {
             "type": "confirm",
@@ -155,7 +164,7 @@ def ask_user_config() -> Dict[str, Any]:
             "when": lambda x: x['telegram']
         },
         {
-            "type": "text",
+            "type": "password",
             "name": "telegram_chat_id",
             "message": "Insert Telegram chat id",
             "when": lambda x: x['telegram']
@@ -182,7 +191,7 @@ def ask_user_config() -> Dict[str, Any]:
             "when": lambda x: x['api_server']
         },
         {
-            "type": "text",
+            "type": "password",
             "name": "api_server_password",
             "message": "Insert api-server password",
             "when": lambda x: x['api_server']
@@ -193,9 +202,16 @@ def ask_user_config() -> Dict[str, Any]:
     if not answers:
         # Interrupted questionary sessions return an empty dict.
         raise OperationalException("User interrupted interactive questions.")
-
+    # Ensure default is set for non-futures exchanges
+    answers['trading_mode'] = answers.get('trading_mode', "spot")
+    answers['margin_mode'] = (
+        'isolated'
+        if answers.get('trading_mode') == 'futures'
+        else ''
+    )
     # Force JWT token to be a random string
     answers['api_server_jwt_key'] = secrets.token_hex()
+    answers['api_server_ws_token'] = secrets.token_urlsafe(25)
 
     return answers
 

@@ -7,10 +7,13 @@ import logging
 import tempfile
 from base64 import urlsafe_b64decode
 from inspect import getfullargspec
+from os import walk
 from pathlib import Path
-from typing import Any, Dict, Optional
+from typing import Any, List, Optional
 
-from freqtrade.constants import REQUIRED_ORDERTIF, REQUIRED_ORDERTYPES, USERPATH_STRATEGIES
+from freqtrade.configuration.config_validation import validate_migrated_strategy_settings
+from freqtrade.constants import REQUIRED_ORDERTIF, REQUIRED_ORDERTYPES, USERPATH_STRATEGIES, Config
+from freqtrade.enums import TradingMode
 from freqtrade.exceptions import OperationalException
 from freqtrade.resolvers import IResolver
 from freqtrade.strategy.interface import IStrategy
@@ -27,9 +30,10 @@ class StrategyResolver(IResolver):
     object_type_str = "Strategy"
     user_subdir = USERPATH_STRATEGIES
     initial_search_path = None
+    extra_path = "strategy_path"
 
     @staticmethod
-    def load_strategy(config: Dict[str, Any] = None) -> IStrategy:
+    def load_strategy(config: Config = None) -> IStrategy:
         """
         Load the custom class from config parameter
         :param config: configuration dictionary or None
@@ -44,34 +48,7 @@ class StrategyResolver(IResolver):
         strategy: IStrategy = StrategyResolver._load_strategy(
             strategy_name, config=config,
             extra_dir=config.get('strategy_path'))
-
-        if hasattr(strategy, 'ticker_interval') and not hasattr(strategy, 'timeframe'):
-            # Assign ticker_interval to timeframe to keep compatibility
-            if 'timeframe' not in config:
-                logger.warning(
-                    "DEPRECATED: Please migrate to using 'timeframe' instead of 'ticker_interval'."
-                )
-                strategy.timeframe = strategy.ticker_interval
-
-        if strategy._ft_params_from_file:
-            # Set parameters from Hyperopt results file
-            params = strategy._ft_params_from_file
-            strategy.minimal_roi = params.get('roi', getattr(strategy, 'minimal_roi', {}))
-
-            strategy.stoploss = params.get('stoploss', {}).get(
-                'stoploss', getattr(strategy, 'stoploss', -0.1))
-            trailing = params.get('trailing', {})
-            strategy.trailing_stop = trailing.get(
-                'trailing_stop', getattr(strategy, 'trailing_stop', False))
-            strategy.trailing_stop_positive = trailing.get(
-                'trailing_stop_positive', getattr(strategy, 'trailing_stop_positive', None))
-            strategy.trailing_stop_positive_offset = trailing.get(
-                'trailing_stop_positive_offset',
-                getattr(strategy, 'trailing_stop_positive_offset', 0))
-            strategy.trailing_only_offset_is_reached = trailing.get(
-                'trailing_only_offset_is_reached',
-                getattr(strategy, 'trailing_only_offset_is_reached', 0.0))
-
+        strategy.ft_load_params_from_file()
         # Set attributes
         # Check if we need to override configuration
         #             (Attribute name,                    default,     subkey)
@@ -91,10 +68,10 @@ class StrategyResolver(IResolver):
                       ("protections",                     None),
                       ("startup_candle_count",            None),
                       ("unfilledtimeout",                 None),
-                      ("use_sell_signal",                 True),
-                      ("sell_profit_only",                False),
-                      ("ignore_roi_if_buy_signal",        False),
-                      ("sell_profit_offset",              0.0),
+                      ("use_exit_signal",                 True),
+                      ("exit_profit_only",                False),
+                      ("ignore_roi_if_entry_signal",      False),
+                      ("exit_profit_offset",              0.0),
                       ("disable_dataframe_checks",        False),
                       ("ignore_buying_expired_candle_after",  0),
                       ("position_adjustment_enable",      False),
@@ -115,8 +92,7 @@ class StrategyResolver(IResolver):
         return strategy
 
     @staticmethod
-    def _override_attribute_helper(strategy, config: Dict[str, Any],
-                                   attribute: str, default: Any):
+    def _override_attribute_helper(strategy, config: Config, attribute: str, default: Any):
         """
         Override attributes in the strategy.
         Prevalence:
@@ -145,10 +121,6 @@ class StrategyResolver(IResolver):
         """
         Normalize attributes to have the correct type.
         """
-        # Assign deprecated variable - to not break users code relying on this.
-        if hasattr(strategy, 'timeframe'):
-            strategy.ticker_interval = strategy.timeframe
-
         # Sort and apply type conversions
         if hasattr(strategy, 'minimal_roi'):
             strategy.minimal_roi = dict(sorted(
@@ -159,18 +131,91 @@ class StrategyResolver(IResolver):
         return strategy
 
     @staticmethod
-    def _strategy_sanity_validations(strategy):
+    def _strategy_sanity_validations(strategy: IStrategy):
+        # Ensure necessary migrations are performed first.
+        validate_migrated_strategy_settings(strategy.config)
+
         if not all(k in strategy.order_types for k in REQUIRED_ORDERTYPES):
             raise ImportError(f"Impossible to load Strategy '{strategy.__class__.__name__}'. "
                               f"Order-types mapping is incomplete.")
-
         if not all(k in strategy.order_time_in_force for k in REQUIRED_ORDERTIF):
             raise ImportError(f"Impossible to load Strategy '{strategy.__class__.__name__}'. "
                               f"Order-time-in-force mapping is incomplete.")
+        trading_mode = strategy.config.get('trading_mode', TradingMode.SPOT)
+
+        if (strategy.can_short and trading_mode == TradingMode.SPOT):
+            raise ImportError(
+                "Short strategies cannot run in spot markets. Please make sure that this "
+                "is the correct strategy and that your trading mode configuration is correct. "
+                "You can run this strategy in spot markets by setting `can_short=False`"
+                " in your strategy. Please note that short signals will be ignored in that case."
+                )
+
+    @staticmethod
+    def validate_strategy(strategy: IStrategy) -> IStrategy:
+        if strategy.config.get('trading_mode', TradingMode.SPOT) != TradingMode.SPOT:
+            # Require new method
+            warn_deprecated_setting(strategy, 'sell_profit_only', 'exit_profit_only', True)
+            warn_deprecated_setting(strategy, 'sell_profit_offset', 'exit_profit_offset', True)
+            warn_deprecated_setting(strategy, 'use_sell_signal', 'use_exit_signal', True)
+            warn_deprecated_setting(strategy, 'ignore_roi_if_buy_signal',
+                                    'ignore_roi_if_entry_signal', True)
+
+            if not check_override(strategy, IStrategy, 'populate_entry_trend'):
+                raise OperationalException("`populate_entry_trend` must be implemented.")
+            if not check_override(strategy, IStrategy, 'populate_exit_trend'):
+                raise OperationalException("`populate_exit_trend` must be implemented.")
+            if check_override(strategy, IStrategy, 'check_buy_timeout'):
+                raise OperationalException("Please migrate your implementation "
+                                           "of `check_buy_timeout` to `check_entry_timeout`.")
+            if check_override(strategy, IStrategy, 'check_sell_timeout'):
+                raise OperationalException("Please migrate your implementation "
+                                           "of `check_sell_timeout` to `check_exit_timeout`.")
+
+            if check_override(strategy, IStrategy, 'custom_sell'):
+                raise OperationalException(
+                    "Please migrate your implementation of `custom_sell` to `custom_exit`.")
+
+        else:
+            # TODO: Implementing one of the following methods should show a deprecation warning
+            #  buy_trend and sell_trend, custom_sell
+            warn_deprecated_setting(strategy, 'sell_profit_only', 'exit_profit_only')
+            warn_deprecated_setting(strategy, 'sell_profit_offset', 'exit_profit_offset')
+            warn_deprecated_setting(strategy, 'use_sell_signal', 'use_exit_signal')
+            warn_deprecated_setting(strategy, 'ignore_roi_if_buy_signal',
+                                    'ignore_roi_if_entry_signal')
+
+            if (
+                not check_override(strategy, IStrategy, 'populate_buy_trend')
+                and not check_override(strategy, IStrategy, 'populate_entry_trend')
+            ):
+                raise OperationalException(
+                    "`populate_entry_trend` or `populate_buy_trend` must be implemented.")
+            if (
+                not check_override(strategy, IStrategy, 'populate_sell_trend')
+                and not check_override(strategy, IStrategy, 'populate_exit_trend')
+            ):
+                raise OperationalException(
+                    "`populate_exit_trend` or `populate_sell_trend` must be implemented.")
+
+            _populate_fun_len = len(getfullargspec(strategy.populate_indicators).args)
+            _buy_fun_len = len(getfullargspec(strategy.populate_buy_trend).args)
+            _sell_fun_len = len(getfullargspec(strategy.populate_sell_trend).args)
+            if any(x == 2 for x in [
+                _populate_fun_len,
+                _buy_fun_len,
+                _sell_fun_len
+            ]):
+                raise OperationalException(
+                    "Strategy Interface v1 is no longer supported. "
+                    "Please update your strategy to implement "
+                    "`populate_indicators`, `populate_entry_trend` and `populate_exit_trend` "
+                    "with the metadata argument. ")
+        return strategy
 
     @staticmethod
     def _load_strategy(strategy_name: str,
-                       config: dict, extra_dir: Optional[str] = None) -> IStrategy:
+                       config: Config, extra_dir: Optional[str] = None) -> IStrategy:
         """
         Search and loads the specified strategy.
         :param strategy_name: name of the module to import
@@ -178,10 +223,19 @@ class StrategyResolver(IResolver):
         :param extra_dir: additional directory to search for the given strategy
         :return: Strategy instance or None
         """
+        if config.get('recursive_strategy_search', False):
+            extra_dirs: List[str] = [
+                path[0] for path in walk(f"{config['user_data_dir']}/{USERPATH_STRATEGIES}")
+            ]  # sub-directories
+        else:
+            extra_dirs = []
+
+        if extra_dir:
+            extra_dirs.append(extra_dir)
 
         abs_paths = StrategyResolver.build_search_paths(config,
                                                         user_subdir=USERPATH_STRATEGIES,
-                                                        extra_dir=extra_dir)
+                                                        extra_dirs=extra_dirs)
 
         if ":" in strategy_name:
             logger.info("loading base64 encoded strategy")
@@ -199,23 +253,35 @@ class StrategyResolver(IResolver):
                 # register temp path with the bot
                 abs_paths.insert(0, temp.resolve())
 
-        strategy = StrategyResolver._load_object(paths=abs_paths,
-                                                 object_name=strategy_name,
-                                                 add_source=True,
-                                                 kwargs={'config': config},
-                                                 )
-        if strategy:
-            strategy._populate_fun_len = len(getfullargspec(strategy.populate_indicators).args)
-            strategy._buy_fun_len = len(getfullargspec(strategy.populate_buy_trend).args)
-            strategy._sell_fun_len = len(getfullargspec(strategy.populate_sell_trend).args)
-            if any(x == 2 for x in [strategy._populate_fun_len,
-                                    strategy._buy_fun_len,
-                                    strategy._sell_fun_len]):
-                strategy.INTERFACE_VERSION = 1
+        strategy = StrategyResolver._load_object(
+            paths=abs_paths,
+            object_name=strategy_name,
+            add_source=True,
+            kwargs={'config': config},
+        )
 
-            return strategy
+        if strategy:
+
+            return StrategyResolver.validate_strategy(strategy)
 
         raise OperationalException(
             f"Impossible to load Strategy '{strategy_name}'. This class does not exist "
             "or contains Python code errors."
         )
+
+
+def warn_deprecated_setting(strategy: IStrategy, old: str, new: str, error=False):
+    if hasattr(strategy, old):
+        errormsg = f"DEPRECATED: Using '{old}' moved to '{new}'."
+        if error:
+            raise OperationalException(errormsg)
+        logger.warning(errormsg)
+        setattr(strategy, new, getattr(strategy, f'{old}'))
+
+
+def check_override(object, parentclass, attribute):
+    """
+    Checks if a object overrides the parent class attribute.
+    :returns: True if the object is overridden.
+    """
+    return getattr(type(object), attribute) != getattr(parentclass, attribute)

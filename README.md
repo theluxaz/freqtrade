@@ -5,7 +5,7 @@
 [![Documentation](https://readthedocs.org/projects/freqtrade/badge/)](https://www.freqtrade.io)
 [![Maintainability](https://api.codeclimate.com/v1/badges/5737e6d668200b7518ff/maintainability)](https://codeclimate.com/github/freqtrade/freqtrade/maintainability)
 
-Freqtrade is a free and open source crypto trading bot written in Python. It is designed to support all major exchanges and be controlled via Telegram. It contains backtesting, plotting and money management tools as well as strategy optimization by machine learning.
+Freqtrade is a free and open source crypto trading bot written in Python. It is designed to support all major exchanges and be controlled via Telegram or webUI. It contains backtesting, plotting and money management tools as well as strategy optimization by machine learning.
 
 ![freqtrade](https://raw.githubusercontent.com/freqtrade/freqtrade/develop/docs/assets/freqtrade-screenshot.png)
 
@@ -26,13 +26,22 @@ hesitate to read the source code and understand the mechanism of this bot.
 
 Please read the [exchange specific notes](docs/exchanges.md) to learn about eventual, special configurations needed for each exchange.
 
-- [X] [Binance](https://www.binance.com/) ([*Note for binance users](docs/exchanges.md#binance-blacklist))
+- [X] [Binance](https://www.binance.com/)
 - [X] [Bittrex](https://bittrex.com/)
-- [X] [FTX](https://ftx.com)
+- [X] [FTX](https://ftx.com/#a=2258149)
 - [X] [Gate.io](https://www.gate.io/ref/6266643)
+- [X] [Huobi](http://huobi.com/)
 - [X] [Kraken](https://kraken.com/)
-- [X] [OKEX](https://www.okex.com/)
+- [X] [OKX](https://okx.com/) (Former OKEX)
 - [ ] [potentially many others](https://github.com/ccxt/ccxt/). _(We cannot guarantee they will work)_
+
+### Supported Futures Exchanges (experimental)
+
+- [X] [Binance](https://www.binance.com/)
+- [X] [Gate.io](https://www.gate.io/ref/6266643)
+- [X] [OKX](https://okx.com/).
+
+Please make sure to read the [exchange specific notes](docs/exchanges.md), as well as the [trading with leverage](docs/leverage.md) documentation before diving in.
 
 ### Community tested
 
@@ -54,25 +63,20 @@ Please find the complete documentation on the [freqtrade website](https://www.fr
 - [x] **Dry-run**: Run the bot without paying money.
 - [x] **Backtesting**: Run a simulation of your buy/sell strategy.
 - [x] **Strategy Optimization by machine learning**: Use machine learning to optimize your buy/sell strategy parameters with real exchange data.
+- [X] **Adaptive prediction modeling**: Build a smart strategy with FreqAI that self-trains to the market via adaptive machine learning methods. [Learn more](https://www.freqtrade.io/en/stable/freqai/)
 - [x] **Edge position sizing** Calculate your win rate, risk reward ratio, the best stoploss and adjust your position size before taking a position for each specific market. [Learn more](https://www.freqtrade.io/en/stable/edge/).
 - [x] **Whitelist crypto-currencies**: Select which crypto-currency you want to trade or use dynamic whitelists.
 - [x] **Blacklist crypto-currencies**: Select which crypto-currency you want to avoid.
+- [x] **Builtin WebUI**: Builtin web UI to manage your bot.
 - [x] **Manageable via Telegram**: Manage the bot with Telegram.
-- [x] **Display profit/loss in fiat**: Display your profit/loss in 33 fiat.
-- [x] **Daily summary of profit/loss**: Provide a daily summary of your profit/loss.
+- [x] **Display profit/loss in fiat**: Display your profit/loss in fiat currency.
 - [x] **Performance status report**: Provide a performance status of your current trades.
 
 ## Quick start
 
-Freqtrade provides a Linux/macOS script to install all dependencies and help you to configure the bot.
+Please refer to the [Docker Quickstart documentation](https://www.freqtrade.io/en/stable/docker_quickstart/) on how to get started quickly.
 
-```bash
-git clone -b develop https://github.com/freqtrade/freqtrade.git
-cd freqtrade
-./setup.sh --install
-```
-
-For any other type of installation please refer to [Installation doc](https://www.freqtrade.io/en/stable/installation/).
+For further (native) installation methods, please refer to the [Installation documentation page](https://www.freqtrade.io/en/stable/installation/).
 
 ## Basic Usage
 
@@ -126,10 +130,11 @@ Telegram is not mandatory. However, this is a great way to control your bot. Mor
 
 - `/start`: Starts the trader.
 - `/stop`: Stops the trader.
-- `/stopbuy`: Stop entering new trades.
+- `/stopentry`: Stop entering new trades.
 - `/status <trade_id>|[table]`: Lists all or specific open trades.
 - `/profit [<n>]`: Lists cumulative profit from all finished trades, over the last n days.
-- `/forcesell <trade_id>|all`: Instantly sells the given trade (Ignoring `minimum_roi`).
+- `/forceexit <trade_id>|all`: Instantly exits the given trade (Ignoring `minimum_roi`).
+- `/fx <trade_id>|all`: Alias to `/forceexit`
 - `/performance`: Show performance of each finished trade grouped by pair
 - `/balance`: Show account balance per currency.
 - `/daily <n>`: Shows profit or loss per day, over the last n days.
@@ -189,7 +194,7 @@ Issues labeled [good first issue](https://github.com/freqtrade/freqtrade/labels/
 
 The clock must be accurate, synchronized to a NTP server very frequently to avoid problems with communication to the exchanges.
 
-### Min hardware required
+### Minimum hardware required
 
 To run this bot we recommend you a cloud instance with a minimum of:
 

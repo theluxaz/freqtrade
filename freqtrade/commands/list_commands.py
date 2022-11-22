@@ -1,7 +1,6 @@
 import csv
 import logging
 import sys
-from pathlib import Path
 from typing import Any, Dict, List
 
 import rapidjson
@@ -10,7 +9,6 @@ from colorama import init as colorama_init
 from tabulate import tabulate
 
 from freqtrade.configuration import setup_utils_configuration
-from freqtrade.constants import USERPATH_STRATEGIES
 from freqtrade.enums import RunMode
 from freqtrade.exceptions import OperationalException
 from freqtrade.exchange import market_is_active, validate_exchanges
@@ -55,7 +53,7 @@ def _print_objs_tabular(objs: List, print_colorized: bool) -> None:
     names = [s['name'] for s in objs]
     objs_to_print = [{
         'name': s['name'] if s['name'] else "--",
-        'location': s['location'].name,
+        'location': s['location_rel'],
         'status': (red + "LOAD FAILED" + reset if s['class'] is None
                    else "OK" if names.count(s['name']) == 1
                    else yellow + "DUPLICATE NAME" + reset)
@@ -76,8 +74,8 @@ def start_list_strategies(args: Dict[str, Any]) -> None:
     """
     config = setup_utils_configuration(args, RunMode.UTIL_NO_EXCHANGE)
 
-    directory = Path(config.get('strategy_path', config['user_data_dir'] / USERPATH_STRATEGIES))
-    strategy_objs = StrategyResolver.search_all_objects(directory, not args['print_one_column'])
+    strategy_objs = StrategyResolver.search_all_objects(
+        config, not args['print_one_column'], config.get('recursive_strategy_search', False))
     # Sort alphabetically
     strategy_objs = sorted(strategy_objs, key=lambda x: x['name'])
     for obj in strategy_objs:
@@ -90,6 +88,21 @@ def start_list_strategies(args: Dict[str, Any]) -> None:
         print('\n'.join([s['name'] for s in strategy_objs]))
     else:
         _print_objs_tabular(strategy_objs, config.get('print_colorized', False))
+
+
+def start_list_freqAI_models(args: Dict[str, Any]) -> None:
+    """
+    Print files with FreqAI models custom classes available in the directory
+    """
+    config = setup_utils_configuration(args, RunMode.UTIL_NO_EXCHANGE)
+    from freqtrade.resolvers.freqaimodel_resolver import FreqaiModelResolver
+    model_objs = FreqaiModelResolver.search_all_objects(config, not args['print_one_column'])
+    # Sort alphabetically
+    model_objs = sorted(model_objs, key=lambda x: x['name'])
+    if args['print_one_column']:
+        print('\n'.join([s['name'] for s in model_objs]))
+    else:
+        _print_objs_tabular(model_objs, config.get('print_colorized', False))
 
 
 def start_list_timeframes(args: Dict[str, Any]) -> None:
@@ -131,7 +144,7 @@ def start_list_markets(args: Dict[str, Any], pairs_only: bool = False) -> None:
     try:
         pairs = exchange.get_markets(base_currencies=base_currencies,
                                      quote_currencies=quote_currencies,
-                                     pairs_only=pairs_only,
+                                     tradable_only=pairs_only,
                                      active_only=active_only)
         # Sort the pairs/markets by symbol
         pairs = dict(sorted(pairs.items()))
@@ -151,15 +164,19 @@ def start_list_markets(args: Dict[str, Any], pairs_only: bool = False) -> None:
                         if quote_currencies else ""))
 
         headers = ["Id", "Symbol", "Base", "Quote", "Active",
-                   *(['Is pair'] if not pairs_only else [])]
+                   "Spot", "Margin", "Future", "Leverage"]
 
-        tabular_data = []
-        for _, v in pairs.items():
-            tabular_data.append({'Id': v['id'], 'Symbol': v['symbol'],
-                                 'Base': v['base'], 'Quote': v['quote'],
-                                 'Active': market_is_active(v),
-                                 **({'Is pair': exchange.market_is_tradable(v)}
-                                    if not pairs_only else {})})
+        tabular_data = [{
+                'Id': v['id'],
+                'Symbol': v['symbol'],
+                'Base': v['base'],
+                'Quote': v['quote'],
+                'Active': market_is_active(v),
+                'Spot': 'Spot' if exchange.market_is_spot(v) else '',
+                'Margin': 'Margin' if exchange.market_is_margin(v) else '',
+                'Future': 'Future' if exchange.market_is_future(v) else '',
+                'Leverage': exchange.get_max_leverage(v['symbol'], 20)
+            } for _, v in pairs.items()]
 
         if (args.get('print_one_column', False) or
                 args.get('list_pairs_print_json', False) or
@@ -207,7 +224,7 @@ def start_show_trades(args: Dict[str, Any]) -> None:
         raise OperationalException("--db-url is required for this command.")
 
     logger.info(f'Using DB: "{parse_db_uri_for_logging(config["db_url"])}"')
-    init_db(config['db_url'], clean_open_orders=False)
+    init_db(config['db_url'])
     tfilter = []
 
     if config.get('trade_ids'):

@@ -10,37 +10,37 @@ Sample configuration (tested using IFTTT).
   "webhook": {
         "enabled": true,
         "url": "https://maker.ifttt.com/trigger/<YOUREVENT>/with/key/<YOURKEY>/",
-        "webhookbuy": {
+        "entry": {
             "value1": "Buying {pair}",
             "value2": "limit {limit:8f}",
             "value3": "{stake_amount:8f} {stake_currency}"
         },
-        "webhookbuycancel": {
+        "entry_cancel": {
             "value1": "Cancelling Open Buy Order for {pair}",
             "value2": "limit {limit:8f}",
             "value3": "{stake_amount:8f} {stake_currency}"
         },
-         "webhookbuyfill": {
+         "entry_fill": {
             "value1": "Buy Order for {pair} filled",
             "value2": "at {open_rate:8f}",
             "value3": ""
         },
-        "webhooksell": {
-            "value1": "Selling {pair}",
+        "exit": {
+            "value1": "Exiting {pair}",
             "value2": "limit {limit:8f}",
             "value3": "profit: {profit_amount:8f} {stake_currency} ({profit_ratio})"
         },
-        "webhooksellcancel": {
-            "value1": "Cancelling Open Sell Order for {pair}",
+        "exit_cancel": {
+            "value1": "Cancelling Open Exit Order for {pair}",
             "value2": "limit {limit:8f}",
             "value3": "profit: {profit_amount:8f} {stake_currency} ({profit_ratio})"
         },
-        "webhooksellfill": {
-            "value1": "Sell Order for {pair} filled",
+        "exit_fill": {
+            "value1": "Exit Order for {pair} filled",
             "value2": "at {close_rate:8f}.",
             "value3": ""
         },
-        "webhookstatus": {
+        "status": {
             "value1": "Status: {status}",
             "value2": "",
             "value3": ""
@@ -57,7 +57,7 @@ You can set the POST body format to Form-Encoded (default), JSON-Encoded, or raw
         "enabled": true,
         "url": "https://<YOURSUBDOMAIN>.cloud.mattermost.com/hooks/<YOURHOOK>",
         "format": "json",
-        "webhookstatus": {
+        "status": {
             "text": "Status: {status}"
         }
     },
@@ -88,22 +88,37 @@ Optional parameters are available to enable automatic retries for webhook messag
         "url": "https://<YOURHOOKURL>",
         "retries": 3,
         "retry_delay": 0.2,
-        "webhookstatus": {
+        "status": {
             "status": "Status: {status}"
+        }
+    },
+```
+
+Custom messages can be sent to Webhook endpoints via the `self.dp.send_msg()` function from within the strategy. To enable this, set the `allow_custom_messages` option to `true`:
+
+```json
+  "webhook": {
+        "enabled": true,
+        "url": "https://<YOURHOOKURL>",
+        "allow_custom_messages": true,
+        "strategy_msg": {
+            "status": "StrategyMessage: {msg}"
         }
     },
 ```
 
 Different payloads can be configured for different events. Not all fields are necessary, but you should configure at least one of the dicts, otherwise the webhook will never be called.
 
-### Webhookbuy
+### Entry
 
-The fields in `webhook.webhookbuy` are filled when the bot executes a buy. Parameters are filled using string.format.
+The fields in `webhook.entry` are filled when the bot executes a long/short. Parameters are filled using string.format.
 Possible parameters are:
 
 * `trade_id`
 * `exchange`
 * `pair`
+* `direction`
+* `leverage`
 * ~~`limit` # Deprecated - should no longer be used.~~
 * `open_rate`
 * `amount`
@@ -114,16 +129,18 @@ Possible parameters are:
 * `fiat_currency`
 * `order_type`
 * `current_rate`
-* `buy_tag`
+* `enter_tag`
 
-### Webhookbuycancel
+### Entry cancel
 
-The fields in `webhook.webhookbuycancel` are filled when the bot cancels a buy order. Parameters are filled using string.format.
+The fields in `webhook.entry_cancel` are filled when the bot cancels a long/short order. Parameters are filled using string.format.
 Possible parameters are:
 
 * `trade_id`
 * `exchange`
 * `pair`
+* `direction`
+* `leverage`
 * `limit`
 * `amount`
 * `open_date`
@@ -133,16 +150,18 @@ Possible parameters are:
 * `fiat_currency`
 * `order_type`
 * `current_rate`
-* `buy_tag`
+* `enter_tag`
 
-### Webhookbuyfill
+### Entry fill
 
-The fields in `webhook.webhookbuyfill` are filled when the bot filled a buy order. Parameters are filled using string.format.
+The fields in `webhook.entry_fill` are filled when the bot filled a long/short order. Parameters are filled using string.format.
 Possible parameters are:
 
 * `trade_id`
 * `exchange`
 * `pair`
+* `direction`
+* `leverage`
 * `open_rate`
 * `amount`
 * `open_date`
@@ -152,16 +171,18 @@ Possible parameters are:
 * `fiat_currency`
 * `order_type`
 * `current_rate`
-* `buy_tag`
+* `enter_tag`
 
-### Webhooksell
+### Exit
 
-The fields in `webhook.webhooksell` are filled when the bot sells a trade. Parameters are filled using string.format.
+The fields in `webhook.exit` are filled when the bot exits a trade. Parameters are filled using string.format.
 Possible parameters are:
 
 * `trade_id`
 * `exchange`
 * `pair`
+* `direction`
+* `leverage`
 * `gain`
 * `limit`
 * `amount`
@@ -171,19 +192,21 @@ Possible parameters are:
 * `stake_currency`
 * `base_currency`
 * `fiat_currency`
-* `sell_reason`
+* `exit_reason`
 * `order_type`
 * `open_date`
 * `close_date`
 
-### Webhooksellfill
+### Exit fill
 
-The fields in `webhook.webhooksellfill` are filled when the bot fills a sell order (closes a Trae). Parameters are filled using string.format.
+The fields in `webhook.exit_fill` are filled when the bot fills a exit order (closes a Trade). Parameters are filled using string.format.
 Possible parameters are:
 
 * `trade_id`
 * `exchange`
 * `pair`
+* `direction`
+* `leverage`
 * `gain`
 * `close_rate`
 * `amount`
@@ -194,19 +217,21 @@ Possible parameters are:
 * `stake_currency`
 * `base_currency`
 * `fiat_currency`
-* `sell_reason`
+* `exit_reason`
 * `order_type`
 * `open_date`
 * `close_date`
 
-### Webhooksellcancel
+### Exit cancel
 
-The fields in `webhook.webhooksellcancel` are filled when the bot cancels a sell order. Parameters are filled using string.format.
+The fields in `webhook.exit_cancel` are filled when the bot cancels a exit order. Parameters are filled using string.format.
 Possible parameters are:
 
 * `trade_id`
 * `exchange`
 * `pair`
+* `direction`
+* `leverage`
 * `gain`
 * `limit`
 * `amount`
@@ -217,13 +242,71 @@ Possible parameters are:
 * `stake_currency`
 * `base_currency`
 * `fiat_currency`
-* `sell_reason`
+* `exit_reason`
 * `order_type`
 * `open_date`
 * `close_date`
 
-### Webhookstatus
+### Status
 
-The fields in `webhook.webhookstatus` are used for regular status messages (Started / Stopped / ...). Parameters are filled using string.format.
+The fields in `webhook.status` are used for regular status messages (Started / Stopped / ...). Parameters are filled using string.format.
 
 The only possible value here is `{status}`.
+
+## Discord
+
+A special form of webhooks is available for discord.
+You can configure this as follows:
+
+```json
+"discord": {
+    "enabled": true,
+    "webhook_url": "https://discord.com/api/webhooks/<Your webhook URL ...>",
+    "exit_fill": [
+        {"Trade ID": "{trade_id}"},
+        {"Exchange": "{exchange}"},
+        {"Pair": "{pair}"},
+        {"Direction": "{direction}"},
+        {"Open rate": "{open_rate}"},
+        {"Close rate": "{close_rate}"},
+        {"Amount": "{amount}"},
+        {"Open date": "{open_date:%Y-%m-%d %H:%M:%S}"},
+        {"Close date": "{close_date:%Y-%m-%d %H:%M:%S}"},
+        {"Profit": "{profit_amount} {stake_currency}"},
+        {"Profitability": "{profit_ratio:.2%}"},
+        {"Enter tag": "{enter_tag}"},
+        {"Exit Reason": "{exit_reason}"},
+        {"Strategy": "{strategy}"},
+        {"Timeframe": "{timeframe}"},
+    ],
+    "entry_fill": [
+        {"Trade ID": "{trade_id}"},
+        {"Exchange": "{exchange}"},
+        {"Pair": "{pair}"},
+        {"Direction": "{direction}"},
+        {"Open rate": "{open_rate}"},
+        {"Amount": "{amount}"},
+        {"Open date": "{open_date:%Y-%m-%d %H:%M:%S}"},
+        {"Enter tag": "{enter_tag}"},
+        {"Strategy": "{strategy} {timeframe}"},
+    ]
+}
+```
+
+The above represents the default (`exit_fill` and `entry_fill` are optional and will default to the above configuration) - modifications are obviously possible.
+
+Available fields correspond to the fields for webhooks and are documented in the corresponding webhook sections.
+
+The notifications will look as follows by default.
+
+![discord-notification](assets/discord_notification.png)
+
+Custom messages can be sent from a strategy to Discord endpoints via the dataprovider.send_msg() function. To enable this, set the `allow_custom_messages` option to `true`:
+
+```json
+  "discord": {
+        "enabled": true,
+        "webhook_url": "https://discord.com/api/webhooks/<Your webhook URL ...>",
+        "allow_custom_messages": true,
+    },
+```

@@ -1,6 +1,6 @@
 import time_machine
 
-from freqtrade.configuration import PeriodicCache
+from freqtrade.util import PeriodicCache
 
 
 def test_ttl_cache():
@@ -26,7 +26,9 @@ def test_ttl_cache():
         assert 'a' in cache1h
 
         t.move_to("2021-09-01 05:59:59 +00:00")
+        assert 'a' not in cache
         assert 'a' in cache1h
 
         t.move_to("2021-09-01 06:00:00 +00:00")
+        assert 'a' not in cache
         assert 'a' not in cache1h

@@ -10,6 +10,7 @@ from typing import Dict, List, Union
 from sklearn.base import RegressorMixin
 from skopt.space import Categorical, Dimension, Integer
 
+from freqtrade.constants import Config
 from freqtrade.exchange import timeframe_to_minutes
 from freqtrade.misc import round_dict
 from freqtrade.optimize.space import SKDecimal
@@ -29,15 +30,13 @@ class IHyperOpt(ABC):
     Class attributes you can use:
         timeframe -> int: value of the timeframe to use for the strategy
     """
-    ticker_interval: str  # DEPRECATED
     timeframe: str
     strategy: IStrategy
 
-    def __init__(self, config: dict) -> None:
+    def __init__(self, config: Config) -> None:
         self.config = config
 
-        # Assign ticker_interval to be used in hyperopt
-        IHyperOpt.ticker_interval = str(config['timeframe'])  # DEPRECATED
+        # Assign timeframe to be used in hyperopt
         IHyperOpt.timeframe = str(config['timeframe'])
 
     def generate_estimator(self, dimensions: List[Dimension], **kwargs) -> EstimatorType:
@@ -192,7 +191,7 @@ class IHyperOpt(ABC):
             Categorical([True, False], name='trailing_only_offset_is_reached'),
         ]
 
-    # This is needed for proper unpickling the class attribute ticker_interval
+    # This is needed for proper unpickling the class attribute timeframe
     # which is set to the actual value by the resolver.
     # Why do I still need such shamanic mantras in modern python?
     def __getstate__(self):
@@ -202,5 +201,4 @@ class IHyperOpt(ABC):
 
     def __setstate__(self, state):
         self.__dict__.update(state)
-        IHyperOpt.ticker_interval = state['timeframe']
         IHyperOpt.timeframe = state['timeframe']

@@ -22,6 +22,7 @@ You may also use something like `.*DOWN/BTC` or `.*UP/BTC` to exclude leveraged 
 
 * [`StaticPairList`](#static-pair-list) (default, if not configured differently)
 * [`VolumePairList`](#volume-pair-list)
+* [`ProducerPairList`](#producerpairlist)
 * [`AgeFilter`](#agefilter)
 * [`OffsetFilter`](#offsetfilter)
 * [`PerformanceFilter`](#performancefilter)
@@ -44,7 +45,7 @@ It uses configuration from `exchange.pair_whitelist` and `exchange.pair_blacklis
 ```json
 "pairlists": [
     {"method": "StaticPairList"}
-    ],
+],
 ```
 
 By default, only currently enabled pairs are allowed.
@@ -84,7 +85,7 @@ Filtering instances (not the first position in the list) will not apply any cach
 
 You can define a minimum volume with `min_value` - which will filter out pairs with a volume lower than the specified value in the specified timerange.
 
-### VolumePairList Advanced mode
+##### VolumePairList Advanced mode
 
 `VolumePairList` can also operate in an advanced mode to build volume over a given timerange of specified candle size. It utilizes exchange historical candle data, builds a typical price (calculated by (open+high+low)/3) and multiplies the typical price with every candle's volume. The sum is the `quoteVolume` over the given range. This allows different scenarios, for a  more smoothened volume, when using longer ranges with larger candle sizes, or the opposite when using a short range with small candles.
 
@@ -146,6 +147,32 @@ More sophisticated approach can be used, by using `lookback_timeframe` for candl
 !!! Note
     `VolumePairList` does not support backtesting mode.
 
+#### ProducerPairList
+
+With `ProducerPairList`, you can reuse the pairlist from a [Producer](producer-consumer.md) without explicitly defining the pairlist on each consumer.
+
+[Consumer mode](producer-consumer.md) is required for this pairlist to work.
+
+The pairlist will perform a check on active pairs against the current exchange configuration to avoid attempting to trade on invalid markets.
+
+You can limit the length of the pairlist with the optional parameter `number_assets`. Using `"number_assets"=0` or omitting this key will result in the reuse of all producer pairs valid for the current setup.
+
+```json
+"pairlists": [
+    {
+        "method": "ProducerPairList",
+        "number_assets": 5,
+        "producer_name": "default",
+    }
+],
+```
+
+
+!!! Tip "Combining pairlists"
+    This pairlist can be combined with all other pairlists and filters for further pairlist reduction, and can also act as an "additional" pairlist, on top of already defined pairs.
+    `ProducerPairList` can also be used multiple times in sequence, combining the pairs from multiple producers.
+    Obviously in complex such configurations, the Producer may not provide data for all pairs, so the strategy must be fit for this.
+
 #### AgeFilter
 
 Removes pairs that have been listed on the exchange for less than `min_days_listed` days (defaults to `10`) or more than `max_days_listed` days (defaults `None` mean infinity).
@@ -160,17 +187,17 @@ This filter allows freqtrade to ignore pairs until they have been listed for at 
 
 Offsets an incoming pairlist by a given `offset` value.
 
-As an example it can be used in conjunction with `VolumeFilter` to remove the top X volume pairs. Or to split
-a larger pairlist on two bot instances.
+As an example it can be used in conjunction with `VolumeFilter` to remove the top X volume pairs. Or to split a larger pairlist on two bot instances.
 
-Example to remove the first 10 pairs from the pairlist:
+Example to remove the first 10 pairs from the pairlist, and takes the next 20 (taking items 10-30 of the initial list):
 
 ```json
 "pairlists": [
     // ...
     {
         "method": "OffsetFilter",
-        "offset": 10
+        "offset": 10,
+        "number_assets": 20
     }
 ],
 ```
@@ -181,7 +208,7 @@ Example to remove the first 10 pairs from the pairlist:
     `VolumeFilter`.
 
 !!! Note
-    An offset larger then the total length of the incoming pairlist will result in an empty pairlist.
+    An offset larger than the total length of the incoming pairlist will result in an empty pairlist.
 
 #### PerformanceFilter
 
@@ -246,7 +273,7 @@ On exchanges that deduct fees from the receiving currency (e.g. FTX) - this can 
 The `low_price_ratio` setting removes pairs where a raise of 1 price unit (pip) is above the `low_price_ratio` ratio.
 This option is disabled by default, and will only apply if set to > 0.
 
-For `PriceFiler` at least one of its `min_price`, `max_price` or `low_price_ratio` settings must be applied.
+For `PriceFilter` at least one of its `min_price`, `max_price` or `low_price_ratio` settings must be applied.
 
 Calculation example:
 

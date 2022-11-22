@@ -3,12 +3,15 @@ PairList manager class
 """
 import logging
 from functools import partial
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 from cachetools import TTLCache, cached
 
-from freqtrade.constants import ListPairsWithTimeframes
+from freqtrade.constants import Config, ListPairsWithTimeframes
+from freqtrade.data.dataprovider import DataProvider
+from freqtrade.enums import CandleType
 from freqtrade.exceptions import OperationalException
+from freqtrade.exchange.types import Tickers
 from freqtrade.mixins import LoggingMixin
 from freqtrade.plugins.pairlist.IPairList import IPairList
 from freqtrade.plugins.pairlist.pairlist_helpers import expand_pairlist
@@ -20,14 +23,15 @@ logger = logging.getLogger(__name__)
 
 class PairListManager(LoggingMixin):
 
-    def __init__(self, exchange, config: dict) -> None:
+    def __init__(self, exchange, config: Config, dataprovider: DataProvider = None) -> None:
         self._exchange = exchange
         self._config = config
         self._whitelist = self._config['exchange'].get('pair_whitelist')
         self._blacklist = self._config['exchange'].get('pair_blacklist', [])
         self._pairlist_handlers: List[IPairList] = []
         self._tickers_needed = False
-        for pairlist_handler_config in self._config.get('pairlists', None):
+        self._dataprovider: Optional[DataProvider] = dataprovider
+        for pairlist_handler_config in self._config.get('pairlists', []):
             pairlist_handler = PairListResolver.load_pairlist(
                 pairlist_handler_config['method'],
                 exchange=exchange,
@@ -41,6 +45,15 @@ class PairListManager(LoggingMixin):
 
         if not self._pairlist_handlers:
             raise OperationalException("No Pairlist Handlers defined")
+
+        if self._tickers_needed and not self._exchange.exchange_has('fetchTickers'):
+            invalid = ". ".join([p.name for p in self._pairlist_handlers if p.needstickers])
+
+            raise OperationalException(
+                "Exchange does not support fetchTickers, therefore the following pairlists "
+                "cannot be used. Please edit your config and restart the bot.\n"
+                f"{invalid}."
+            )
 
         refresh_period = config.get('pairlist_refresh_period', 3600)
         LoggingMixin.__init__(self, logger, refresh_period)
@@ -73,7 +86,7 @@ class PairListManager(LoggingMixin):
         return [{p.name: p.short_desc()} for p in self._pairlist_handlers]
 
     @cached(TTLCache(maxsize=1, ttl=1800))
-    def _get_cached_tickers(self):
+    def _get_cached_tickers(self) -> Tickers:
         return self._exchange.get_tickers()
 
     def refresh_pairlist(self) -> None:
@@ -94,6 +107,8 @@ class PairListManager(LoggingMixin):
         # Validation against blacklist happens after the chain of Pairlist Handlers
         # to ensure blacklist is respected.
         pairlist = self.verify_blacklist(pairlist, logger.warning)
+
+        self.log_once(f"Whitelist with {len(pairlist)} pairs: {pairlist}", logger.info)
 
         self._whitelist = pairlist
 
@@ -132,7 +147,6 @@ class PairListManager(LoggingMixin):
         :return: pairlist - whitelisted pairs
         """
         try:
-
             whitelist = expand_pairlist(pairlist, self._exchange.get_markets().keys(), keep_invalid)
         except ValueError as err:
             logger.error(f"Pair whitelist contains an invalid Wildcard: {err}")
@@ -143,4 +157,10 @@ class PairListManager(LoggingMixin):
         """
         Create list of pair tuples with (pair, timeframe)
         """
-        return [(pair, timeframe or self._config['timeframe']) for pair in pairs]
+        return [
+            (
+                pair,
+                timeframe or self._config['timeframe'],
+                self._config.get('candle_type_def', CandleType.SPOT)
+            ) for pair in pairs
+        ]

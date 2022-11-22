@@ -11,7 +11,9 @@ import numpy as np
 from cachetools import TTLCache
 from pandas import DataFrame
 
+from freqtrade.constants import Config, ListPairsWithTimeframes
 from freqtrade.exceptions import OperationalException
+from freqtrade.exchange.types import Tickers
 from freqtrade.misc import plural
 from freqtrade.plugins.pairlist.IPairList import IPairList
 
@@ -25,7 +27,7 @@ class VolatilityFilter(IPairList):
     """
 
     def __init__(self, exchange, pairlistmanager,
-                 config: Dict[str, Any], pairlistconfig: Dict[str, Any],
+                 config: Config, pairlistconfig: Dict[str, Any],
                  pairlist_pos: int) -> None:
         super().__init__(exchange, pairlistmanager, config, pairlistconfig, pairlist_pos)
 
@@ -33,15 +35,16 @@ class VolatilityFilter(IPairList):
         self._min_volatility = pairlistconfig.get('min_volatility', 0)
         self._max_volatility = pairlistconfig.get('max_volatility', sys.maxsize)
         self._refresh_period = pairlistconfig.get('refresh_period', 1440)
+        self._def_candletype = self._config['candle_type_def']
 
         self._pair_cache: TTLCache = TTLCache(maxsize=1000, ttl=self._refresh_period)
 
+        candle_limit = exchange.ohlcv_candle_limit('1d', self._config['candle_type_def'])
         if self._days < 1:
             raise OperationalException("VolatilityFilter requires lookback_days to be >= 1")
-        if self._days > exchange.ohlcv_candle_limit('1d'):
+        if self._days > candle_limit:
             raise OperationalException("VolatilityFilter requires lookback_days to not "
-                                       "exceed exchange max request size "
-                                       f"({exchange.ohlcv_candle_limit('1d')})")
+                                       f"exceed exchange max request size ({candle_limit})")
 
     @property
     def needstickers(self) -> bool:
@@ -60,14 +63,15 @@ class VolatilityFilter(IPairList):
                 f"{self._min_volatility}-{self._max_volatility} "
                 f" the last {self._days} {plural(self._days, 'day')}.")
 
-    def filter_pairlist(self, pairlist: List[str], tickers: Dict) -> List[str]:
+    def filter_pairlist(self, pairlist: List[str], tickers: Tickers) -> List[str]:
         """
         Validate trading range
         :param pairlist: pairlist to filter or sort
-        :param tickers: Tickers (from exchange.get_tickers()). May be cached.
+        :param tickers: Tickers (from exchange.get_tickers). May be cached.
         :return: new allowlist
         """
-        needed_pairs = [(p, '1d') for p in pairlist if p not in self._pair_cache]
+        needed_pairs: ListPairsWithTimeframes = [
+            (p, '1d', self._def_candletype) for p in pairlist if p not in self._pair_cache]
 
         since_ms = (arrow.utcnow()
                          .floor('day')
@@ -81,7 +85,8 @@ class VolatilityFilter(IPairList):
 
         if self._enabled:
             for p in deepcopy(pairlist):
-                daily_candles = candles[(p, '1d')] if (p, '1d') in candles else None
+                daily_candles = candles[(p, '1d', self._def_candletype)] if (
+                    p, '1d', self._def_candletype) in candles else None
                 if not self._validate_pair_loc(p, daily_candles):
                     pairlist.remove(p)
         return pairlist
@@ -90,7 +95,7 @@ class VolatilityFilter(IPairList):
         """
         Validate trading range
         :param pair: Pair that's currently validated
-        :param ticker: ticker dict as returned from ccxt.fetch_tickers()
+        :param daily_candles: Downloaded daily candles
         :return: True if the pair can stay, false if it should be removed
         """
         # Check symbol in cache
@@ -103,7 +108,7 @@ class VolatilityFilter(IPairList):
             returns = (np.log(daily_candles.close / daily_candles.close.shift(-1)))
             returns.fillna(0, inplace=True)
 
-            volatility_series = returns.rolling(window=self._days).std()*np.sqrt(self._days)
+            volatility_series = returns.rolling(window=self._days).std() * np.sqrt(self._days)
             volatility_avg = volatility_series.mean()
 
             if self._min_volatility <= volatility_avg <= self._max_volatility:

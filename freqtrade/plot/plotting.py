@@ -407,7 +407,7 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
 
     if( label.startswith('solo')):
 
-        m_trend = int(label.split("-")[1])
+        m_trend = int(label.split("=")[1])
 
 
         main_trend_color_hex = {  5:"rgba(24, 69, 13,0.4)",#"name":"UPPER_DANGER_ZONE"}
@@ -446,24 +446,61 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
 
 
         if(m_trend != 0):
+
+
             newframe = data.copy()
 
-            newframe.loc[( newframe['main_trend'] != m_trend), 'bb_upperband'] = newframe['bb_middleband']
-            newframe.loc[( newframe['main_trend'] != m_trend), 'bb_lowerband'] = newframe['bb_middleband']
-
+            newframe.loc[(newframe['main_trend'] != m_trend), 'bb_upperband'] = newframe['bb_middleband']
+            newframe.loc[(newframe['main_trend'] != m_trend), 'bb_lowerband'] = newframe['bb_middleband']
 
             main_trend_area_style = main_trend_color_hex[m_trend]
             main_trend_label_style = main_trend_labels[str(m_trend)]
 
-
             trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
-                             showlegend=False,
-                             line=line)
+                                 showlegend=False,
+                                 line=line)
             trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=main_trend_label_style,
                                  fill="tonexty", fillcolor=main_trend_area_style,
                                  line=line)
             fig.add_trace(trace_a, row, 1)
             fig.add_trace(trace_b, row, 1)
+
+            # draws danger zone on -1 and -2 BOTH DOWNTRENDS
+            if ((m_trend == -1) or (m_trend == -2)):
+                newframe = data.copy()
+
+                newframe.loc[(newframe['main_trend'] != -3) , 'bb_upperband'] = newframe['bb_middleband']
+                newframe.loc[(newframe['main_trend'] != -3) , 'bb_lowerband'] = newframe['bb_middleband']
+
+                main_trend_area_style = main_trend_color_hex[-3]
+                main_trend_label_style = main_trend_labels[str(-3)]
+
+                trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
+                                     showlegend=False,
+                                     line=line)
+                trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=main_trend_label_style,
+                                     fill="tonexty", fillcolor=main_trend_area_style,
+                                     line=line)
+                fig.add_trace(trace_a, row, 1)
+                fig.add_trace(trace_b, row, 1)
+            # draws upper danger zone on LONG UPTREND
+            if (m_trend == 3):
+                newframe = data.copy()
+
+                newframe.loc[(newframe['main_trend'] != 5) , 'bb_upperband'] = newframe['bb_middleband']
+                newframe.loc[(newframe['main_trend'] != 5) , 'bb_lowerband'] = newframe['bb_middleband']
+
+                main_trend_area_style = main_trend_color_hex[5]
+                main_trend_label_style = main_trend_labels[str(5)]
+
+                trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
+                                     showlegend=False,
+                                     line=line)
+                trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=main_trend_label_style,
+                                     fill="tonexty", fillcolor=main_trend_area_style,
+                                     line=line)
+                fig.add_trace(trace_a, row, 1)
+                fig.add_trace(trace_b, row, 1)
         else:
             for vol in range(3):
                 vol+=1
@@ -515,7 +552,7 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
 
     data = data.copy()
 
-    labels = label.split('-')
+    labels = label.split('=')
     label = labels[0]
 
     display="below"

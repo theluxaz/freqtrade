@@ -127,11 +127,11 @@ def setup_logging(config: Dict[str, Any]) -> None:
             logging.root.addHandler(handler_rf)
 
     #DISABLE logging here
-    logging.root.setLevel(logging.ERROR)
+    # logging.root.setLevel(logging.ERROR)
     #DISABLE most logging here
-    # logging.root.setLevel(logging.WARNING)
+    logging.root.setLevel(logging.WARNING)
     #ENABLE logging here
-    #logging.root.setLevel(logging.INFO if verbosity < 1 else logging.DEBUG)
+    # logging.root.setLevel(logging.INFO if verbosity < 1 else logging.DEBUG)
 
     _set_loggers(verbosity, config.get('api_server', {}).get('verbosity', 'info'))
 

@@ -116,11 +116,11 @@ strategy_json = [{"DEV": "DevLukas15min"},
                  {"LONG UPTREND BUY 13": "x_BUY_LONG_UPTREND13"},
                  {"LONG UPTREND BUY 14": "x_BUY_LONG_UPTREND14"},
                  {"LONG UPTREND BUY 15": "x_BUY_LONG_UPTREND15"},
-                 # {"LONG UPTREND BUY 16": "x_BUY_LONG_UPTREND16"},
-                 # {"LONG UPTREND BUY 17": "x_BUY_LONG_UPTREND17"},
-                 # {"LONG UPTREND BUY 18": "x_BUY_LONG_UPTREND18"},
-                 # {"LONG UPTREND BUY 19": "x_BUY_LONG_UPTREND19"},
-                 # {"LONG UPTREND BUY 20": "x_BUY_LONG_UPTREND20"},
+                 {"LONG UPTREND BUY 16": "x_BUY_LONG_UPTREND16"},
+                 {"LONG UPTREND BUY 17": "x_BUY_LONG_UPTREND17"},
+                 {"LONG UPTREND BUY 18": "x_BUY_LONG_UPTREND18"},
+                 {"LONG UPTREND BUY 19": "x_BUY_LONG_UPTREND19"},
+                 {"LONG UPTREND BUY 20": "x_BUY_LONG_UPTREND20"},
 
 
                  #LONG DOWNTREND RULES
@@ -144,6 +144,15 @@ strategy_json = [{"DEV": "DevLukas15min"},
                  # {"LONG DOWNTREND BUY 18": "x_BUY_LONG_DOWNTREND18"},
                  # {"LONG DOWNTREND BUY 19": "x_BUY_LONG_DOWNTREND19"},
                  # {"LONG DOWNTREND BUY 20": "x_BUY_LONG_DOWNTREND20"},
+
+
+                 # DANGER ZONE RULES
+                 {"DANGER ZONE BUY 1": "x_BUY_DANGER_ZONE1"},
+                 {"DANGER ZONE BUY 2": "x_BUY_DANGER_ZONE2"},
+                 {"DANGER ZONE BUY 3": "x_BUY_DANGER_ZONE3"},
+                 {"DANGER ZONE BUY 4": "x_BUY_DANGER_ZONE4"},
+                 {"DANGER ZONE BUY 5": "x_BUY_DANGER_ZONE5"},
+
 
                  #SLOW DOWNTREND RULES
                  {"SLOW DOWNTREND BUY 1": "x_BUY_SLOW_DOWNTREND1"},
@@ -344,7 +353,8 @@ strategy_json = [{"DEV": "DevLukas15min"},
 
                  ]
 
-timeframes_json = [ {"7": 1652514252769}, # 14 may 2022 12:00 midday - AFTER HUGE CRASH
+timeframes_json = [ {"8": 1663750800000},  # 22 september 2022 midday
+                    {"7": 1652514252769}, # 14 may 2022 12:00 midday - AFTER HUGE CRASH
                     # {"TEST END":1650073800000},#16 march 2022
                     # {"TEST START":1648600200000},#30 feb 2022
                     {"6": 1644278400000},  # 8 february 2022
@@ -353,7 +363,11 @@ timeframes_json = [ {"7": 1652514252769}, # 14 may 2022 12:00 midday - AFTER HUG
                    {"3": 1625097600000},  # 1 july 2021
                    {"2": 1617235200000},  # 1 april 2021
                    {"1": 1609464867000},  # 1 january 2021
-                   {"0": 1600312000000}  # 17 september 2020
+                   {"0": 1600312000000},  # 17 september 2020,
+                   {"Notrend-old2": 1552348800000},  # 3 december 2019
+                    {"Bear-old": 1515715200000},  # 12 january 2018
+                    {"Bull-old": 1491177600000}  # 3 April 2017
+
                    ]
 
 configs_json = ["normal", "nostalgia", "nostalgia-other", "older-classic"]
@@ -430,6 +444,9 @@ MODULE_LIST = ["x_other.BUY_SIGNALS.LOW","x_other.BUY_TRENDS.BUYER_LOW","LOW","x
                              "RULES.LONG_DOWNTREND.x_BUY_LONG_DOWNTREND13", "x_BUY_LONG_DOWNTREND13","RULES.LONG_DOWNTREND.x_BUY_LONG_DOWNTREND14" ,"x_BUY_LONG_DOWNTREND14","RULES.LONG_DOWNTREND.x_BUY_LONG_DOWNTREND15" ,"x_BUY_LONG_DOWNTREND15",
                              "RULES.LONG_DOWNTREND.x_BUY_LONG_DOWNTREND16", "x_BUY_LONG_DOWNTREND16","RULES.LONG_DOWNTREND.x_BUY_LONG_DOWNTREND17" ,"x_BUY_LONG_DOWNTREND17","RULES.LONG_DOWNTREND.x_BUY_LONG_DOWNTREND18" ,"x_BUY_LONG_DOWNTREND18",
                              "RULES.LONG_DOWNTREND.x_BUY_LONG_DOWNTREND19", "x_BUY_LONG_DOWNTREND19","RULES.LONG_DOWNTREND.x_BUY_LONG_DOWNTREND20" ,"x_BUY_LONG_DOWNTREND20",
+
+                             "RULES.DANGER_ZONE.x_BUY_DANGER_ZONE1" ,"x_BUY_DANGER_ZONE1","RULES.DANGER_ZONE.x_BUY_DANGER_ZONE2" ,"x_BUY_DANGER_ZONE2","RULES.DANGER_ZONE.x_BUY_DANGER_ZONE3" ,"x_BUY_DANGER_ZONE3",
+                             "RULES.DANGER_ZONE.x_BUY_DANGER_ZONE4", "x_BUY_DANGER_ZONE4","RULES.DANGER_ZONE.x_BUY_DANGER_ZONE5" ,"x_BUY_DANGER_ZONE5"
 
 
                              "RULES.SLOW_DOWNTREND.x_BUY_SLOW_DOWNTREND1", "x_BUY_SLOW_DOWNTREND1","RULES.SLOW_DOWNTREND.x_BUY_SLOW_DOWNTREND2", "x_BUY_SLOW_DOWNTREND2","RULES.SLOW_DOWNTREND.x_BUY_SLOW_DOWNTREND3", "x_BUY_SLOW_DOWNTREND3",
@@ -1353,7 +1370,7 @@ class App(QWidget):
                     indicators1_temp.append("main")
                 if (self.data["indicators_extra"]["solo"]):
                     indicators1_temp.append(
-                        "solo-" + str(self.solo_trends[self.data["indicators_extra"]["solo_trend"]]))
+                        "solo=" + str(self.solo_trends[self.data["indicators_extra"]["solo_trend"]]))
                 if (self.data["indicators_extra"]["default"]):
                     for item in indicators1_default:
                         indicators1_temp.append(item)

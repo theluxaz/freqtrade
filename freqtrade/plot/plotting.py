@@ -6,8 +6,8 @@ import pandas as pd
 
 from freqtrade.constants import Config
 from freqtrade.configuration import TimeRange
-from freqtrade.data.btanalysis import (analyze_trade_parallelism, calculate_max_drawdown, combine_dataframes_with_mean,
-                                       create_cum_profit, extract_trades_of_period, load_trades)
+from freqtrade.data.btanalysis import (analyze_trade_parallelism,# calculate_max_drawdown, combine_dataframes_with_mean,create_cum_profit,
+                                        extract_trades_of_period, load_trades)
 from freqtrade.data.converter import trim_dataframe
 from freqtrade.data.dataprovider import DataProvider
 from freqtrade.data.history import get_timerange, load_data

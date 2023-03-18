@@ -6,6 +6,7 @@ Read the documentation to know what cli arguments you need.
 import logging
 import sys
 from typing import Any, List
+import gc
 
 # check min. python version
 if sys.version_info < (3, 8):  # pragma: no cover
@@ -60,6 +61,7 @@ def main(sysargv: List[str] = None) -> None:
     finally:
         logger.info('PROCESS FINISHED')
         print("PROCESS FINISHED")
+        gc.collect()
         return True
         # sys.exit(return_code)
 

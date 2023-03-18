@@ -353,7 +353,8 @@ strategy_json = [{"DEV": "DevLukas15min"},
 
                  ]
 
-timeframes_json = [ {"9": 1669118400000},  # 22 November 2022 midday
+timeframes_json = [{"10": 1679114962000},  # 18 March  2023 4am GMT
+                    {"9": 1671667200000},  # 22 December 2022 midday
                     {"8": 1663750800000},  # 22 september 2022 midday
                     {"7": 1652514252769}, # 14 may 2022 12:00 midday - AFTER HUGE CRASH
                     # {"TEST END":1650073800000},#16 march 2022
@@ -367,8 +368,8 @@ timeframes_json = [ {"9": 1669118400000},  # 22 November 2022 midday
                    {"0": 1600312000000},  # 17 september 2020,
                    {"Notrend-old2": 1552348800000},  # 3 december 2019
                     {"Bear-old": 1515715200000},  # 12 january 2018
-                    {"Bull-old": 1491177600000}  # 3 April 2017
-
+                    {"Bull-old": 1491177600000},  # 3 April 2017
+                    {"Bitcoin Start": 1486080000000}  # 3 February 2017
                    ]
 
 configs_json = ["normal", "nostalgia", "nostalgia-other", "older-classic"]
@@ -579,7 +580,7 @@ MODULE_LIST = ["x_other.BUY_SIGNALS.LOW","x_other.BUY_TRENDS.BUYER_LOW","LOW","x
                             "Common","CommonBuyerLOW","CommonBuyerMID","CommonBuyerHIGH","Constants","BUYS","SELLS"
                             ]
 
-data_loading_time_ms = 905000000
+data_loading_time_ms = 1815000000   #21 days
 
 
 indicators1_default = ['sma50', 'sma200', 'sma400', 'sma10k']

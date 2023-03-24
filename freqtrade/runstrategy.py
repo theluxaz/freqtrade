@@ -3,6 +3,7 @@ import sys, os
 file_dir = os.path.dirname(__file__)
 sys.path.append(file_dir)
 
+
 from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QComboBox, QLabel, QCheckBox, QScrollBar
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAction, QLineEdit, QMessageBox, \
@@ -16,7 +17,7 @@ import json
 import time
 import datetime
 import math
-
+import winsound
 from importlib import reload, import_module
 
 ## use __ autopep8 __ formatter for the whole project (apart from this file)
@@ -34,9 +35,7 @@ stake_amount=800
 fee_enable = True
 fee_amount = 0.003   # 3% fees or so amount to about 0.4% percent profit
 
-strategy_json = [{"DEV": "DevLukas15min"},
-                 {"DEVNFI":"DevLukas15minWithNFI"},
-                 {"PROD": "ProdLukas15min"},
+strategy_json = [{"MAIN": "AltcoinTrader15"},
                  {"HIGH": "BuyerDevHigh"},
                  {"MID": "BuyerDevMid"},
                  {"LOW": "BuyerDevLow"},
@@ -46,7 +45,15 @@ strategy_json = [{"DEV": "DevLukas15min"},
                  {"DOWNTREND UPSWING": "BuyerDevDowntrendUpswing"},
                  {"DANGER ZONE": "BuyerDevDangerZone"},
                  {"UPPER DANGER ZONE": "BuyerDevUpperDangerZone"},
-
+                 {"HIGH SELL": "SellerDevHigh"},
+                 {"MID SELL": "SellerDevMid"},
+                 {"LOW SELL": "SellerDevLow"},
+                 {"LONG UPTREND SELL": "SellerDevLongUptrend"},
+                 {"SLOW DOWNTREND SELL": "SellerDevSlowDowntrend"},
+                 {"LONG DOWNTREND SELL": "SellerDevLongDowntrend"},
+                 {"DOWNTREND UPSWING SELL": "SellerDevDowntrendUpswing"},
+                 {"DANGER ZONE SELL": "SellerDevDangerZone"},
+                 {"UPPER DANGER ZONE SELL": "SellerDevUpperDangerZone"},
 
                  #DRAFT RULES
                  {"BUY 1": "x_Buy1"},
@@ -468,6 +475,13 @@ MODULE_LIST = ["x_other.BUY_SIGNALS.LOW","x_other.BUY_TRENDS.BUYER_LOW","LOW","x
                              "RULES.ANY.x_BUY_ANY16", "x_BUY_ANY16","RULES.ANY.x_BUY_ANY17", "x_BUY_ANY17","RULES.ANY.x_BUY_ANY18", "x_BUY_ANY18",
                              "RULES.ANY.x_BUY_ANY19", "x_BUY_ANY19","RULES.ANY.x_BUY_ANY20", "x_BUY_ANY20",
 
+                             "RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE1", "x_BUY_UPPER_DANGER_ZONE1","RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE2", "x_BUY_UPPER_DANGER_ZONE2","RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE3", "x_BUY_UPPER_DANGER_ZONE3",
+                             "RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE4", "x_BUY_UPPER_DANGER_ZONE4","RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE5", "x_BUY_UPPER_DANGER_ZONE5","RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE6", "x_BUY_UPPER_DANGER_ZONE6",
+                             "RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE7", "x_BUY_UPPER_DANGER_ZONE7","RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE8", "x_BUY_UPPER_DANGER_ZONE8","RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE9", "x_BUY_UPPER_DANGER_ZONE9",
+                             "RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE10", "x_BUY_UPPER_DANGER_ZONE10","RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE11", "x_BUY_UPPER_DANGER_ZONE11","RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE12", "x_BUY_UPPER_DANGER_ZONE12",
+                             "RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE13", "x_BUY_UPPER_DANGER_ZONE13","RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE14", "x_BUY_UPPER_DANGER_ZONE14","RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE15", "x_BUY_UPPER_DANGER_ZONE15",
+                             "RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE16", "x_BUY_UPPER_DANGER_ZONE16","RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE17", "x_BUY_UPPER_DANGER_ZONE17","RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE18", "x_BUY_UPPER_DANGER_ZONE18",
+                             "RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE19", "x_BUY_UPPER_DANGER_ZONE19","RULES.UPPER_DANGER_ZONE.x_BUY_UPPER_DANGER_ZONE20", "x_BUY_UPPER_DANGER_ZONE20",
 
                              "RULES.NOTREND.x_BUY_NOTREND1", "x_BUY_NOTREND1","RULES.NOTREND.x_BUY_NOTREND2", "x_BUY_NOTREND2","RULES.NOTREND.x_BUY_NOTREND3", "x_BUY_NOTREND3",
                              "RULES.NOTREND.x_BUY_NOTREND4", "x_BUY_NOTREND4","RULES.NOTREND.x_BUY_NOTREND5", "x_BUY_NOTREND5","RULES.NOTREND.x_BUY_NOTREND6", "x_BUY_NOTREND6",
@@ -475,14 +489,27 @@ MODULE_LIST = ["x_other.BUY_SIGNALS.LOW","x_other.BUY_TRENDS.BUYER_LOW","LOW","x
                              "RULES.NOTREND.x_BUY_NOTREND10", "x_BUY_NOTREND10","RULES.NOTREND.x_BUY_NOTREND11", "x_BUY_NOTREND11","RULES.NOTREND.x_BUY_NOTREND12", "x_BUY_NOTREND12",
                              "RULES.NOTREND.x_BUY_NOTREND13", "x_BUY_NOTREND13","RULES.NOTREND.x_BUY_NOTREND14", "x_BUY_NOTREND14","RULES.NOTREND.x_BUY_NOTREND15", "x_BUY_NOTREND15",
                              "RULES.NOTREND.x_BUY_NOTREND16", "x_BUY_NOTREND16","RULES.NOTREND.x_BUY_NOTREND17", "x_BUY_NOTREND17","RULES.NOTREND.x_BUY_NOTREND18", "x_BUY_NOTREND18",
-                             "RULES.NOTREND.x_BUY_NOTREND19", "x_BUY_NOTREND19","RULES.NOTREND.x_BUY_NOTREND20", "x_BUY_HIGH20",
+                             "RULES.NOTREND.x_BUY_NOTREND19", "x_BUY_NOTREND19","RULES.NOTREND.x_BUY_NOTREND20", "x_BUY_NOTREND20",
 
-                            "RULES.CUSTOM.BUYER_NOSTALGIA", "BUYER_NOSTALGIA","RULES.CUSTOM.BUYER_NOSTALGIA_LONG_UPTREND", "BUYER_NOSTALGIA_LONG_UPTREND",
+
+                             "RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING1", "x_BUY_DOWNTREND_UPSWING1","RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING2", "x_BUY_DOWNTREND_UPSWING2","RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING3", "x_BUY_DOWNTREND_UPSWING3",
+                             "RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING4", "x_BUY_DOWNTREND_UPSWING4","RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING5", "x_BUY_DOWNTREND_UPSWING5","RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING6", "x_BUY_DOWNTREND_UPSWING6",
+                             "RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING7", "x_BUY_DOWNTREND_UPSWING7","RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING8", "x_BUY_DOWNTREND_UPSWING8","RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING9", "x_BUY_DOWNTREND_UPSWING9",
+                             "RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING10", "x_BUY_DOWNTREND_UPSWING10","RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING11", "x_BUY_DOWNTREND_UPSWING11","RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING12", "x_BUY_DOWNTREND_UPSWING12",
+                             "RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING13", "x_BUY_DOWNTREND_UPSWING13","RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING14", "x_BUY_DOWNTREND_UPSWING14","RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING15", "x_BUY_DOWNTREND_UPSWING15",
+                             "RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING16", "x_BUY_DOWNTREND_UPSWING16","RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING17", "x_BUY_DOWNTREND_UPSWING17","RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING18", "x_BUY_DOWNTREND_UPSWING18",
+                             "RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING19", "x_BUY_DOWNTREND_UPSWING19","RULES.DOWNTREND_UPSWING.x_BUY_DOWNTREND_UPSWING20", "x_BUY_DOWNTREND_UPSWING20",
+
+
+                            "RULES.CUSTOM.BUYER_NOSTALGIA_OLD", "BUYER_NOSTALGIA_OLD","RULES.CUSTOM.BUYER_NOSTALGIA_LONG_UPTREND", "BUYER_NOSTALGIA_LONG_UPTREND",
                              "RULES.CUSTOM.BUYER_NOSTALGIA_LONG_DOWNTREND", "BUYER_NOSTALGIA_LONG_DOWNTREND","RULES.CUSTOM.BUYER_NOSTALGIA_SLOW_DOWNTREND", "BUYER_NOSTALGIA_SLOW_DOWNTREND",
                              "RULES.CUSTOM.BUYER_NOSTALGIA_HIGH", "BUYER_NOSTALGIA_HIGH","RULES.CUSTOM.BUYER_NOSTALGIA_LOW", "BUYER_NOSTALGIA_LOW",
                              "RULES.CUSTOM.BUYER_NOSTALGIA_MID", "BUYER_NOSTALGIA_MID","RULES.CUSTOM.BUYER_NOSTALGIA_DANGER_ZONE", "BUYER_NOSTALGIA_DANGER_ZONE",
 
-
+                            "SELL_RULES.CUSTOM.SELLER_NOSTALGIA_OLD", "SELLER_NOSTALGIA_OLD","SELL_RULES.CUSTOM.SELLER_NOSTALGIA_LONG_UPTREND", "SELLER_NOSTALGIA_LONG_UPTREND",
+                             "SELL_RULES.CUSTOM.SELLER_NOSTALGIA_LONG_DOWNTREND", "SELLER_NOSTALGIA_LONG_DOWNTREND","SELL_RULES.CUSTOM.SELLER_NOSTALGIA_SLOW_DOWNTREND", "SELLER_NOSTALGIA_SLOW_DOWNTREND",
+                             "SELL_RULES.CUSTOM.SELLER_NOSTALGIA_HIGH", "SELLER_NOSTALGIA_HIGH","SELL_RULES.CUSTOM.SELLER_NOSTALGIA_LOW", "SELLER_NOSTALGIA_LOW",
+                             "SELL_RULES.CUSTOM.SELLER_NOSTALGIA_MID", "SELLER_NOSTALGIA_MID","SELL_RULES.CUSTOM.SELLER_NOSTALGIA_DANGER_ZONE", "SELLER_NOSTALGIA_DANGER_ZONE",
 
 
 
@@ -550,6 +577,13 @@ MODULE_LIST = ["x_other.BUY_SIGNALS.LOW","x_other.BUY_TRENDS.BUYER_LOW","LOW","x
                              "SELL_RULES.ANY.x_SELL_ANY16", "x_SELL_ANY16","SELL_RULES.ANY.x_SELL_ANY17", "x_SELL_ANY17","SELL_RULES.ANY.x_SELL_ANY18", "x_SELL_ANY18",
                              "SELL_RULES.ANY.x_SELL_ANY19", "x_SELL_ANY19","SELL_RULES.ANY.x_SELL_ANY20", "x_SELL_ANY20",
 
+                             "SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING1", "x_SELL_DOWNTREND_UPSWING1","SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING2", "x_SELL_DOWNTREND_UPSWING2","SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING3", "x_SELL_DOWNTREND_UPSWING3",
+                             "SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING4", "x_SELL_DOWNTREND_UPSWING4","SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING5", "x_SELL_DOWNTREND_UPSWING5","SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING6", "x_SELL_DOWNTREND_UPSWING6",
+                             "SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING7", "x_SELL_DOWNTREND_UPSWING7","SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING8", "x_SELL_DOWNTREND_UPSWING8","SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING9", "x_SELL_DOWNTREND_UPSWING9",
+                             "SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING10", "x_SELL_DOWNTREND_UPSWING10","SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING11", "x_SELL_DOWNTREND_UPSWING11","SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING12", "x_SELL_DOWNTREND_UPSWING12",
+                             "SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING13", "x_SELL_DOWNTREND_UPSWING13","SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING14", "x_SELL_DOWNTREND_UPSWING14","SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING15", "x_SELL_DOWNTREND_UPSWING15",
+                             "SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING16", "x_SELL_DOWNTREND_UPSWING16","SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING17", "x_SELL_DOWNTREND_UPSWING17","SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING18", "x_SELL_DOWNTREND_UPSWING18",
+                             "SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING19", "x_SELL_DOWNTREND_UPSWING19","SELL_RULES.DOWNTREND_UPSWING.x_SELL_DOWNTREND_UPSWING20", "x_SELL_DOWNTREND_UPSWING20",
 
                              "SELL_RULES.NOTREND.x_SELL_NOTREND1", "x_SELL_NOTREND1","SELL_RULES.NOTREND.x_SELL_NOTREND2", "x_SELL_NOTREND2","SELL_RULES.NOTREND.x_SELL_NOTREND3", "x_SELL_NOTREND3",
                              "SELL_RULES.NOTREND.x_SELL_NOTREND4", "x_SELL_NOTREND4","SELL_RULES.NOTREND.x_SELL_NOTREND5", "x_SELL_NOTREND5","SELL_RULES.NOTREND.x_SELL_NOTREND6", "x_SELL_NOTREND6",
@@ -564,18 +598,20 @@ MODULE_LIST = ["x_other.BUY_SIGNALS.LOW","x_other.BUY_TRENDS.BUYER_LOW","LOW","x
                             "COMMON.COMMON_FUNCTIONS", "COMMON.CONSTANTS","COMMON.TA_FUNCTIONS","COMMON.POPULATE_INDICATORS",
                             "COMMON_FUNCTIONS", "CONSTANTS","TA_FUNCTIONS","POPULATE_INDICATORS", "COMMON.BUYS","COMMON.SELLS",
 
-                            "DevLukas15min","DevLukas15minWithNFI",
+                            "AltcoinTrader15",
                             "x_Buy1","x_Buy2","x_Buy3","x_Buy4","x_Buy5","x_Sell1","x_Sell2","x_Sell3","x_Sell4","x_Sell5",
-                            "x_Buys_ANY","x_Buys_NOTREND","x_Buys_LOW","x_Buys_MID","x_Buys_HIGH","x_Buys_LONG_UPTREND","x_Buys_LONG_DOWNTREND","x_Buys_SLOW_DOWNTREND","x_Buys_DOWNTREND_UPSWING",
-                            "x_Sells_ANY","x_Sells_NOTREND","x_Sells_LOW","x_Sells_MID","x_Sells_HIGH","x_Sells_LONG_UPTREND","x_Sells_LONG_DOWNTREND","x_Sells_SLOW_DOWNTREND","x_Sells_DOWNTREND_UPSWING",
+                            "x_Buys_ANY","x_Buys_NOTREND","x_Buys_LOW","x_Buys_MID","x_Buys_HIGH","x_Buys_LONG_UPTREND","x_Buys_LONG_DOWNTREND","x_Buys_SLOW_DOWNTREND","x_Buys_DOWNTREND_UPSWING","x_Buys_DANGER_ZONE",
+                            "x_Sells_ANY","x_Sells_NOTREND","x_Sells_LOW","x_Sells_MID","x_Sells_HIGH","x_Sells_LONG_UPTREND","x_Sells_LONG_DOWNTREND","x_Sells_SLOW_DOWNTREND","x_Sells_DOWNTREND_UPSWING","x_Sells_DANGER_ZONE","x_Sells_UPPER_DANGER_ZONE",
 
                             "BuyerDevDangerZone","buyer_dev_DANGER_ZONE","BuyerDevDowntrendUpswing","buyer_dev_DOWNTREND_UPSWING","BuyerDevHigh","buyer_dev_HIGH",
                             "BuyerDevLongDowntrend","buyer_dev_LONG_DOWNTREND","BuyerDevLongUptrend","buyer_dev_LONG_UPTREND","BuyerDevLow","buyer_dev_LOW",
-                            "BuyerDevMid","buyer_dev_MID","BuyerDevSlowDowntrend","buyer_dev_SLOW_DOWNTREND","BuyerDevUpperDangerZone","buyer_dev_UPPER_DANGE_ZONE",
+                            "BuyerDevMid","buyer_dev_MID","BuyerDevSlowDowntrend","buyer_dev_SLOW_DOWNTREND","BuyerDevUpperDangerZone","buyer_dev_UPPER_DANGER_ZONE",
+                            "BuyerDevAny","buyer_dev_ANY","BuyerDevNotrend","buyer_dev_NOTREND",
 
                             "SellerDevDangerZone","seller_dev_DANGER_ZONE","SellerDevDowntrendUpswing","seller_dev_DOWNTREND_UPSWING","SellerDevHigh","seller_dev_HIGH",
                             "SellerDevLongDowntrend","seller_dev_LONG_DOWNTREND","SellerDevLongUptrend","seller_dev_LONG_UPTREND","SellerDevLow","seller_dev_LOW",
-                            "SellerDevMid","seller_dev_MID","SellerDevSlowDowntrend","seller_dev_SLOW_DOWNTREND","SellerDevUpperDangerZone","seller_dev_UPPER_DANGE_ZONE",
+                            "SellerDevMid","seller_dev_MID","SellerDevSlowDowntrend","seller_dev_SLOW_DOWNTREND","SellerDevUpperDangerZone","seller_dev_UPPER_DANGER_ZONE",
+                            "SellerDevAny", "seller_dev_ANY", "SellerDevNotrend", "seller_dev_NOTREND",
 
                             "Common","CommonBuyerLOW","CommonBuyerMID","CommonBuyerHIGH","Constants","BUYS","SELLS"
                             ]
@@ -588,6 +624,8 @@ indicators1_default = ['sma50', 'sma200', 'sma400', 'sma10k']
 config_file = "run-configuration.json"
 
 fiat_currency = "USDT"
+
+enable_sound = True
 
 # date_until_gap = 5259492000 # 2 months
 date_until_gap = 7889238000  # 3 months
@@ -1305,8 +1343,9 @@ class App(QWidget):
     @pyqtSlot()
     def on_click_backtest(self):
         if (self.backtesting_clicked):
-
             main(self.command_list)
+            if enable_sound:
+                winsound.PlaySound('Welcome.wav', winsound.SND_FILENAME)
             self.backtesting_clicked = False
             self.show_plot_clicked = False
             self.hyperopt_clicked = False
@@ -1431,6 +1470,8 @@ class App(QWidget):
         if (self.data["hyperopt"]["hyperopt"]):
             if (self.hyperopt_clicked):
                 main(self.command_list)
+                if enable_sound:
+                    winsound.PlaySound('Welcome.wav', winsound.SND_FILENAME)
                 self.backtesting_clicked = False
                 self.show_plot_clicked = False
                 self.hyperopt_clicked = False
@@ -1526,6 +1567,8 @@ class App(QWidget):
         main(["download-data", "-t", "1h","--days",str(days)])
         print("Downloading data for 1d")
         main(["download-data", "-t", "1d","--days",str(days)])
+        if enable_sound:
+            winsound.PlaySound('Welcome.wav', winsound.SND_FILENAME)
         print("FINISHED DOWNLOADING DATA")
 
     # @pyqtSlot()
@@ -2051,8 +2094,8 @@ class App(QWidget):
         pairs = self.data["pairs1"].split()
         processed_pairs = []
         for pair in pairs:
+            #new  processed_pairs.append(pair + "/" + fiat_currency+":"+fiat_currency)
             processed_pairs.append(pair + "/" + fiat_currency)
-
         config_json["exchange"]["pair_whitelist"] = processed_pairs
         config_json["max_open_trades"] = self.data["max_open_trades"]
         config_json = update_config_funds(config_json)
@@ -2075,6 +2118,7 @@ class App(QWidget):
 
         for pair in config_json["exchange"]["pair_whitelist"]:
             processed_pair = pair.strip("/" + fiat_currency)
+            #new processed_pair = pair.strip("/" + fiat_currency+":"+fiat_currency)
             processed_pair_text += (processed_pair + "/n")
         self.data["pairs1"] = processed_pair_text
         self.pairs1_textbox.setPlainText(self.data["pairs1"])

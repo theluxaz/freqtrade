@@ -1128,8 +1128,8 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
                          "#FFFACD", "#F0E68C" , "#FFFF00", "#FFD700"  #yellow
                              ]
 
-    if 'buy' in data.columns:
-        df_buy = data[data['buy'] == 1]
+    if 'enter_long' in data.columns:
+        df_buy = data[data['enter_long'] == 1]
         if len(df_buy) > 0:
             index = 0
 
@@ -1140,21 +1140,21 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
                          "hexagon" , "star-diamond", "octagon", "diamond-tall"
                          ]
 
-            for buy_tag in df_buy.buy_tag.copy().drop_duplicates():
-                buy_tag_series = df_buy[df_buy['buy_tag'] == buy_tag]
-                #buy_tag_style="circle"
-                buy_tag_style = generate_buy_tag_style(buy_tag, buy_colours_hex[index%len(buy_colours_hex)], buy_symbols[index%len(buy_symbols)])
+            for enter_tag in df_buy.enter_tag.copy().drop_duplicates():
+                enter_tag_series = df_buy[df_buy['enter_tag'] == enter_tag]
+                #enter_tag_style="circle"
+                enter_tag_style = generate_enter_tag_style(enter_tag, buy_colours_hex[index%len(buy_colours_hex)], buy_symbols[index%len(buy_symbols)])
                 buys = go.Scatter(
-                    x=buy_tag_series.date,
-                    y=buy_tag_series.close,
+                    x=enter_tag_series.date,
+                    y=enter_tag_series.close,
                     mode='markers',
-                    text=buy_tag_series.buy_tag,
-                    name='buy',
+                    text=enter_tag_series.enter_tag,
+                    name='enter_long',
                     marker=dict(
-                        symbol=buy_tag_style["symbol"],
-                        size=buy_tag_style["size"],
+                        symbol=enter_tag_style["symbol"],
+                        size=enter_tag_style["size"],
                         line=dict(width=1),
-                        color=buy_tag_style["color"]
+                        color=enter_tag_style["color"]
                     )
                 )
                 fig.add_trace(buys, 1, 1)
@@ -1162,8 +1162,8 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
         else:
             logger.warning("No buy-signals found.")
 
-    if 'sell' in data.columns:
-        df_sell = data[data['sell'] == 1]
+    if 'exit_long' in data.columns:
+        df_sell = data[data['exit_long'] == 1]
         if len(df_sell) > 0:
             index = 0
             sell_colours_hex=["#8B0000"  ,  "#A52A2A"  , "#B22222" , "#DC143C", #bordo
@@ -1190,7 +1190,7 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
                         y=sell_reason_series.close,
                         mode='markers',
                         text=sell_reason_series.exit_tag,
-                        name='sell',
+                        name='exit_long',
                         marker=dict(
                             symbol=sell_reason_style["symbol"],
                             size=sell_reason_style["size"],
@@ -1263,7 +1263,7 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
 
     return fig
 
-def generate_buy_tag_style(buy_tag, color, symbol):
+def generate_enter_tag_style(enter_tag, color, symbol):
 
     premade_tags = {
                     "LOW":          {"color":"#98FB98",
@@ -1303,8 +1303,8 @@ def generate_buy_tag_style(buy_tag, color, symbol):
                                     "size":11}
         }
 
-    if(buy_tag in premade_tags.keys()):
-        return premade_tags[buy_tag]
+    if(enter_tag in premade_tags.keys()):
+        return premade_tags[enter_tag]
     else:
         return {"color":color, "symbol":symbol, "size":10}
 

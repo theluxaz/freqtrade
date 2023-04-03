@@ -1184,7 +1184,7 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
                 for exit_tag in df_sell.exit_tag.copy().drop_duplicates():
                     sell_reason_series = df_sell[df_sell['exit_tag'] == exit_tag]
                     #sell_reason_style="circle"
-                    sell_reason_style = generate_sell_reason_style(exit_tag, sell_colours_hex[index%len(buy_colours_hex)], sell_symbols[index%len(sell_symbols)])
+                    sell_reason_style = generate_sell_reason_style(exit_tag, sell_colours_hex[index%len(sell_colours_hex)], sell_symbols[index%len(sell_symbols)])
                     sells = go.Scatter(
                         x=sell_reason_series.date,
                         y=sell_reason_series.close,

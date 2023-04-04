@@ -35,6 +35,12 @@ stake_amount=800
 fee_enable = True
 fee_amount = 0.003   # 3% fees or so amount to about 0.4% percent profit
 
+
+#change spot to futures in config and change to use orderbook= true
+#add GUI
+futures = False
+
+
 strategy_json = [{"MAIN": "AltcoinTrader15"},
                  {"HIGH": "BuyerDevHigh"},
                  {"MID": "BuyerDevMid"},
@@ -1445,9 +1451,15 @@ class App(QWidget):
                 for item in self.data["indicators3"]["text"].split():
                     indicators3.append(item)
 
-            command_list = [command, "--config", "user_data/" + self.data["config"], "--strategy",
+            if futures:
+                command_list = [command, "--config", "user_data/" + self.data["config"], "--strategy",
+                            self.strategies[self.data["strategy"]], "-p", pair + "/" + fiat_currency + ":" + fiat_currency,
+                            "--timerange=" + str(self.data["time"]["time_from"]-data_loading_time_ms) + "-" + str(time_until)]
+            else:
+                command_list = [command, "--config", "user_data/" + self.data["config"], "--strategy",
                             self.strategies[self.data["strategy"]], "-p", pair + "/" + fiat_currency,
                             "--timerange=" + str(self.data["time"]["time_from"]-data_loading_time_ms) + "-" + str(time_until)]
+
 
             if (len(indicators1) > 0):
                 command_list.extend(indicators1)
@@ -2094,8 +2106,10 @@ class App(QWidget):
         pairs = self.data["pairs1"].split()
         processed_pairs = []
         for pair in pairs:
-            #new  processed_pairs.append(pair + "/" + fiat_currency+":"+fiat_currency)
-            processed_pairs.append(pair + "/" + fiat_currency)
+            if futures:
+                processed_pairs.append(pair + "/" + fiat_currency + ":" + fiat_currency)
+            else:
+                processed_pairs.append(pair + "/" + fiat_currency)
         config_json["exchange"]["pair_whitelist"] = processed_pairs
         config_json["max_open_trades"] = self.data["max_open_trades"]
         config_json = update_config_funds(config_json)
@@ -2117,8 +2131,10 @@ class App(QWidget):
         processed_pair_text = ""
 
         for pair in config_json["exchange"]["pair_whitelist"]:
-            processed_pair = pair.strip("/" + fiat_currency)
-            #new processed_pair = pair.strip("/" + fiat_currency+":"+fiat_currency)
+            if futures:
+                processed_pair = pair.strip("/" + fiat_currency + ":" + fiat_currency)
+            else:
+                processed_pair = pair.strip("/" + fiat_currency)
             processed_pair_text += (processed_pair + "/n")
         self.data["pairs1"] = processed_pair_text
         self.pairs1_textbox.setPlainText(self.data["pairs1"])

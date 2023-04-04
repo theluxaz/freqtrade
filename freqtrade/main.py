@@ -6,7 +6,7 @@ Read the documentation to know what cli arguments you need.
 import logging
 import sys
 from typing import Any, List, Optional
-
+import gc
 from freqtrade.util.gc_setup import gc_set_threshold
 
 
@@ -63,7 +63,6 @@ def main(sysargv: Optional[List[str]] = None) -> None:
         logger.exception('Fatal exception!')
     finally:
         logger.info('PROCESS FINISHED')
-        print("PROCESS FINISHED")
         gc.collect()
         return True
         # sys.exit(return_code)

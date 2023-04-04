@@ -24,7 +24,7 @@ This will spin up a local server (usually on port 8000) so you can see if everyt
 To configure a development environment, you can either use the provided [DevContainer](#devcontainer-setup), or use the `setup.sh` script and answer "y" when asked "Do you want to install dependencies for dev [y/N]? ".
 Alternatively (e.g. if your system is not supported by the setup.sh script), follow the manual installation process and run `pip3 install -e .[all]`.
 
-This will install all required tools for development, including `pytest`, `flake8`, `mypy`, and `coveralls`.
+This will install all required tools for development, including `pytest`, `ruff`, `mypy`, and `coveralls`.
 
 Then install the git hook scripts by running `pre-commit install`, so your changes will be verified locally before committing.
 This avoids a lot of waiting for CI already, as some basic formatting checks are done locally on your machine.
@@ -48,6 +48,13 @@ For more information about the [Remote container extension](https://code.visuals
 
 New code should be covered by basic unittests. Depending on the complexity of the feature, Reviewers may request more in-depth unittests.
 If necessary, the Freqtrade team can assist and give guidance with writing good tests (however please don't expect anyone to write the tests for you).
+
+#### How to run tests
+
+Use `pytest` in root folder to run all available testcases and confirm your local environment is setup correctly
+
+!!! Note "feature branches"
+    Tests are expected to pass on the `develop` and `stable` branches. Other branches may be work in progress with tests not working yet.
 
 #### Checking log content in tests
 
@@ -356,7 +363,7 @@ from pathlib import Path
 exchange = ccxt.binance({
     'apiKey': '<apikey>',
     'secret': '<secret>'
-    'options': {'defaultType': 'future'}
+    'options': {'defaultType': 'swap'}
     })
 _ = exchange.load_markets()
 
@@ -433,6 +440,11 @@ To keep the release-log short, best wrap the full git changelog into a collapsib
 
 </details>
 ```
+
+### FreqUI release
+
+If FreqUI has been updated substantially, make sure to create a release before merging the release branch.
+Make sure that freqUI CI on the release is finished and passed before merging the release.
 
 ### Create github release / tag
 

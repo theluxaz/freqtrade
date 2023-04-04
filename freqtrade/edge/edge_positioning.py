@@ -195,7 +195,7 @@ class Edge:
 
     def stake_amount(self, pair: str, free_capital: float,
                      total_capital: float, capital_in_trade: float) -> float:
-        stoploss = self.stoploss(pair)
+        stoploss = self.get_stoploss(pair)
         available_capital = (total_capital + capital_in_trade) * self._capital_ratio
         allowed_capital_at_risk = available_capital * self._allowed_risk
         max_position_size = abs(allowed_capital_at_risk / stoploss)
@@ -214,7 +214,7 @@ class Edge:
             )
         return round(position_size, 15)
 
-    def stoploss(self, pair: str) -> float:
+    def get_stoploss(self, pair: str) -> float:
         if pair in self._cached_pairs:
             return self._cached_pairs[pair].stoploss
         else:
@@ -392,7 +392,7 @@ class Edge:
         # Returning a list of pairs in order of "expectancy"
         return final
 
-    def _find_trades_for_stoploss_range(self, df, pair, stoploss_range):
+    def _find_trades_for_stoploss_range(self, df, pair: str, stoploss_range) -> list:
         buy_column = df['enter_long'].values
         sell_column = df['exit_long'].values
         date_column = df['date'].values
@@ -407,7 +407,7 @@ class Edge:
         return result
 
     def _detect_next_stop_or_sell_point(self, buy_column, sell_column, date_column,
-                                        ohlc_columns, stoploss, pair):
+                                        ohlc_columns, stoploss, pair: str):
         """
         Iterate through ohlc_columns in order to find the next trade
         Next trade opens from the first buy signal noticed to

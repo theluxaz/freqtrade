@@ -8,7 +8,6 @@ import sys
 from typing import Any, List, Optional
 import gc
 from freqtrade.util.gc_setup import gc_set_threshold
-import time
 
 
 # check min. python version
@@ -65,11 +64,9 @@ def main(sysargv: Optional[List[str]] = None) -> None:
     finally:
         logger.info('PROCESS FINISHED')
         gc.collect()
-        time.sleep(0.1)
         return True
         # sys.exit(return_code)
 
 
 if __name__ == '__main__':  # pragma: no cover
     main()
-    time.sleep(0.1)

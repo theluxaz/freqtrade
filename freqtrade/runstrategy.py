@@ -40,6 +40,8 @@ fee_amount = 0.003   # 3% fees or so amount to about 0.4% percent profit
 #add GUI
 futures = False
 
+production_max_trades_enable = False
+production_max_trades = 12
 
 strategy_json = [{"MAIN": "AltcoinTrader15"},
                  {"HIGH": "BuyerDevHigh"},
@@ -2128,7 +2130,10 @@ class App(QWidget):
             else:
                 processed_pairs.append(pair + "/" + fiat_currency)
         config_json["exchange"]["pair_whitelist"] = processed_pairs
-        config_json["max_open_trades"] = self.data["max_open_trades"]
+        if(production_max_trades_enable):
+            config_json["max_open_trades"] = production_max_trades
+        else:
+            config_json["max_open_trades"] = self.data["max_open_trades"]
         config_json = update_config_funds(config_json)
         try:
             with open(config_url, 'w') as file:
@@ -2243,7 +2248,10 @@ class App(QWidget):
 
 
 def update_config_funds(config_json):
-    config_json["dry_run_wallet"] = len(config_json["exchange"]["pair_whitelist"]) * balance_per_pair
+    if(production_max_trades_enable):
+        config_json["dry_run_wallet"] = production_max_trades * balance_per_pair
+    else:
+        config_json["dry_run_wallet"] = len(config_json["exchange"]["pair_whitelist"]) * balance_per_pair
     config_json["stake_amount"] = stake_amount
     return config_json
 

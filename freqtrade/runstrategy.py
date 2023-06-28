@@ -40,7 +40,7 @@ fee_amount = 0.003   # 3% fees or so amount to about 0.4% percent profit
 #add GUI
 futures = False
 
-production_max_trades_enable = False
+production_max_trades_enable = True
 production_max_trades = 12
 
 strategy_json = [{"MAIN": "AltcoinTrader15"},
@@ -368,7 +368,9 @@ strategy_json = [{"MAIN": "AltcoinTrader15"},
 
                  ]
 
-timeframes_json = [{"10": 1679114962000},  # 18 March  2023 4am GMT
+timeframes_json = [
+                    {"11":1687941699000},  # 28 June  2023 8am GMT
+                    {"10": 1679114962000},  # 18 March  2023 4am GMT
                     {"9": 1671667200000},  # 22 December 2022 midday
                     {"8": 1663750800000},  # 22 september 2022 midday
                     {"7": 1652514252769}, # 14 may 2022 12:00 midday - AFTER HUGE CRASH
@@ -403,6 +405,20 @@ indicators1_solo_trends = [{"5": "Upper Danger Zone"},
                            {"-2": "Long Downtrend"},
                            {"-3": "Danger Zone"},
                            ]
+
+    #GET OTHER INDICATORS FROM PREVIOUS LAPTOP
+indicators1_list  = [{"sma50 sma25 sma30k_1h sma10k sma100 sma200 sma400": "sma50 sma25 sma30k_1h sma10k sma100 sma200 sma400"},
+                        {"sma10":"sma10"},
+                           ]
+
+#GET OTHER INDICATORS FROM PREVIOUS LAPTOP
+indicators2_list  = [{"ppo5 ppo10 ppo25 ppo50 ppo100 ppo200 ppo500":"ppo5 ppo10 ppo25 ppo50 ppo100 ppo200 ppo500"},#ppos
+                     {"ppo1000":"ppo1000"},{"rsi roc roc2":"rsi roc roc2"}#GET OTHER INDICATORS FROM PREVIOUS LAPTOP
+               ]
+
+indicators3_list  = [{"vol100 vol175 vol250":"vol100 vol175 vol250"},#vols
+                     {"convsmall convmedium convlarge":"convsmall convmedium convlarge"}
+               ]
 
 
 MODULE_LIST = ["x_other.BUY_SIGNALS.LOW","x_other.BUY_TRENDS.BUYER_LOW","LOW","x_other.BUY_SIGNALS.MID","x_other.BUY_TRENDS.BUYER_MID", "MID", "x_other.BUY_SIGNALS.HIGH","x_other.BUY_TRENDS.BUYER_HIGH","HIGH",
@@ -664,7 +680,7 @@ class App(QWidget):
         self.title = 'Freqtrade Strategy Tester'
         self.left = 15
         self.top = 20
-        self.width = 850
+        self.width = 1050
         self.height = 380
 
         # Set strategies
@@ -690,6 +706,30 @@ class App(QWidget):
             for key, value in pair.items():
                 self.solo_trends.append(key)
                 self.solo_trends_label.append(value)
+
+        # Set indicators 1 dropdown
+        self.indicator1_list = []
+        self.indicator1_list_labels = []
+        for pair in indicators1_list :
+            for key, value in pair.items():
+                self.indicator1_list_labels.append(key)
+                self.indicator1_list.append(value)
+
+        # Set indicators 2 dropdown
+        self.indicator2_list = []
+        self.indicator2_list_labels = []
+        for pair in indicators2_list :
+            for key, value in pair.items():
+                self.indicator2_list_labels.append(key)
+                self.indicator2_list.append(value)
+
+        # Set indicators 3 dropdown
+        self.indicator3_list = []
+        self.indicator3_list_labels = []
+        for pair in indicators3_list :
+            for key, value in pair.items():
+                self.indicator3_list_labels.append(key)
+                self.indicator3_list.append(value)
 
         # Set configs
         self.configs = configs_json
@@ -731,13 +771,13 @@ class App(QWidget):
         self.combobox_strategy.currentIndexChanged.connect(self.on_select_strategy)
 
         # Label Indicators 1
-        self.indicator1_label = QLabel(self)
-        self.indicator1_label.setText('Indicators 1:')
-        self.indicator1_label.move(20, 80)
+        self.indicator1_text_label = QLabel(self)
+        self.indicator1_text_label.setText('Indicators 1:')
+        self.indicator1_text_label.move(20, 80)
         # Textbox Indicator 1
         self.indicator1_textbox = QLineEdit(self)
         self.indicator1_textbox.move(90, 78)
-        self.indicator1_textbox.resize(150, 20)
+        self.indicator1_textbox.resize(260, 20)
         self.indicator1_textbox.setText(self.data["indicators1"]["text"])
         self.indicator1_textbox.editingFinished.connect(self.on_textchange_indicators1)
         if (self.data["indicators1"]["enabled"] == True):
@@ -745,9 +785,16 @@ class App(QWidget):
         else:
             self.indicator1_textbox.setEnabled(False)
 
+        # Dropdown Indicators 1
+        self.combobox_indicator1 = QComboBox(self)
+        self.combobox_indicator1.setGeometry(370, 78, 140, 20)
+        self.combobox_indicator1.addItems(self.indicator1_list_labels)
+        self.combobox_indicator1.setCurrentIndex(self.data["indicator1_dropdown"])
+        self.combobox_indicator1.currentIndexChanged.connect(self.on_select_indicator1_list)
+
         # Checkbox Indicators 1 Enable
         self.indicator1_checkbox = QCheckBox(self)
-        self.indicator1_checkbox.move(250, 82)
+        self.indicator1_checkbox.move(353, 82)
         self.indicator1_checkbox.setChecked(self.data["indicators1"]["enabled"])
         self.indicator1_checkbox.stateChanged.connect(self.checkbox_indicators1)
 
@@ -758,16 +805,24 @@ class App(QWidget):
         # Textbox Indicator 2
         self.indicator2_textbox = QLineEdit(self)
         self.indicator2_textbox.move(90, 132)
-        self.indicator2_textbox.resize(150, 20)
+        self.indicator2_textbox.resize(260, 20)
         self.indicator2_textbox.setText(self.data["indicators2"]["text"])
         self.indicator2_textbox.editingFinished.connect(self.on_textchange_indicators2)
         if (self.data["indicators2"]["enabled"] == True):
             self.indicator2_textbox.setEnabled(True)
         else:
             self.indicator2_textbox.setEnabled(False)
+
+        # Dropdown Indicators 2
+        self.combobox_indicator2 = QComboBox(self)
+        self.combobox_indicator2.setGeometry(370, 132, 140, 20)
+        self.combobox_indicator2.addItems(self.indicator2_list_labels)
+        self.combobox_indicator2.setCurrentIndex(self.data["indicator2_dropdown"])
+        self.combobox_indicator2.currentIndexChanged.connect(self.on_select_indicator2_list)
+
         # Checkbox Indicators 2 Enable
         self.indicator2_checkbox = QCheckBox(self)
-        self.indicator2_checkbox.move(250, 136)
+        self.indicator2_checkbox.move(353, 136)
         self.indicator2_checkbox.setChecked(self.data["indicators2"]["enabled"])
         self.indicator2_checkbox.stateChanged.connect(self.checkbox_indicators2)
 
@@ -778,16 +833,24 @@ class App(QWidget):
         # Textbox Indicator 3
         self.indicator3_textbox = QLineEdit(self)
         self.indicator3_textbox.move(90, 162)
-        self.indicator3_textbox.resize(150, 20)
+        self.indicator3_textbox.resize(260, 20)
         self.indicator3_textbox.setText(self.data["indicators3"]["text"])
         self.indicator3_textbox.editingFinished.connect(self.on_textchange_indicators3)
         if (self.data["indicators3"]["enabled"] == True):
             self.indicator3_textbox.setEnabled(True)
         else:
             self.indicator3_textbox.setEnabled(False)
+
+        # Dropdown Indicators 3
+        self.combobox_indicator3 = QComboBox(self)
+        self.combobox_indicator3.setGeometry(370, 162, 140, 20)
+        self.combobox_indicator3.addItems(self.indicator3_list_labels)
+        self.combobox_indicator3.setCurrentIndex(self.data["indicator3_dropdown"])
+        self.combobox_indicator3.currentIndexChanged.connect(self.on_select_indicator3_list)
+
         # Checkbox Indicators 3 Enable
         self.indicator3_checkbox = QCheckBox(self)
-        self.indicator3_checkbox.move(250, 166)
+        self.indicator3_checkbox.move(353, 166)
         self.indicator3_checkbox.setChecked(self.data["indicators3"]["enabled"])
         self.indicator3_checkbox.stateChanged.connect(self.checkbox_indicators3)
 
@@ -866,16 +929,16 @@ class App(QWidget):
         # Time From label
         self.time_from_label = QLabel(self)
         self.time_from_label.setText('Time From:')
-        self.time_from_label.move(310, 12)
+        self.time_from_label.move(510, 12)
         # Time From Dropdown
         self.time_from_dropdown = QComboBox(self)
-        self.time_from_dropdown.setGeometry(310, 30, 150, 30)
+        self.time_from_dropdown.setGeometry(510, 30, 150, 30)
         self.time_from_dropdown.addItems(self.timeframes_label)
         self.time_from_dropdown.setCurrentIndex(self.data["time"]["time_from_index"])
         self.time_from_dropdown.currentIndexChanged.connect(self.on_select_time_from)
         # Time From Calendar
         self.time_from_calendar = QDateEdit(self, calendarPopup=True)
-        self.time_from_calendar.setGeometry(310, 30, 150, 30)
+        self.time_from_calendar.setGeometry(510, 30, 150, 30)
         self.time_from_calendar.setDateTime(QDateTime.fromMSecsSinceEpoch(self.data["time"]["time_from"]))
         self.time_from_calendar.dateChanged.connect(self.on_select_from_date)
         self.time_from_calendar.hide()
@@ -885,49 +948,49 @@ class App(QWidget):
         # Time From label checkbox
         self.time_from_date_label = QLabel(self)
         self.time_from_date_label.setText('Date')
-        self.time_from_date_label.move(420, 12)
+        self.time_from_date_label.move(620, 12)
         # Time From Checkbox Date
         self.time_from_checkbox_date = QCheckBox(self)
-        self.time_from_checkbox_date.move(446, 13)
+        self.time_from_checkbox_date.move(646, 13)
         self.time_from_checkbox_date.setChecked(self.data["time"]["time_from_date"])
         self.time_from_checkbox_date.stateChanged.connect(self.checkbox_time_from_date)
         # Time From label
         self.time_from_final_date_label = QLabel(self)
         self.time_from_final_date_label.setText(unix_to_datetime(self.data["time"]["time_from"], True, True))
-        self.time_from_final_date_label.move(404, 72)
+        self.time_from_final_date_label.move(604, 72)
 
         ## ^ ^ WHEN THIS ONE IS UPDATED, UPDATE THE TIME UNTIL TO THE NEXT NUMBER AUTOMATICALLY
 
         # Time From to Util arrows label
         self.time_arrow_label = QLabel(self)
         self.time_arrow_label.setText('----->')
-        self.time_arrow_label.move(470, 36)
+        self.time_arrow_label.move(670, 36)
         self.time_arrow_lower_label = QLabel(self)
         self.time_arrow_lower_label.setText('---->')
-        self.time_arrow_lower_label.move(470, 72)
+        self.time_arrow_lower_label.move(670, 72)
 
         # Time Until label
         self.time_until_label = QLabel(self)
         self.time_until_label.setText('Time Until:')
-        self.time_until_label.move(510, 12)
+        self.time_until_label.move(710, 12)
         # Time Until label checkbox
         self.time_until_label_checkbox = QLabel(self)
         self.time_until_label_checkbox.setText('Date')
-        self.time_until_label_checkbox.move(620, 12)
+        self.time_until_label_checkbox.move(820, 12)
         # Time Until Checkbox Date
         self.time_until_checkbox_date = QCheckBox(self)
-        self.time_until_checkbox_date.move(646, 13)
+        self.time_until_checkbox_date.move(846, 13)
         self.time_until_checkbox_date.setChecked(self.data["time"]["time_until_date"])
         self.time_until_checkbox_date.stateChanged.connect(self.checkbox_time_until_date)
         # Time Until Dropdown
         self.time_until_dropdown = QComboBox(self)
-        self.time_until_dropdown.setGeometry(510, 30, 150, 30)
+        self.time_until_dropdown.setGeometry(710, 30, 150, 30)
         self.time_until_dropdown.addItems(self.timeframes_label)
         self.time_until_dropdown.setCurrentIndex(self.data["time"]["time_until_index"])
         self.time_until_dropdown.currentIndexChanged.connect(self.on_select_time_until)
         # Time Until Calendar
         self.time_until_calendar = QDateEdit(self, calendarPopup=True)
-        self.time_until_calendar.setGeometry(510, 30, 150, 30)
+        self.time_until_calendar.setGeometry(710, 30, 150, 30)
         self.time_until_calendar.setDateTime(QDateTime.fromMSecsSinceEpoch(self.data["time"]["time_until"]))
         self.time_until_calendar.dateChanged.connect(self.on_select_until_date)
         self.time_until_calendar.setMaximumDateTime(
@@ -939,7 +1002,7 @@ class App(QWidget):
             self.time_until_dropdown.hide()
         # Time Until Checkbox
         self.time_until_checkbox = QCheckBox(self)
-        self.time_until_checkbox.move(667, 37)
+        self.time_until_checkbox.move(867, 37)
         self.time_until_checkbox.setChecked(True)
         self.time_until_checkbox.setChecked(self.data["time"]["time_until_enabled"])
         self.time_until_checkbox.stateChanged.connect(self.checkbox_time_until)
@@ -952,22 +1015,22 @@ class App(QWidget):
         # Time From final date label
         self.time_until_final_date_label = QLabel(self)
         self.time_until_final_date_label.setText(unix_to_datetime(self.data["time"]["time_until"], True, True))
-        self.time_until_final_date_label.move(504, 72)
+        self.time_until_final_date_label.move(704, 72)
         # Time difference label
         self.time_difference_label = QLabel(self)
         self.time_difference_label.setText(
             "Days: " + str(days_between_timestamps(self.data["time"]["time_from"], self.data["time"]["time_until"])))
-        self.time_difference_label.move(610, 72)
+        self.time_difference_label.move(810, 72)
 
         # Download Data absolute latest label
         self.label_download_data_abs_latest = QLabel(self)
         self.label_download_data_abs_latest.setText(
             'Abs Latest:   ' + unix_to_datetime(self.data["download"]["absolute_latest_update"], True, True))
-        self.label_download_data_abs_latest.move(695, 40)
+        self.label_download_data_abs_latest.move(895, 40)
         # Download Data
         self.download_data_button = QPushButton('Download Data', self)
         self.download_data_button.setToolTip('Download 15m and 1h data for the selected pairs')
-        self.download_data_button.move(695, 12)
+        self.download_data_button.move(895, 12)
         self.download_data_button.clicked.connect(self.on_click_download_data)
         # # Download Data 1h
         # self.download_1h_button=QPushButton('1h',self)
@@ -976,7 +1039,7 @@ class App(QWidget):
         # self.download_1h_button.clicked.connect(self.on_click_1h)
         # Download Data days textbox
         self.textbox_download_days = QLineEdit(self)
-        self.textbox_download_days.move(782, 15)
+        self.textbox_download_days.move(982, 15)
         self.textbox_download_days.resize(45, 18)
         self.textbox_download_days.setText(str(self.data["download"]["days_to_download"]))
         self.textbox_download_days.textChanged.connect(self.on_textchange_download_days)
@@ -985,25 +1048,25 @@ class App(QWidget):
         self.label_download_data_latest = QLabel(self)
         self.label_download_data_latest.setText(
             'Latest: ' + unix_to_datetime(self.data["download"]["latest_update"], True, True))
-        self.label_download_data_latest.move(675, 160)
+        self.label_download_data_latest.move(875, 160)
         # Download Data days from pairlist label
         self.label_download_days_latest = QLabel(self)
         self.label_download_days_latest.setText(str(self.data["download"]["latest_days"]) + " days")
-        self.label_download_days_latest.move(795, 160)
+        self.label_download_days_latest.move(995, 160)
         # Download Data clashes label
         self.label_download_data_clashes = QLabel(self)
         self.label_download_data_clashes.setText("Latest Date Clash...")
-        self.label_download_data_clashes.move(683, 186)
+        self.label_download_data_clashes.move(883, 186)
         self.label_download_data_clashes.hide()
         # Download Data check button
         self.check_downloaded_data_button = QPushButton('Check', self)
         self.check_downloaded_data_button.setToolTip('Check downloaded data for the selected pairs')
-        self.check_downloaded_data_button.move(792, 180)
+        self.check_downloaded_data_button.move(992, 180)
         self.check_downloaded_data_button.resize(50, 25)
         self.check_downloaded_data_button.clicked.connect(self.on_click_check_download_data)
         # Download Data textfields view
         self.download_data_details_textbox = QPlainTextEdit(self)
-        self.download_data_details_textbox.move(850, 10)
+        self.download_data_details_textbox.move(1050, 10)
         self.download_data_details_textbox.resize(190, 360)
         self.download_data_details_textbox.setEnabled(False)
         # self.download_data_details_textbox.setPlainText(self.data["pairs1"])
@@ -1012,10 +1075,10 @@ class App(QWidget):
         # Label Pairs 1
         self.pairs1_label = QLabel(self)
         self.pairs1_label.setText('Pairs:')
-        self.pairs1_label.move(320, 100)
+        self.pairs1_label.move(520, 100)
         # Textbox Pairs 1
         self.pairs1_textbox = QPlainTextEdit(self)
-        self.pairs1_textbox.move(355, 100)
+        self.pairs1_textbox.move(555, 100)
         self.pairs1_textbox.resize(60, 246)
         self.pairs1_textbox.setPlainText(self.data["pairs1"])
         self.pairs1_textbox.textChanged.connect(self.on_textchange_pairs1)
@@ -1023,10 +1086,10 @@ class App(QWidget):
         # Label Cache Pairs 2
         self.pairs2_label = QLabel(self)
         self.pairs2_label.setText('Cache:')
-        self.pairs2_label.move(470, 100)
+        self.pairs2_label.move(670, 100)
         # Textbox Cache Pairs 2
         self.pairs2_textbox = QPlainTextEdit(self)
-        self.pairs2_textbox.move(510, 100)
+        self.pairs2_textbox.move(710, 100)
         self.pairs2_textbox.resize(60, 246)
         self.pairs2_textbox.setPlainText(self.data["pairs2"])
         self.pairs2_textbox.textChanged.connect(self.on_textchange_pairs2)
@@ -1034,10 +1097,10 @@ class App(QWidget):
         # Label All Pairs 3
         self.pairs3_label = QLabel(self)
         self.pairs3_label.setText('All:')
-        self.pairs3_label.move(580, 100)
+        self.pairs3_label.move(780, 100)
         # Textbox All Pairs 3
         self.pairs3_textbox = QPlainTextEdit(self)
-        self.pairs3_textbox.move(600, 100)
+        self.pairs3_textbox.move(800, 100)
         self.pairs3_textbox.resize(60, 246)
         self.pairs3_textbox.setPlainText(self.data["pairs3"])
         self.pairs3_textbox.textChanged.connect(self.on_textchange_pairs3)
@@ -1047,31 +1110,31 @@ class App(QWidget):
         # Button backtest
         self.backtest_button = QPushButton('Backtest', self)
         self.backtest_button.setToolTip('Backtest Data')
-        self.backtest_button.move(670, 324)
+        self.backtest_button.move(870, 324)
         self.backtest_button.clicked.connect(self.on_click_backtest)
 
         # Button Show Plot
         self.plot_button = QPushButton('Show Plot', self)
         self.plot_button.setToolTip('Create A plot for the selected pair')
-        self.plot_button.move(765, 324)
+        self.plot_button.move(965, 324)
         self.plot_button.clicked.connect(self.on_click_plot)
 
         # Config  label
         self.label_config = QLabel(self)
         self.label_config.setText('Config:')
-        self.label_config.move(735, 72)
+        self.label_config.move(935, 72)
         # Config Default label
         self.label_config_default = QLabel(self)
         self.label_config_default.setText('Default:')
-        self.label_config_default.move(675, 100)
+        self.label_config_default.move(875, 100)
         # Config Default checkbox
         self.checkbox_config_default = QCheckBox(self)
-        self.checkbox_config_default.move(720, 100)
+        self.checkbox_config_default.move(920, 100)
         self.checkbox_config_default.setChecked(self.data["config_default"])
         self.checkbox_config_default.stateChanged.connect(self.checkbox_config)
         # Config dropdown
         self.dropdown_config = QComboBox(self)
-        self.dropdown_config.setGeometry(750, 96, 85, 20)
+        self.dropdown_config.setGeometry(950, 96, 85, 20)
         self.dropdown_config.addItems(self.configs)
         self.dropdown_config.setCurrentIndex(self.data["config_selection"])
         self.dropdown_config.currentIndexChanged.connect(self.on_select_config)
@@ -1080,7 +1143,7 @@ class App(QWidget):
 
         # Button load config pairs
         self.backtest_button = QPushButton('Config Pairs', self)
-        self.backtest_button.move(750, 120)
+        self.backtest_button.move(950, 120)
         self.backtest_button.clicked.connect(self.load_config_pairs)
 
         # # Plot Pair label
@@ -1089,7 +1152,7 @@ class App(QWidget):
         # self.label_plot_pair.move(705, 300)
         # Plot Pair dropdown
         self.dropdown_plot_pair = QComboBox(self)
-        self.dropdown_plot_pair.setGeometry(766, 297, 73, 20)
+        self.dropdown_plot_pair.setGeometry(966, 297, 73, 20)
         self.dropdown_plot_pair.addItems(self.data["pairs1"].split())
         self.dropdown_plot_pair.setCurrentIndex(self.data["plot_pair"])
         self.dropdown_plot_pair.currentIndexChanged.connect(self.on_select_plot_pair)
@@ -1097,15 +1160,15 @@ class App(QWidget):
         # Pairs no label
         self.label_pairs_no = QLabel(self)
         self.label_pairs_no.setText(self.get_pairlist_length())
-        self.label_pairs_no.move(690, 126)
+        self.label_pairs_no.move(890, 126)
         self.label_pairs_no.adjustSize()
         # Processing Backtest  label
         self.label_backtest_process = QLabel(self)
-        self.label_backtest_process.move(667, 289)
+        self.label_backtest_process.move(867, 289)
         self.get_backtest_processing_power()
         # Processing Plot  label
         self.label_plot_process = QLabel(self)
-        self.label_plot_process.move(667, 305)
+        self.label_plot_process.move(867, 305)
         self.get_plot_processing_power()
         # Processing Hyperopt  label
         self.label_hyperopt_process = QLabel(self)
@@ -1115,10 +1178,10 @@ class App(QWidget):
         # Profit plot label
         self.display_profit_label = QLabel(self)
         self.display_profit_label.setText('Profit')
-        self.display_profit_label.move(789, 275)
+        self.display_profit_label.move(989, 275)
         # Profit plot Checkbox
         self.display_profit_checkbox = QCheckBox(self)
-        self.display_profit_checkbox.move(820, 275)
+        self.display_profit_checkbox.move(1020, 275)
         self.display_profit_checkbox.setChecked(self.data["plot_profit"])
         self.display_profit_checkbox.stateChanged.connect(self.checkbox_profit)
 
@@ -1613,27 +1676,33 @@ class App(QWidget):
         if (self.data["indicators1"]["enabled"] == True):
             self.data["indicators1"]["enabled"] = False
             self.indicator1_textbox.setEnabled(False)
+            self.combobox_indicator1.setEnabled(False)
         else:
             self.data["indicators1"]["enabled"] = True
             self.indicator1_textbox.setEnabled(True)
+            self.combobox_indicator1.setEnabled(True)
 
     @pyqtSlot()
     def checkbox_indicators2(self):
         if (self.data["indicators2"]["enabled"] == True):
             self.data["indicators2"]["enabled"] = False
             self.indicator2_textbox.setEnabled(False)
+            self.combobox_indicator2.setEnabled(False)
         else:
             self.data["indicators2"]["enabled"] = True
             self.indicator2_textbox.setEnabled(True)
+            self.combobox_indicator2.setEnabled(True)
 
     @pyqtSlot()
     def checkbox_indicators3(self):
         if (self.data["indicators3"]["enabled"] == True):
             self.data["indicators3"]["enabled"] = False
             self.indicator3_textbox.setEnabled(False)
+            self.combobox_indicator3.setEnabled(False)
         else:
             self.data["indicators3"]["enabled"] = True
             self.indicator3_textbox.setEnabled(True)
+            self.combobox_indicator3.setEnabled(True)
 
     @pyqtSlot()
     def checkbox_indicators_extra_main(self):
@@ -1714,7 +1783,13 @@ class App(QWidget):
         self.dropdown_plot_pair.clear()
         self.dropdown_plot_pair.addItems(self.data["pairs1"].split())
         self.label_pairs_no.setText("Pairs: " + str(len(self.data["pairs1"].split())))
-        self.data["max_open_trades"] = len(self.data["pairs1"].split())
+        if (production_max_trades_enable):
+            if (len(self.data["pairs1"].split()) < production_max_trades):
+                self.data["max_open_trades"] = len(self.data["pairs1"].split())
+            else:
+                self.data["max_open_trades"] = production_max_trades
+        else:
+            self.data["max_open_trades"] = len(self.data["pairs1"].split())
         self.label_pairs_no.adjustSize()
         self.get_backtest_processing_power()
         self.get_hyperopt_processing_power()
@@ -1887,6 +1962,21 @@ class App(QWidget):
 
     def on_select_strategy(self, i):
         self.data["strategy"] = i
+
+    def on_select_indicator1_list(self, i):
+        self.data["indicator1_dropdown"] = i
+        self.data["indicators1"]["text"] = self.indicator1_list[i]
+        self.indicator1_textbox.setText(self.indicator1_list[i])
+
+    def on_select_indicator2_list(self, i):
+        self.data["indicator2_dropdown"] = i
+        self.data["indicators2"]["text"] = self.indicator2_list[i]
+        self.indicator2_textbox.setText(self.indicator2_list[i])
+
+    def on_select_indicator3_list(self, i):
+        self.data["indicator3_dropdown"] = i
+        self.data["indicators3"]["text"] = self.indicator3_list[i]
+        self.indicator3_textbox.setText(self.indicator3_list[i])
 
     def on_select_loss_function(self, i):
         self.data["hyperopt"]["loss_function"] = i

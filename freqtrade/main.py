@@ -18,6 +18,7 @@ from freqtrade import __version__
 from freqtrade.commands import Arguments
 from freqtrade.exceptions import FreqtradeException, OperationalException
 from freqtrade.loggers import setup_logging_pre
+import time
 
 
 logger = logging.getLogger('freqtrade')
@@ -28,7 +29,7 @@ def main(sysargv: Optional[List[str]] = None) -> None:
     This function will initiate the bot and start the trading loop.
     :return: None
     """
-
+    tik = time.perf_counter()
     return_code: Any = 1
     try:
         setup_logging_pre()
@@ -63,8 +64,10 @@ def main(sysargv: Optional[List[str]] = None) -> None:
         logger.exception('Fatal exception!')
     finally:
         logger.info('PROCESS FINISHED')
+        tok = time.perf_counter()
+        print(f"Program Running took a total of: {tok - tik:0.4f} seconds.")
         gc.collect()
-        return True
+        return tok-tik
         # sys.exit(return_code)
 
 

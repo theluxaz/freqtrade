@@ -28,12 +28,12 @@ from importlib import reload, import_module
 
 computer_processing_power = 1.3  # 0.00001 to.. 2.0
 
-balance_per_pair=2000
+balance_per_pair= 1000  #ADJUST BALANCE, WAS 2000, trying with 1000
 
 stake_amount=800
 
 fee_enable = True
-fee_amount = 0.003   # 3% fees or so amount to about 0.4% percent profit
+fee_amount = 0.0025   #CHANGED TO 25 RECENTLY!!!! 3% fees or so amount to about 0.4% percent profit
 
 
 #change spot to futures in config and change to use orderbook= true
@@ -389,7 +389,7 @@ timeframes_json = [
                     {"Bitcoin Start": 1486080000000}  # 3 February 2017
                    ]
 
-configs_json = ["normal", "nostalgia", "nostalgia-other", "older-classic"]
+configs_json = ["config-production"]
 
 hyperopt_loss_functions = ["ShortTradeDurHyperOptLoss", "OnlyProfitHyperOptLoss", "SharpeHyperOptLoss",
                            "SharpeHyperOptLossDaily", "SortinoHyperOptLoss",
@@ -657,6 +657,8 @@ MODULE_LIST = ["x_other.BUY_SIGNALS.LOW","x_other.BUY_TRENDS.BUYER_LOW","LOW","x
                             "Common","CommonBuyerLOW","CommonBuyerMID","CommonBuyerHIGH","Constants","BUYS","SELLS"
                             ]
 
+timeframes_needed_list=["15m","1h","1d"]
+
 data_loading_time_ms = 1815000000   #21 days
 
 
@@ -743,13 +745,12 @@ class App(QWidget):
         self.backtesting_clicked = False
         self.show_plot_clicked = False
         self.hyperopt_clicked = False
+        self.download_clicked = False
 
-        self.backtest_data_enabled = False
+        self.backtest_data_enabled = False #IF TRUE SHOWS DETAILED BACKTESTING DATA CLASHES
         self.backtest_data_issues_display = ""
 
         self.command_list = []
-
-        self.processing_power = 0
 
         self.initUI()
 
@@ -1022,15 +1023,11 @@ class App(QWidget):
             "Days: " + str(days_between_timestamps(self.data["time"]["time_from"], self.data["time"]["time_until"])))
         self.time_difference_label.move(810, 72)
 
-        # Download Data absolute latest label
-        self.label_download_data_abs_latest = QLabel(self)
-        self.label_download_data_abs_latest.setText(
-            'Abs Latest:   ' + unix_to_datetime(self.data["download"]["absolute_latest_update"], True, True))
-        self.label_download_data_abs_latest.move(895, 40)
+
         # Download Data
         self.download_data_button = QPushButton('Download Data', self)
         self.download_data_button.setToolTip('Download 15m and 1h data for the selected pairs')
-        self.download_data_button.move(895, 12)
+        self.download_data_button.move(910, 12)
         self.download_data_button.clicked.connect(self.on_click_download_data)
         # # Download Data 1h
         # self.download_1h_button=QPushButton('1h',self)
@@ -1039,7 +1036,7 @@ class App(QWidget):
         # self.download_1h_button.clicked.connect(self.on_click_1h)
         # Download Data days textbox
         self.textbox_download_days = QLineEdit(self)
-        self.textbox_download_days.move(982, 15)
+        self.textbox_download_days.move(992, 15)
         self.textbox_download_days.resize(45, 18)
         self.textbox_download_days.setText(str(self.data["download"]["days_to_download"]))
         self.textbox_download_days.textChanged.connect(self.on_textchange_download_days)
@@ -1047,27 +1044,45 @@ class App(QWidget):
         # Download Data latest from pairlist label
         self.label_download_data_latest = QLabel(self)
         self.label_download_data_latest.setText(
-            'Latest: ' + unix_to_datetime(self.data["download"]["latest_update"], True, True))
-        self.label_download_data_latest.move(875, 160)
+            'Latest Data:           ' + unix_to_datetime(self.data["download"]["latest_update"], True, True))
+        self.label_download_data_latest.move(883, 100)
+        self.label_download_data_latest.setToolTip("What is the date of most recent download-data update for trading pairs. (From Pairs1)")
+
         # Download Data days from pairlist label
         self.label_download_days_latest = QLabel(self)
-        self.label_download_days_latest.setText(str(self.data["download"]["latest_days"]) + " days")
-        self.label_download_days_latest.move(995, 160)
+        self.label_download_days_latest.setText("("+str(self.data["download"]["latest_days"]) + " days)")
+        self.label_download_days_latest.move(979, 82)
+        self.label_download_days_latest.setToolTip("How many days of data downloaded back from latest date. (From Pairs1)")
+
+        # Download Data absolute latest label
+        self.label_download_data_abs_latest = QLabel(self)
+        self.label_download_data_abs_latest.setText(
+            'Abs Latest Data:    ' + unix_to_datetime(self.data["download"]["absolute_latest_update"], True, True))
+        self.label_download_data_abs_latest.move(883, 125)
+        self.label_download_data_abs_latest.setToolTip("What is the absolute latest (recent) time backtesting data was downloaded for any pairs. (From Pairs1)")
+
+        # Download Data days since update
+        self.label_download_days_since_update = QLabel(self)
+        self.label_download_days_since_update.setText(f"Time Since Update: {days_between_timestamps( self.data['download']['absolute_latest_update'], int(datetime_to_unix(datetime.datetime.now(), False)))} days")
+        self.label_download_days_since_update.move(883, 150)
+        self.label_download_days_since_update.setToolTip("How many days have passed since the latest download-data update. (From Pairs1)")
         # Download Data clashes label
         self.label_download_data_clashes = QLabel(self)
-        self.label_download_data_clashes.setText("Latest Date Clash...")
-        self.label_download_data_clashes.move(883, 186)
+        self.label_download_data_clashes.setText("Latest Date Clash!")
+        self.label_download_data_clashes.move(900, 46)
         self.label_download_data_clashes.hide()
+
         # Download Data check button
         self.check_downloaded_data_button = QPushButton('Check', self)
         self.check_downloaded_data_button.setToolTip('Check downloaded data for the selected pairs')
-        self.check_downloaded_data_button.move(992, 180)
-        self.check_downloaded_data_button.resize(50, 25)
+        self.check_downloaded_data_button.move(990, 40)
+        self.check_downloaded_data_button.resize(48, 25)
         self.check_downloaded_data_button.clicked.connect(self.on_click_check_download_data)
+
         # Download Data textfields view
         self.download_data_details_textbox = QPlainTextEdit(self)
         self.download_data_details_textbox.move(1050, 10)
-        self.download_data_details_textbox.resize(190, 360)
+        self.download_data_details_textbox.resize(290, 360)
         self.download_data_details_textbox.setEnabled(False)
         # self.download_data_details_textbox.setPlainText(self.data["pairs1"])
         # self.download_data_details_textbox.textChanged.connect(self.on_textchange_pairs1)
@@ -1104,6 +1119,46 @@ class App(QWidget):
         self.pairs3_textbox.resize(60, 246)
         self.pairs3_textbox.setPlainText(self.data["pairs3"])
         self.pairs3_textbox.textChanged.connect(self.on_textchange_pairs3)
+        # Button ALL Pairs 3
+        self.all_pairs_3_button = QPushButton('ALL', self)
+        self.all_pairs_3_button.setToolTip('Set the current Pairlist to all the pairs')
+        self.all_pairs_3_button.move(630, 280)
+        self.all_pairs_3_button.resize(60, 30)
+        self.all_pairs_3_button.clicked.connect(self.on_click_all_pairs)
+
+        # Label PairSet 1
+        self.pair_set_1_label = QLabel(self)
+        self.pair_set_1_label.setText('Pair Set 1')
+        self.pair_set_1_label.move(373, 185)
+        # Textbox PairSet 1
+        self.pair_set_1_textbox = QPlainTextEdit(self)
+        self.pair_set_1_textbox.move(370, 200)
+        self.pair_set_1_textbox.resize(60, 146)
+        self.pair_set_1_textbox.setPlainText(self.data["pair_set1"])
+        self.pair_set_1_textbox.textChanged.connect(self.on_textchange_pair_set_1)
+        # Button PairSet 1
+        self.pair_set_1_button = QPushButton('1', self)
+        self.pair_set_1_button.setToolTip('Set the current Pairlist to the 1st Set')
+        self.pair_set_1_button.move(630, 220)
+        self.pair_set_1_button.resize(60, 30)
+        self.pair_set_1_button.clicked.connect(self.on_click_pair_set_1)
+
+        # Label PairSet 2
+        self.pair_set_2_label = QLabel(self)
+        self.pair_set_2_label.setText('Pair Set 2')
+        self.pair_set_2_label.move(455, 185)
+        # Textbox PairSet 2
+        self.pair_set_2_textbox = QPlainTextEdit(self)
+        self.pair_set_2_textbox.move(450, 200)
+        self.pair_set_2_textbox.resize(60, 146)
+        self.pair_set_2_textbox.setPlainText(self.data["pair_set2"])
+        self.pair_set_2_textbox.textChanged.connect(self.on_textchange_pair_set_2)
+        # Button PairSet 2
+        self.pair_set_2_button = QPushButton('2', self)
+        self.pair_set_2_button.setToolTip('Set the current Pairlist to the 2nd Set')
+        self.pair_set_2_button.move(630, 250)
+        self.pair_set_2_button.resize(60, 30)
+        self.pair_set_2_button.clicked.connect(self.on_click_pair_set_2)
 
         self.addHyperopt()
 
@@ -1119,22 +1174,22 @@ class App(QWidget):
         self.plot_button.move(965, 324)
         self.plot_button.clicked.connect(self.on_click_plot)
 
-        # Config  label
-        self.label_config = QLabel(self)
-        self.label_config.setText('Config:')
-        self.label_config.move(935, 72)
+        # # Config  label
+        # self.label_config = QLabel(self)
+        # self.label_config.setText('Config:')
+        # self.label_config.move(935, 72)
         # Config Default label
         self.label_config_default = QLabel(self)
-        self.label_config_default.setText('Default:')
-        self.label_config_default.move(875, 100)
+        self.label_config_default.setText('Default Config:')
+        self.label_config_default.move(275, 38)
         # Config Default checkbox
         self.checkbox_config_default = QCheckBox(self)
-        self.checkbox_config_default.move(920, 100)
+        self.checkbox_config_default.move(353, 38)
         self.checkbox_config_default.setChecked(self.data["config_default"])
         self.checkbox_config_default.stateChanged.connect(self.checkbox_config)
         # Config dropdown
         self.dropdown_config = QComboBox(self)
-        self.dropdown_config.setGeometry(950, 96, 85, 20)
+        self.dropdown_config.setGeometry(292, 54, 75, 20)
         self.dropdown_config.addItems(self.configs)
         self.dropdown_config.setCurrentIndex(self.data["config_selection"])
         self.dropdown_config.currentIndexChanged.connect(self.on_select_config)
@@ -1143,8 +1198,9 @@ class App(QWidget):
 
         # Button load config pairs
         self.backtest_button = QPushButton('Config Pairs', self)
-        self.backtest_button.move(950, 120)
+        self.backtest_button.move(400, 32)
         self.backtest_button.clicked.connect(self.load_config_pairs)
+        self.backtest_button.setToolTip("Loads trading pairs from config (pair-whitelist) to the active pair window on the left. Checks if there are download data clashes (missing data)")
 
         # # Plot Pair label
         # self.label_plot_pair = QLabel(self)
@@ -1160,20 +1216,44 @@ class App(QWidget):
         # Pairs no label
         self.label_pairs_no = QLabel(self)
         self.label_pairs_no.setText(self.get_pairlist_length())
-        self.label_pairs_no.move(890, 126)
+        self.label_pairs_no.move(635, 195)
         self.label_pairs_no.adjustSize()
-        # Processing Backtest  label
-        self.label_backtest_process = QLabel(self)
-        self.label_backtest_process.move(867, 289)
-        self.get_backtest_processing_power()
-        # Processing Plot  label
-        self.label_plot_process = QLabel(self)
-        self.label_plot_process.move(867, 305)
-        self.get_plot_processing_power()
-        # Processing Hyperopt  label
-        self.label_hyperopt_process = QLabel(self)
-        self.label_hyperopt_process.move(250, 300)
-        self.get_hyperopt_processing_power()
+
+        # Pairs Max label
+        self.label_max_pairs = QLabel(self)
+        self.label_max_pairs.move(625, 325)
+        self.set_max_pairs_label(self.data["max_open_trades"])
+
+
+        # Funds  label
+        self.label_funds = QLabel(self)
+        self.label_funds.move(979, 192)
+        self.update_funds()
+
+        # Balance Per Pair  label
+        self.label_balance_per_pair = QLabel(self)
+        self.label_balance_per_pair.move(958, 212)
+        self.label_balance_per_pair.setText(f"Pair Balance: {balance_per_pair}")
+
+        # Stake  label
+        self.label_stake = QLabel(self)
+        self.label_stake.move(979, 232)
+        self.label_stake.setText(f"Stake: {stake_amount}")
+
+        # Fee  label
+        self.label_fee = QLabel(self)
+        self.label_fee.move(979, 252)
+        if(fee_enable):
+            self.label_fee.setText(f"Fee: {fee_amount}")
+        else:
+            self.label_fee.setText(f"Fee: None")
+
+        # Processing time  label
+        self.label_processing_time = QLabel(self)
+        self.label_processing_time.move(868, 305)
+        self.label_processing_time.resize(90, 20)
+        self.set_label_processing_time(self.data['previous_processing_time'])
+
 
         # Profit plot label
         self.display_profit_label = QLabel(self)
@@ -1350,7 +1430,6 @@ class App(QWidget):
             self.search_space_trailing_checkbox.show()
             self.search_space_protections_label.show()
             self.search_space_protections_checkbox.show()
-            self.label_hyperopt_process.show()
             self.label_epochs.show()
             self.textbox_epochs.show()
         else:
@@ -1374,7 +1453,6 @@ class App(QWidget):
             self.search_space_trailing_checkbox.hide()
             self.search_space_protections_label.hide()
             self.search_space_protections_checkbox.hide()
-            self.label_hyperopt_process.hide()
             self.label_epochs.hide()
             self.textbox_epochs.hide()
 
@@ -1392,9 +1470,9 @@ class App(QWidget):
         self.time_difference_label.setText(
             "Days: " + str(days_between_timestamps(self.data["time"]["time_from"], self.data["time"]["time_until"])))
         self.time_difference_label.adjustSize()
-        self.get_backtest_processing_power()
-        self.get_plot_processing_power()
-        self.get_hyperopt_processing_power()
+        # self.get_backtest_processing_power()
+        # self.get_plot_processing_power()
+        # self.get_hyperopt_processing_power()
         self.time_until_calendar.setMaximumDateTime(
             QDateTime.fromMSecsSinceEpoch(self.data["download"]["latest_update"]))
         # if(self.data["time"]["time_until_enabled"]):
@@ -1431,16 +1509,18 @@ class App(QWidget):
     @pyqtSlot()
     def on_click_backtest(self):
         if (self.backtesting_clicked):
-            main(self.command_list)
+            processing_time = main(self.command_list)
             if enable_sound:
                 winsound.PlaySound('Welcome.wav', winsound.SND_FILENAME)
+
+            self.set_label_processing_time(processing_time)
             self.backtesting_clicked = False
             self.show_plot_clicked = False
             self.hyperopt_clicked = False
+            self.download_clicked = False
         else:
             self.update_config_pairs()
             self.on_click_save_json()
-            self.get_backtest_processing_power()
             time_until = ""
             if (self.data["time"]["time_until_enabled"]):
                 time_until = self.data["time"]["time_until"]
@@ -1461,12 +1541,15 @@ class App(QWidget):
             self.hyperopt_clicked = False
             self.backtesting_clicked = True
             self.show_plot_clicked = False
+            self.download_clicked = False
             self.reload_imports()
 
     @pyqtSlot()
     def on_click_plot(self):
         if (self.show_plot_clicked):
-            main(self.command_list)
+            processing_time = main(self.command_list)
+
+            self.set_label_processing_time(processing_time)
             # commands = "main.py " +' '.join(self.command_list)
             # os.system('cmd /c python ' + commands)
             # Opens the plot in the default browser
@@ -1479,6 +1562,7 @@ class App(QWidget):
             self.backtesting_clicked = False
             self.show_plot_clicked = False
             self.hyperopt_clicked = False
+            self.download_clicked = False
         else:
             self.update_config_pairs()
             self.on_click_save_json()
@@ -1557,18 +1641,22 @@ class App(QWidget):
             self.hyperopt_clicked = False
             self.backtesting_clicked = False
             self.show_plot_clicked = True
+            self.download_clicked = False
             self.reload_imports()
 
     @pyqtSlot()
     def on_click_hyperopt(self):
         if (self.data["hyperopt"]["hyperopt"]):
             if (self.hyperopt_clicked):
-                main(self.command_list)
+                processing_time = main(self.command_list)
+
+                self.set_label_processing_time(processing_time)
                 if enable_sound:
                     winsound.PlaySound('Welcome.wav', winsound.SND_FILENAME)
                 self.backtesting_clicked = False
                 self.show_plot_clicked = False
                 self.hyperopt_clicked = False
+                self.download_clicked = False
             else:
                 self.update_config_pairs()
                 self.on_click_save_json()
@@ -1622,48 +1710,62 @@ class App(QWidget):
                 self.hyperopt_clicked = True
                 self.backtesting_clicked = False
                 self.show_plot_clicked = False
+                self.download_clicked = False
                 self.reload_imports()
         else:
             print("Hyperopt is disabled")
 
     @pyqtSlot()
     def on_click_download_data(self):
-        self.update_config_pairs()
-        self.on_click_save_json()
+        if (self.download_clicked):
+            self.update_config_pairs()
+            self.on_click_save_json()
 
-        pairs = self.data["pairs1"].split()
-        datetime_now = datetime.datetime.now() - datetime.timedelta(hours=2)
-        timestamp = int(datetime_to_unix(datetime_now, False))
-        if (timestamp > self.data["download"]["absolute_latest_update"]):
-            self.data["download"]["absolute_latest_update"] = timestamp
-        days = self.data["download"]["days_to_download"]
-        self.data["download"]["days"] = int(days)
-        for pair in pairs:
-            found = False
-            for item in self.data["download"]["pairs"]:
-                if item["name"] == pair:
-                    found = True
-                    item["latest_update"] = timestamp
-                    item["days"] = days
-            if (found == False):
-                pair_object = {"name": pair,
-                               "latest_update": timestamp,
-                               "days": int(days)}
-                self.data["download"]["pairs"].append(pair_object)
+            pairs = self.data["pairs1"].split()
+            datetime_now = datetime.datetime.now() - datetime.timedelta(hours=2)
+            timestamp = int(datetime_to_unix(datetime_now, False))
+            if (timestamp > self.data["download"]["absolute_latest_update"]):
+                self.data["download"]["absolute_latest_update"] = timestamp
+            days = self.data["download"]["days_to_download"]
+            self.data["download"]["days"] = int(days)
+            for pair in pairs:
+                found = False
+                for item in self.data["download"]["pairs"]:
+                    if item["name"] == pair:
+                        found = True
+                        item["latest_update"] = timestamp
+                        item["days"] = days
+                if (found == False):
+                    pair_object = {"name": pair,
+                                   "latest_update": timestamp,
+                                   "days": int(days)}
+                    self.data["download"]["pairs"].append(pair_object)
 
-        if self.backtest_data_enabled == True:
-            self.hide_download_data_details()
-        self.update_download_data_labels()
-        self.on_click_save_json()
-        print("Downloading data for 15m")
-        main(["download-data", "-t", "15m","--days",str(days)])
-        print("Downloading data for 1h")
-        main(["download-data", "-t", "1h","--days",str(days)])
-        print("Downloading data for 1d")
-        main(["download-data", "-t", "1d","--days",str(days)])
-        if enable_sound:
-            winsound.PlaySound('Welcome.wav', winsound.SND_FILENAME)
-        print("FINISHED DOWNLOADING DATA")
+            if self.backtest_data_enabled == True:
+                self.hide_download_data_details()
+            self.update_download_data_labels()
+            self.on_click_save_json()
+            for timeframe in timeframes_needed_list:
+                print(f"Downloading data for {timeframe}")
+                processing_time = main(["download-data", "-t", timeframe, "--days", str(days)])
+                print(f"Processing time for {timeframe} was {processing_time:0.1f}s")
+
+            if enable_sound:
+                winsound.PlaySound('Welcome.wav', winsound.SND_FILENAME)
+            print("FINISHED DOWNLOADING DATA")
+
+            self.backtesting_clicked = False
+            self.show_plot_clicked = False
+            self.hyperopt_clicked = False
+            self.download_clicked = False
+        else:
+            self.backtesting_clicked = False
+            self.show_plot_clicked = False
+            self.hyperopt_clicked = False
+            self.download_clicked = True
+            days = int(self.data["download"]["days_to_download"])
+            self.run_command_args_label.setText(f"Downloading {days} days for timeframes: {timeframes_needed_list}")
+            self.reload_imports()
 
     # @pyqtSlot()
     # def on_click_1h(self):
@@ -1790,11 +1892,12 @@ class App(QWidget):
                 self.data["max_open_trades"] = production_max_trades
         else:
             self.data["max_open_trades"] = len(self.data["pairs1"].split())
+        self.set_max_pairs_label(self.data["max_open_trades"])
         self.label_pairs_no.adjustSize()
-        self.get_backtest_processing_power()
-        self.get_hyperopt_processing_power()
+        self.set_label_processing_time(0)
         self.update_download_data_labels()
         self.update_onclick_triggers()
+        self.update_funds()
 
     @pyqtSlot()
     def on_textchange_pairs2(self):
@@ -1803,6 +1906,83 @@ class App(QWidget):
     @pyqtSlot()
     def on_textchange_pairs3(self):
         self.data["pairs3"] = self.pairs3_textbox.toPlainText().upper()
+
+    @pyqtSlot()
+    def on_textchange_pair_set_1(self):
+        self.data["pair_set1"] = self.pair_set_1_textbox.toPlainText().upper()
+
+
+    @pyqtSlot()
+    def on_textchange_pair_set_2(self):
+        self.data["pair_set2"] = self.pair_set_2_textbox.toPlainText().upper()
+
+
+    @pyqtSlot()
+    def on_click_all_pairs(self):
+        if self.backtest_data_enabled == True:
+            self.hide_download_data_details()
+        self.data["pairs1"] = self.data["pairs3"]
+        self.pairs1_textbox.setPlainText(self.data["pairs1"])
+        self.dropdown_plot_pair.clear()
+        self.dropdown_plot_pair.addItems(self.data["pairs1"].split())
+        self.label_pairs_no.setText("Pairs: " + str(len(self.data["pairs1"].split())))
+        if (production_max_trades_enable):
+            if (len(self.data["pairs1"].split()) < production_max_trades):
+                self.data["max_open_trades"] = len(self.data["pairs1"].split())
+            else:
+                self.data["max_open_trades"] = production_max_trades
+        else:
+            self.data["max_open_trades"] = len(self.data["pairs1"].split())
+        self.set_max_pairs_label(self.data["max_open_trades"])
+        self.label_pairs_no.adjustSize()
+        self.set_label_processing_time(0)
+        self.update_download_data_labels()
+        self.update_onclick_triggers()
+        self.update_funds()
+
+    @pyqtSlot()
+    def on_click_pair_set_1(self):
+        if self.backtest_data_enabled == True:
+            self.hide_download_data_details()
+        self.data["pairs1"] = self.data["pair_set1"]
+        self.pairs1_textbox.setPlainText(self.data["pairs1"])
+        self.dropdown_plot_pair.clear()
+        self.dropdown_plot_pair.addItems(self.data["pairs1"].split())
+        self.label_pairs_no.setText("Pairs: " + str(len(self.data["pairs1"].split())))
+        if (production_max_trades_enable):
+            if (len(self.data["pairs1"].split()) < production_max_trades):
+                self.data["max_open_trades"] = len(self.data["pairs1"].split())
+            else:
+                self.data["max_open_trades"] = production_max_trades
+        else:
+            self.data["max_open_trades"] = len(self.data["pairs1"].split())
+        self.set_max_pairs_label(self.data["max_open_trades"])
+        self.label_pairs_no.adjustSize()
+        self.update_download_data_labels()
+        self.update_onclick_triggers()
+        self.update_funds()
+
+    @pyqtSlot()
+    def on_click_pair_set_2(self):
+        if self.backtest_data_enabled == True:
+            self.hide_download_data_details()
+        self.data["pairs1"] = self.data["pair_set2"]
+        self.pairs1_textbox.setPlainText(self.data["pairs1"])
+        self.dropdown_plot_pair.clear()
+        self.dropdown_plot_pair.addItems(self.data["pairs1"].split())
+        self.label_pairs_no.setText("Pairs: " + str(len(self.data["pairs1"].split())))
+        if (production_max_trades_enable):
+            if (len(self.data["pairs1"].split()) < production_max_trades):
+                self.data["max_open_trades"] = len(self.data["pairs1"].split())
+            else:
+                self.data["max_open_trades"] = production_max_trades
+        else:
+            self.data["max_open_trades"] = len(self.data["pairs1"].split())
+        self.set_max_pairs_label(self.data["max_open_trades"])
+        self.label_pairs_no.adjustSize()
+        self.update_download_data_labels()
+        self.update_onclick_triggers()
+        self.update_funds()
 
     @pyqtSlot()
     def checkbox_hyperopt(self):
@@ -1955,6 +2135,7 @@ class App(QWidget):
         if (self.data["config_default"] == True):
             self.data["config_default"] = False
             self.dropdown_config.show()
+            self.on_select_config(0)
         else:
             self.data["config"] = "config.json"
             self.data["config_default"] = True
@@ -2024,7 +2205,7 @@ class App(QWidget):
     def on_select_config(self, i):
         self.data["config_selection"] = i
         config = self.configs[i]
-        self.data["config"] = "config-" + str(config) + ".json"
+        self.data["config"] = str(config) + ".json"
 
     def on_select_plot_pair(self, i):
         self.data["plot_pair"] = i
@@ -2033,8 +2214,8 @@ class App(QWidget):
         if self.backtest_data_enabled == False:
             self.check_downloaded_data_button.setText("Hide")
             self.backtest_data_enabled = True
-            self.width = 1050
-            self.setFixedWidth(1050)
+            self.width = 1350
+            self.setFixedWidth(1350)
             self.generate_download_data_table()
             self.show()
         else:
@@ -2043,8 +2224,8 @@ class App(QWidget):
     def hide_download_data_details(self):
         self.check_downloaded_data_button.setText("Check")
         self.backtest_data_enabled = False
-        self.width = 850
-        self.setFixedWidth(850)
+        self.width = 1050
+        self.setFixedWidth(1050)
         self.show()
 
     ## Generates ands updates data for downloaded data for pairs in the textfield
@@ -2119,9 +2300,9 @@ class App(QWidget):
                             break
 
         if type_days:
-            self.label_download_data_clashes.setText("Data Days Clash...  ")
+            self.label_download_data_clashes.setText("Data Days Clash!")
         else:
-            self.label_download_data_clashes.setText("Latest Date Clash...")
+            self.label_download_data_clashes.setText("Latest Date Clash!")
 
         if (lower == True):
             self.label_download_data_clashes.show()
@@ -2139,7 +2320,7 @@ class App(QWidget):
                     if (pair["days"] < lowest):
                         lowest = pair["days"]
         self.data["download"]["latest_days"] = lowest
-        self.label_download_days_latest.setText(str(self.data["download"]["latest_days"]) + " days")
+        self.label_download_days_latest.setText("("+str(self.data["download"]["latest_days"]) + " days)")
 
     def update_latest_date_download_data_label(self):
         lowest = 0
@@ -2153,7 +2334,7 @@ class App(QWidget):
                         lowest = pair["latest_update"]
 
         self.data["download"]["latest_update"] = lowest
-        self.label_download_data_latest.setText('Latest: ' + unix_to_datetime(lowest, True, True))
+        self.label_download_data_latest.setText('Latest Data:           ' + unix_to_datetime(lowest, True, True))
 
     def on_select_from_date(self, date):
         if(self.data["time"]["time_from_date"]):
@@ -2220,11 +2401,16 @@ class App(QWidget):
             else:
                 processed_pairs.append(pair + "/" + fiat_currency)
         config_json["exchange"]["pair_whitelist"] = processed_pairs
-        if(production_max_trades_enable):
-            config_json["max_open_trades"] = production_max_trades
+        if (production_max_trades_enable):
+            if (self.data["max_open_trades"] < production_max_trades):
+                config_json["max_open_trades"] = self.data["max_open_trades"]
+            else:
+                config_json["max_open_trades"] = production_max_trades
+                self.data["max_open_trades"] = production_max_trades
         else:
             config_json["max_open_trades"] = self.data["max_open_trades"]
-        config_json = update_config_funds(config_json)
+        self.set_max_pairs_label(self.data["max_open_trades"])
+        config_json = self.update_config_funds(config_json)
         try:
             with open(config_url, 'w') as file:
                 json.dump(config_json, file)
@@ -2244,20 +2430,20 @@ class App(QWidget):
 
         for pair in config_json["exchange"]["pair_whitelist"]:
             if futures:
-                processed_pair = pair.strip("/" + fiat_currency + ":" + fiat_currency)
+                processed_pair = pair.replace("/" + fiat_currency + ":" + fiat_currency,"")
             else:
-                processed_pair = pair.strip("/" + fiat_currency)
-            processed_pair_text += (processed_pair + "/n")
+                processed_pair = pair.replace("/" + fiat_currency,"")
+            processed_pair_text += (processed_pair + "\n")
         self.data["pairs1"] = processed_pair_text
         self.pairs1_textbox.setPlainText(self.data["pairs1"])
         self.label_pairs_no.setText("Pairs: " + str(len(config_json["exchange"]["pair_whitelist"])))
         self.label_pairs_no.adjustSize()
-        self.get_backtest_processing_power()
-        self.get_hyperopt_processing_power()
+        self.set_label_processing_time(0)
         if self.backtest_data_enabled == True:
             self.hide_download_data_details()
         self.update_download_data_labels()
         self.update_onclick_triggers()
+        self.update_funds()
 
     def get_pairlist_length(self):
         pairs = self.data["pairs1"].split()
@@ -2266,59 +2452,18 @@ class App(QWidget):
         else:
             return "0"
 
-    def get_backtest_processing_power(self):
-        time = 0.1
-        days = days_between_timestamps(self.data["time"]["time_from"], self.data["time"]["time_until"])
-        pairs = len(self.data["pairs1"].split())
-        if (pairs <= 6):
-            days_from_25 = days / 50
-            days_ratio = (1 + (0.135 * (days_from_25)))
-            pair_time = pairs * 1.8
-            pair_time = pair_time + (0.4 * math.pow(1.22, pair_time))
-            time = (pair_time * (days_ratio))
-            time += 2.5
+    def set_label_processing_time(self,time):
+        self.data["previous_processing_time"]=time
+        if(time >= 60):
+            self.label_processing_time.setText(f"Process: {time/ 60:0.1f} min")
         else:
-            days_from_25 = days / 50
-            days_ratio = (1 + (0.135 * (days_from_25)))
-            pair_time = pairs * 2.0
-            pair_time = pair_time + (0.10 * math.pow(1.16, pair_time))
-            time = (pair_time * (days_ratio))
-            time += 2.0
-        time = round(time + ((time / 2 * ((computer_processing_power - 1.0) * -1))), 1)
-        self.label_backtest_process.setText('Backtest-Pw: ' + str(time) + "s")
+            self.label_processing_time.setText(f"Process: {time:0.1f} sec")
 
-    def get_plot_processing_power(self):
-        days = days_between_timestamps(self.data["time"]["time_from"], self.data["time"]["time_until"])
-        time1 = 5
-        time1 = time1 + (days * 0.075)
-        time2 = (0.16 * math.pow(1.05, days / 5))
-        final_time = time1 + time2
-        final_time = round(final_time + ((final_time / 2 * ((computer_processing_power - 1.0) * -1))), 1)
-        self.label_plot_process.setText('Plotting-Pw:  ' + str(final_time) + "s")
+    def set_max_pairs_label(self,max_pairs):
+        self.label_max_pairs.setText(f"Max Trades: {max_pairs}")
 
-    ##TO FINISH LATER
-    def get_hyperopt_processing_power(self):
-        # time=0.1
-        # days = days_between_timestamps(self.data["time"]["time_from"],self.data["time"]["time_until"])
-        # pairs = len(self.data["pairs1"].split())
-        # if(pairs <= 6):
-        #     days_from_25 = days / 50
-        #     days_ratio = (1+(0.135 *(days_from_25)))
-        #     pair_time= pairs *1.8
-        #     pair_time = pair_time  + (0.4*math.pow( 1.22, pair_time ))
-        #     time = (pair_time * (days_ratio) )
-        #     time += 2.5
-        # else:
-        #     days_from_25 = days / 50
-        #     days_ratio = (1+(0.135 *(days_from_25)))
-        #     pair_time= pairs *2.0
-        #     pair_time = pair_time  + (0.10*math.pow( 1.16, pair_time ))
-        #     time = (pair_time * (days_ratio) )
-        #     time += 2.0
-        # time = round(time +  ((time/2 *((computer_processing_power-1.0)*-1))),1)
-        self.label_hyperopt_process.setText('Hyperopt-Pw: ' + "??" + "s")
-
-
+    def update_funds(self):
+        self.label_funds.setText(f"Funds: {self.data['max_open_trades'] * balance_per_pair}")
 
     # RESETS ALL IMPORTS BEFORE RUNNING ANY COMMANDS
     def reload_imports(self):
@@ -2337,13 +2482,10 @@ class App(QWidget):
     # Updates the balance and order size for the config
 
 
-def update_config_funds(config_json):
-    if(production_max_trades_enable):
-        config_json["dry_run_wallet"] = production_max_trades * balance_per_pair
-    else:
-        config_json["dry_run_wallet"] = len(config_json["exchange"]["pair_whitelist"]) * balance_per_pair
-    config_json["stake_amount"] = stake_amount
-    return config_json
+    def update_config_funds(self,config_json):
+        config_json["dry_run_wallet"] = self.data["max_open_trades"] * balance_per_pair
+        config_json["stake_amount"] = stake_amount
+        return config_json
 
 
 def unix_to_datetime(timestamp, to_string, to_simple):

@@ -13,6 +13,11 @@ user_data/freqaimodels/*
 user_data/models/*
 user_data/notebooks/*
 freqtrade-plot.html
+file
+freqtrade/file
+/freqtrade/file
+freqtrade/file*
+/freqtrade/file*
 freqtrade-profit-plot.html
 freqtrade/rpc/api_server/ui/*
 build_helpers/ta-lib/*

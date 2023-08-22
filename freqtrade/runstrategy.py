@@ -468,6 +468,38 @@ indicators3_list  = [
                ]
 
 
+    #GET OTHER INDICATORS FROM PREVIOUS LAPTOP
+indicators1_rare_list  = [    {"FAVORITES":""},
+                        #normal ones
+                        {"sma50 sma25 sma30k_1h sma10k sma100 sma200 sma400": "sma50 sma25 sma30k_1h sma10k sma100 sma200 sma400"},
+                        {"sma10":"sma10"},
+                        {"RESISTANCES 1H":"res_low_1h res_mid_1h res_high_1h"},
+                        {"SUPPORTS 1H":"sup_low_1h sup_mid_1h sup_high_1h"},
+                        {"SUP & RES 15m":"res_low sup_low"},
+                           ]
+
+indicators2_rare_list  = [
+                    #normal ones
+                    {"ROC":"roc roc2 "},
+                     {"ROC LONG":"roc10 roc25 roc50"},
+                     {"ROC SMA":"roc50sma"},
+                     {"RSI":"rsi rsi4 rsi5 rsi20 rsi50"},
+                     {"CANDLESIZE":"candlesize"},
+                    {"ppo5 ppo10 ppo25":"ppo5"},#ppos
+                     {"ppo1000":"ppo1000"},{"roc2":"roc2"}#GET OTHER INDICATORS FROM PREVIOUS LAPTOP
+               ]
+
+indicators3_rare_list  = [
+                    #normal ones
+                    {"ROC":"roc roc2 "},
+                     {"ROC LONG":"roc10 roc25 roc50"},
+                     {"ROC SMA":"roc50sma roc50smaavg roc200sma roc400sma"},
+                     {"RSI":"rsi rsi4 rsi5 rsi20 rsi50"},
+                     {"CANDLESIZE":"candlesize"},
+                    {"ppo500":"ppo500"},#ppos
+                     {"ppo1000":"ppo1000"},{"rsi roc roc2":"rsi roc roc2"}#GET OTHER INDICATORS FROM PREVIOUS LAPTOP
+               ]
+
 MODULE_LIST = ["x_other.BUY_SIGNALS.LOW","x_other.BUY_TRENDS.BUYER_LOW","LOW","x_other.BUY_SIGNALS.MID","x_other.BUY_TRENDS.BUYER_MID", "MID", "x_other.BUY_SIGNALS.HIGH","x_other.BUY_TRENDS.BUYER_HIGH","HIGH",
                             "x_other.BUY_SIGNALS.LONG_UPTREND","x_other.BUY_TRENDS.BUYER_LONG_UPTREND","LONG_UPTREND","x_other.BUY_SIGNALS.LONG_DOWNTREND","x_other.BUY_TRENDS.BUYER_LONG_DOWNTREND","LONG_DOWNTREND",
                             "x_other.BUY_SIGNALS.SLOW_DOWNTREND","x_other.BUY_TRENDS.BUYER_SLOW_DOWNTREND","SLOW_DOWNTREND","x_other.BUY_SIGNALS.DOWNTREND_UPSWING","x_other.BUY_TRENDS.BUYER_DOWNTREND_UPSWING","DOWNTREND_UPSWING",
@@ -780,6 +812,30 @@ class App(QWidget):
                 self.indicator3_list_labels.append(key)
                 self.indicator3_list.append(value)
 
+        # Set indicators_rare 1 dropdown
+        self.indicator1_rare_list = []
+        self.indicator1_rare_list_labels = []
+        for pair in indicators1_rare_list :
+            for key, value in pair.items():
+                self.indicator1_rare_list_labels.append(key)
+                self.indicator1_rare_list.append(value)
+
+        # Set indicators_rare 2 dropdown
+        self.indicator2_rare_list = []
+        self.indicator2_rare_list_labels = []
+        for pair in indicators2_rare_list :
+            for key, value in pair.items():
+                self.indicator2_rare_list_labels.append(key)
+                self.indicator2_rare_list.append(value)
+
+        # Set indicators_rare 3 dropdown
+        self.indicator3_rare_list = []
+        self.indicator3_rare_list_labels = []
+        for pair in indicators3_rare_list :
+            for key, value in pair.items():
+                self.indicator3_rare_list_labels.append(key)
+                self.indicator3_rare_list.append(value)
+
         # Set configs
         self.configs = configs_json
 
@@ -800,8 +856,8 @@ class App(QWidget):
         self.command_list = []
 
         self.ctrl_or_shift_pressed = False
-        self.z_pressed = False #Adds indicators to Indicators1
         self.x_pressed = False #Adds indicators to Indicators2
+        self.c_pressed = False #Adds indicators to Indicators3
 
                 # Collect events until released
         self.listener = Listener(
@@ -846,12 +902,20 @@ class App(QWidget):
 
         # Dropdown Indicators 1
         self.combobox_indicator1 = QComboBox(self)
-        self.combobox_indicator1.setGeometry(370, 78, 140, 20)
+        self.combobox_indicator1.setGeometry(370, 78, 120, 20)
         self.combobox_indicator1.setMaxVisibleItems(50)
         self.combobox_indicator1.addItems(self.indicator1_list_labels)
         self.combobox_indicator1.setCurrentIndex(self.data["indicator1_dropdown"])
         self.combobox_indicator1.setToolTip('Hold SHIFT or CTRL to add to the indicators, instead of replacing.')
         self.combobox_indicator1.currentIndexChanged.connect(self.on_select_indicator1_list)
+        # Dropdown Indicators 1 RARE
+        self.combobox_indicator1_rare = QComboBox(self)
+        self.combobox_indicator1_rare.setGeometry(490, 78, 68, 20)
+        self.combobox_indicator1_rare.setMaxVisibleItems(50)
+        self.combobox_indicator1_rare.addItems(self.indicator1_rare_list_labels)
+        self.combobox_indicator1_rare.setCurrentIndex(self.data["indicator1_rare_dropdown"])
+        self.combobox_indicator1_rare.setToolTip('Hold SHIFT or CTRL to add to the indicators, instead of replacing.')
+        self.combobox_indicator1_rare.currentIndexChanged.connect(self.on_select_indicator1_rare_list)
 
         # Checkbox Indicators 1 Enable
         self.indicator1_checkbox = QCheckBox(self)
@@ -876,12 +940,20 @@ class App(QWidget):
 
         # Dropdown Indicators 2
         self.combobox_indicator2 = QComboBox(self)
-        self.combobox_indicator2.setGeometry(370, 132, 180, 20)
+        self.combobox_indicator2.setGeometry(370, 132, 120, 20)
         self.combobox_indicator2.setMaxVisibleItems(50)
         self.combobox_indicator2.addItems(self.indicator2_list_labels)
         self.combobox_indicator2.setCurrentIndex(self.data["indicator2_dropdown"])
         self.combobox_indicator2.setToolTip('Hold SHIFT or CTRL to add to the indicators, instead of replacing. Hold X to add to Indicators 3.')
         self.combobox_indicator2.currentIndexChanged.connect(self.on_select_indicator2_list)
+        # Dropdown Indicators 2 RARE
+        self.combobox_indicator2_rare = QComboBox(self)
+        self.combobox_indicator2_rare.setGeometry(490, 132, 68, 20)
+        self.combobox_indicator2_rare.setMaxVisibleItems(50)
+        self.combobox_indicator2_rare.addItems(self.indicator2_rare_list_labels)
+        self.combobox_indicator2_rare.setCurrentIndex(self.data["indicator2_rare_dropdown"])
+        self.combobox_indicator2_rare.setToolTip('Hold SHIFT or CTRL to add to the indicators, instead of replacing.')
+        self.combobox_indicator2_rare.currentIndexChanged.connect(self.on_select_indicator2_rare_list)
 
         # Checkbox Indicators 2 Enable
         self.indicator2_checkbox = QCheckBox(self)
@@ -906,12 +978,20 @@ class App(QWidget):
 
         # Dropdown Indicators 3
         self.combobox_indicator3 = QComboBox(self)
-        self.combobox_indicator3.setGeometry(370, 162, 180, 20)
+        self.combobox_indicator3.setGeometry(370, 162, 120, 20)
         self.combobox_indicator3.setMaxVisibleItems(50)
         self.combobox_indicator3.addItems(self.indicator3_list_labels)
         self.combobox_indicator3.setCurrentIndex(self.data["indicator3_dropdown"])
         self.combobox_indicator3.setToolTip('Hold SHIFT or CTRL to add to the indicators, instead of replacing. Hold Z to add to Indicators 2.')
         self.combobox_indicator3.currentIndexChanged.connect(self.on_select_indicator3_list)
+        # Dropdown Indicators 3 RARE
+        self.combobox_indicator3_rare = QComboBox(self)
+        self.combobox_indicator3_rare.setGeometry(490, 162, 68, 20)
+        self.combobox_indicator3_rare.setMaxVisibleItems(50)
+        self.combobox_indicator3_rare.addItems(self.indicator3_rare_list_labels)
+        self.combobox_indicator3_rare.setCurrentIndex(self.data["indicator3_rare_dropdown"])
+        self.combobox_indicator3_rare.setToolTip('Hold SHIFT or CTRL to add to the indicators, instead of replacing.')
+        self.combobox_indicator3_rare.currentIndexChanged.connect(self.on_select_indicator3_rare_list)
 
         # Checkbox Indicators 3 Enable
         self.indicator3_checkbox = QCheckBox(self)
@@ -2213,7 +2293,6 @@ class App(QWidget):
         self.data["strategy"] = i
 
     def on_select_indicator1_list(self, i):
-        print("check0")
         if self.ctrl_or_shift_pressed:
             self.data["indicator1_dropdown"] = i
             self.data["indicators1"]["text"] = self.data["indicators1"]["text"]+ " "+self.indicator1_list[i]
@@ -2225,7 +2304,7 @@ class App(QWidget):
 
     def on_select_indicator2_list(self, i):
         if self.ctrl_or_shift_pressed:
-            if(self.x_pressed):
+            if(self.c_pressed):
                 self.data["indicator2_dropdown"] = i
                 self.data["indicators3"]["text"] = self.data["indicators3"]["text"]+" "+self.indicator2_list[i]
                 self.indicator3_textbox.setText(self.data["indicators3"]["text"])
@@ -2234,7 +2313,7 @@ class App(QWidget):
                 self.data["indicators2"]["text"] = self.data["indicators2"]["text"]+" "+self.indicator2_list[i]
                 self.indicator2_textbox.setText(self.data["indicators2"]["text"])
         else:
-            if(self.x_pressed):
+            if(self.c_pressed):
                 self.data["indicator2_dropdown"] = i
                 self.data["indicators3"]["text"] = self.indicator2_list[i]
                 self.indicator3_textbox.setText(self.indicator2_list[i])
@@ -2245,7 +2324,7 @@ class App(QWidget):
 
     def on_select_indicator3_list(self, i):
         if self.ctrl_or_shift_pressed:
-            if(self.z_pressed):
+            if(self.x_pressed):
                 self.data["indicator3_dropdown"] = i
                 self.data["indicators2"]["text"] = self.data["indicators2"]["text"]+" "+self.indicator3_list[i]
                 self.indicator2_textbox.setText(self.data["indicators2"]["text"])
@@ -2254,7 +2333,7 @@ class App(QWidget):
                 self.data["indicators3"]["text"] = self.data["indicators3"]["text"]+" "+self.indicator3_list[i]
                 self.indicator3_textbox.setText(self.data["indicators3"]["text"])
         else:
-            if(self.z_pressed):
+            if(self.x_pressed):
                 self.data["indicator3_dropdown"] = i
                 self.data["indicators2"]["text"] = self.indicator3_list[i]
                 self.indicator2_textbox.setText(self.indicator3_list[i])
@@ -2262,6 +2341,33 @@ class App(QWidget):
                 self.data["indicator3_dropdown"] = i
                 self.data["indicators3"]["text"] = self.indicator3_list[i]
                 self.indicator3_textbox.setText(self.indicator3_list[i])
+
+
+    def on_select_indicator1_rare_list(self, i):
+        self.data["indicator1_rare_dropdown"] = i
+        self.data["indicators1"]["text"] = self.data["indicators1"]["text"]+ " "+self.indicator1_rare_list[i]
+        self.indicator1_textbox.setText(self.data["indicators1"]["text"])
+
+    def on_select_indicator2_rare_list(self, i):
+        if(self.c_pressed):
+            self.data["indicator2_rare_dropdown"] = i
+            self.data["indicators3"]["text"] = self.data["indicators3"]["text"]+" "+self.indicator2_rare_list[i]
+            self.indicator3_textbox.setText(self.data["indicators3"]["text"])
+        else:
+            self.data["indicator2_rare_dropdown"] = i
+            self.data["indicators2"]["text"] = self.data["indicators2"]["text"]+" "+self.indicator2_rare_list[i]
+            self.indicator2_textbox.setText(self.data["indicators2"]["text"])
+
+
+    def on_select_indicator3_rare_list(self, i):
+        if(self.x_pressed):
+            self.data["indicator3_rare_dropdown"] = i
+            self.data["indicators2"]["text"] = self.data["indicators2"]["text"]+" "+self.indicator3_rare_list[i]
+            self.indicator2_textbox.setText(self.data["indicators2"]["text"])
+        else:
+            self.data["indicator3_rare_dropdown"] = i
+            self.data["indicators3"]["text"] = self.data["indicators3"]["text"]+" "+self.indicator3_rare_list[i]
+            self.indicator3_textbox.setText(self.data["indicators3"]["text"])
 
     def on_select_loss_function(self, i):
         self.data["hyperopt"]["loss_function"] = i
@@ -2601,12 +2707,15 @@ class App(QWidget):
         elif key == Key.shift:
             # print("shift pressed")
             self.ctrl_or_shift_pressed = True
-        elif hasattr(key, "char") and ( key.char == "z" or key.char == "Z"):
-            # print("z pressed")
-            self.z_pressed = True
+        # elif hasattr(key, "char") and ( key.char == "z" or key.char == "Z"):
+        #     # print("z pressed")
+        #     self.z_pressed = True
         elif hasattr(key, "char") and ( key.char == "x" or key.char == "X"):
             # print("x pressed")
             self.x_pressed = True
+        elif hasattr(key, "char") and ( key.char == "c" or key.char == "C"):
+            # print("c pressed")
+            self.c_pressed = True
 
     def on_release(self, key):
         # print("button released")
@@ -2617,12 +2726,15 @@ class App(QWidget):
         elif key == Key.shift:
             # print("shift released")
             self.ctrl_or_shift_pressed = False
-        elif hasattr(key, "char") and ( key.char == "z" or key.char == "Z"):
-            # print("z released")
-            self.z_pressed = False
+        # elif hasattr(key, "char") and ( key.char == "z" or key.char == "Z"):
+        #     # print("z released")
+        #     self.z_pressed = False
         elif hasattr(key, "char") and (key.char == "x" or key.char == "X"):
             # print("x released")
             self.x_pressed = False
+        elif hasattr(key, "char") and (key.char == "c" or key.char == "C"):
+            # print("c released")
+            self.c_pressed = False
 
 def unix_to_datetime(timestamp, to_string, to_simple):
     if (to_string):

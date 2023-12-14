@@ -370,7 +370,8 @@ strategy_json = [{"MAIN": "AltcoinTrader15"},
 
                  ]
 
-timeframes_json = [
+timeframes_json = [ {"13":1702526400000},  # 14 September  2023 4pm GMT
+                    {"12":1695566238000},  # 24 September  2023 5pm GMT
                     {"11":1687941699000},  # 28 June  2023 8am GMT
                     {"10": 1679114962000},  # 18 March  2023 4am GMT
                     {"9": 1671667200000},  # 22 December 2022 midday
@@ -409,95 +410,198 @@ indicators1_solo_trends = [{"5": "Upper Danger Zone"},
                            ]
 
     #GET OTHER INDICATORS FROM PREVIOUS LAPTOP
-indicators1_list  = [    {"FAVORITES":""},
-                        #normal ones
-                        {"sma50 sma25 sma30k_1h sma10k sma100 sma200 sma400": "sma50 sma25 sma30k_1h sma10k sma100 sma200 sma400"},
-                        {"sma10":"sma10"},
-                        {"RESISTANCES 1H":"res_low_1h res_mid_1h res_high_1h"},
-                        {"SUPPORTS 1H":"sup_low_1h sup_mid_1h sup_high_1h"},
-                        {"SUP & RES 15m":"res_low sup_low"},
+indicators1_list  = [   {"---FAVORITES---":""},
+                        {"SMA mix": "sma50 sma25 sma30k_1h sma10k sma100 sma200 sma400"},
+
+                        {"---RESISTANCE/SUP---":""},
+                        {"Resistance/Sup":"res_low sup_low"},
+                        {"Resistance 1h":"res_low_1h res_mid_1h res_high_1h"},
+                        {"Support 1h":"sup_low_1h sup_mid_1h sup_high_1h"},
+                        {"Support 1d":"res_level_1d sup_level_1d"},
+
+                        {"---MOVING AVG---":""},
+                        {"Short SMA":"sma3 sma5 sma10 sma15 sma25 "},
+                        {"Mid SMA":"sma30 sma50 sma75 sma100 sma200 sma400 "},
+                        {"Long SMA":"sma10k sma13k sma200_1h sma20k_1h sma30_1h"},
+                        {"Very Long SMA":"sma30_1d sma35_1d sma50_1d sma100_1d"},
+                        {"Short EMA":"ema8 ema12 ema16 ema20 ema25"},
+                        {"Mid EMA":"ema50 ema200 ema12_1h"},
+                        {"Long EMA":"ema35_1h ema50_1h ema100_1h ema200_1h"},
+
+                        {"---BOLINGER BANDS---":""},
+                        {"Bollinger 20":"bb_lowerband20 bb_upperband20 bb_middleband20"},
+                        {"Bollinger 50":"bb_lowerband50 bb_middleband50 bb_upperband50"},
+                        {"Bollinger 100":"bb_lowerband100 bb_upperband100 bb_middleband100"},
+                        {"Bollinger 175":"bb_lowerband175 bb_upperband175 bb_middleband175"},
+                        {"Bollinger 1h 2000":"bb_lowerband2000_1h bb_upperband2000_1h bb_middleband2000_1h"},
+
+                        {"SAR":"sar"},
+                        # {"SUPtttttttttttt":"ttttttttttttttttt"},
+                        # {"SUPtttttttttttt":"ttttttttttttttttt"},
                            ]
 
 #GET OTHER INDICATORS FROM PREVIOUS LAPTOP
-indicators2_list  = [
-                    #normal ones
-                    {"ROC":"roc roc2 "},
-                     {"ROC LONG":"roc10 roc25 roc50"},
-                     {"ROC SMA":"roc50sma roc50smaavg roc200sma roc400sma"},
-                     {"RSI":"rsi rsi4 rsi5 rsi20 rsi50"},
-                     {"CANDLESIZE":"candlesize"},
-                    {"ppo5 ppo10 ppo25 ppo50 ppo100 ppo200 ppo500":"ppo5 ppo10 ppo25 ppo50 ppo100 ppo200 ppo500"},#ppos
-                     {"ppo1000":"ppo1000"},{"rsi roc roc2":"rsi roc roc2"}#GET OTHER INDICATORS FROM PREVIOUS LAPTOP
+indicators2_list  = [   {"---FAVORITES---":""},
+                        {"PPO mix":"ppo5 ppo10 ppo25 ppo50 ppo100 ppo200 ppo500"},#ppos
+                        {"ROC candlesize mix":"candlesize roc roc2 "},
+                        {"RSI":"rsi rsi5"},
+
+                        {"---RATE OF CHANGE---":""},
+                        {"Short ROC":"roc roc2 roc10"},
+                        {"Mid ROC":"roc25 roc50 roc50avg"},
+                        {"Sma ROC":"roc50sma roc50smaavg roc200sma"},
+
+                        {"---MOMENTUM---":""},
+                        {"Short PPO":"ppo5 ppo10 ppo25 ppo50"},
+                        {"Long PPO":"ppo100 ppo200 ppo500 ppo1000"},
+                        {"Short RSI":"rsi5 rsi"},
+                        {"Mid RSI":"rsi50 rsi_1h"},
+
+                        {"ADX":"adx plus_di minus_di"},
+                        {"Connors RSI":"crsi crsi_1h"},
+                        {"Money Flow Index":"mfi"},
+                        {"Ultimate Oscillator":"ult"},
+
+                        {"R_Will":"r_14 r_480 r_480_1h"},
+                        {"Fisher RSI":"fisher_rsi"},
+                        {"Candlesize":"candlesize candleheight"},
+                        {"Elliott Wave Osc":"ewo ewo_1h"},
+                        {"Momentum Indicator":"cmf cmf_1h"},
+                        {"Chaikin Money Flow":"mom"},
+
+                        # {"Aroon":"aroon aroonosc"},
+                        {"CCI":"cci"},
+                        # {"MACD":"macd macdext macdfix"},
+                        # {"STOCH":"stoch fastd fastk"},
+                        # {"STOCHRSI":"stochrsi"},
+                        {"NFI ones":"bb50_delta tail"},
+                        # {"Range %Change 1h":"hl_pct_6_1h hl_pct_12_1h hl_pct_24_1h hl_pct_36_1h hl_pct_48_1h"},
+
+                        # {"SUPtttttttttttt":"ttttttttttttttttt"},
+                        # {"SUPtttttttttttt":"ttttttttttttttttt"},
                ]
 
-indicators3_list  = [
-                    #normal ones
-                    {"VOLATILITY":""},
-                    {"volatility":"vol100 vol175 vol250"},
-                    {"small volatility ":"vol50 vol100 vol175"},
-                    {"large volatility":"vol500 vol1000 volultra"},
-                     {"convergence":"convsmall convmedium convlarge"},
-                     {"convergence large":"convlarge convmain convtotal"},
+indicators3_list  = [   {"---FAVORITES---":""},
+                        {"Volatility":"vol50 vol100 vol175 vol250"},
+                        {"Convergence":"convsmall convmedium"},
 
-            #DELETE LATER, TEMPORARY COPY PASTE
-            {"VOLATILITY":""},
-                            {"volatility":"vol100 vol175 vol250"},
-                            {"small volatility ":"vol50 vol100 vol175"},
-                            {"large volatility":"vol500 vol1000 volultra"},
-                             {"convergence":"convsmall convmedium convlarge"},
-                             {"convergence large":"convlarge convmain convtotal"},
-            {"VOLATILITY":""},
-                            {"volatility":"vol100 vol175 vol250"},
-                            {"small volatility ":"vol50 vol100 vol175"},
-                            {"large volatility":"vol500 vol1000 volultra"},
-                             {"convergence":"convsmall convmedium convlarge"},
-                             {"convergence large":"convlarge convmain convtotal"},
-            {"VOLATILITY":""},
-                            {"volatility":"vol100 vol175 vol250"},
-                            {"small volatility ":"vol50 vol100 vol175"},
-                            {"large volatility":"vol500 vol1000 volultra"},
-                             {"convergence":"convsmall convmedium convlarge"},
-                             {"convergence large":"convlarge convmain convtotal"},
-            {"VOLATILITY":""},
-                            {"volatility":"vol100 vol175 vol250"},
-                            {"small volatility ":"vol50 vol100 vol175"},
-                            {"large volatility":"vol500 vol1000 volultra"},
-                             {"convergence":"convsmall convmedium convlarge"},
-                             {"convergence large":"convlarge convmain convtotal"},
+                        {"---VOLATILITY---":""},
+                        {"Volatility":"vol50 vol100 vol175 vol250"},
+                        {"Mid Volatility":"vol500 vol1000 volultra"},
+                        {"High Volatility":"volultra vol1000"},
+                        {"Convergence":"convsmall convmedium"},
+                        {"Long Convergence":"convmain convtotal"},
+                        {"Mean Volume":"volume_mean_12 volume_mean_24"},
+                        # {"Top %Change":"tpct_change_0 tpct_change_2 tpct_change_12 tpct_change_144"},
 
+                        # {"SUPtttttttttttt":"ttttttttttttttttt"},
+                        # {"SUPtttttttttttt":"ttttttttttttttttt"},
                ]
 
 
     #GET OTHER INDICATORS FROM PREVIOUS LAPTOP
-indicators1_rare_list  = [    {"FAVORITES":""},
-                        #normal ones
-                        {"sma50 sma25 sma30k_1h sma10k sma100 sma200 sma400": "sma50 sma25 sma30k_1h sma10k sma100 sma200 sma400"},
-                        {"sma10":"sma10"},
-                        {"RESISTANCES 1H":"res_low_1h res_mid_1h res_high_1h"},
-                        {"SUPPORTS 1H":"sup_low_1h sup_mid_1h sup_high_1h"},
-                        {"SUP & RES 15m":"res_low sup_low"},
+indicators1_rare_list  = [  {"---FAVORITES---":""},
+
+                            {"---MOVING AVG---":""},
+                            {"High Price":"high50 high100 high1000"},
+                            {"Low Price":"low50 low100 low1000"},
+                            {"vwap short":"vwap vwap10 vwap50"},
+                            {"vwap long":"vwap100 vwap500 vwap950"},
+                            {"Conv vwap":"convwap"},
+                            {"Zemas":"zema zema50 zema100 zema200"},
+
+                            # {"SUPtttttttttttt":"ttttttttttttttttt"},
+                            # {"SUPtttttttttttt":"ttttttttttttttttt"},
                            ]
 
-indicators2_rare_list  = [
-                    #normal ones
-                    {"ROC":"roc roc2 "},
-                     {"ROC LONG":"roc10 roc25 roc50"},
-                     {"ROC SMA":"roc50sma"},
-                     {"RSI":"rsi rsi4 rsi5 rsi20 rsi50"},
-                     {"CANDLESIZE":"candlesize"},
-                    {"ppo5 ppo10 ppo25":"ppo5"},#ppos
-                     {"ppo1000":"ppo1000"},{"roc2":"roc2"}#GET OTHER INDICATORS FROM PREVIOUS LAPTOP
+indicators2_rare_list  = [  {"---FAVORITES---":""},
+
+                            {"---RATE OF CHANGE---":""},
+                            {"ROC":"roc roc2 "},
+                            {"ROC LONG":"roc10 roc25 roc50"},
+                            {"ROC SMA":"roc50sma"},
+
+                            {"---MOMENTUM---":""},
+                            {"RSI average":"rsi5avg rsiavg"},
+                            {"ROC average":"roc10avg roc25avg"},
+                            {"ADX50":"adx50 plus_di50 minus_di50 "},
+
+                            {"Avg Directional Move I":"adxr"},
+                            {"Absolute Price Osc":"apo"},
+                            {"Balance Of Power":"bop"},
+                            {"Chande Mom. Osc":"cmo"},
+                            {"Directional Move I":"dx"},
+
+                            {"Plus-Minus DM":"minus_dm plus_dm"},
+                            {"ROC variants":"rocp rocr rocr100"},
+                            {"TRIX":"trix"},
+                            {"MODERI":"moderi_32"},
+
+                            {"Awesome Oscillator":"ao"},
+                            {"Bias":"bias"},
+                            {"Brar":"brar"},
+                            {"Coppock Curve":"coppock"},
+                            {"Efficiency Ratio":"er"},
+
+                            {"Vortex KDJ":"kdj"},
+                            {"Pretty Good Oscillator":"pgo"},
+                            {"Pretty Good Oscillator":"psl"},
+                            {"Percentage Volume Osc":"pvo"},
+
+                            {"Slope":"slope"},
+                            {"Smi Ergodic":"smi"},
+                            {"Squeeze":"squeeze squeeze_pro"},
+                            {"True strength index":"tsi"},
+
+                            {"---CYCLE---":""},
+                            {"Hillbert Transform":"ht_dcperiod ht_dcphase ht_phasor ht_sine ht_trendmode"},
+
                ]
 
-indicators3_rare_list  = [
-                    #normal ones
-                    {"ROC":"roc roc2 "},
-                     {"ROC LONG":"roc10 roc25 roc50"},
-                     {"ROC SMA":"roc50sma roc50smaavg roc200sma roc400sma"},
-                     {"RSI":"rsi rsi4 rsi5 rsi20 rsi50"},
-                     {"CANDLESIZE":"candlesize"},
-                    {"ppo500":"ppo500"},#ppos
-                     {"ppo1000":"ppo1000"},{"rsi roc roc2":"rsi roc roc2"}#GET OTHER INDICATORS FROM PREVIOUS LAPTOP
+indicators3_rare_list  = [  {"---FAVORITES---":""},
+
+                            {"---DISTANCE---":""},
+                            {"Distance":"dist50 dist200 dist400 dist10k"},
+                            {"Boll Distance":"dist_upbol50 dist_upbol100 dist_lowbol50 dist_lowbol100"},
+                            {"Distance Convergence":"convdist"},
+
+                            {"---VOLATILITY---":""},
+                            {"Mean Volatility":"vol100mean vol250mean"},
+                            {"ATR's":"atr_perc atr natr"},
+                            {"True Range":"trange"},
+
+                            {"Aberration":"aberration"},
+                            {"Acceleration Bands":"accbands"},
+                            {"Keltner Channel":"kc"},
+
+                            {"Mass Index":"massi"},
+                            {"Price Distance":"pdist"},
+                            {"Relative Volatility I":"rvi"},
+                            {"Elder's Thermometer":"thermo"},
+                            {"Ulcer Index":"ui"},
+
+                            {"---TREND---":""},
+                            {"Decreasing":"decreasing100 decreasing250 decreasing500 decreasing1000"},
+                            {"Increasing":"increasing100 increasing250 increasing500 increasing1000"},
+
+                            {"---VOLUME---":""},
+                            {"Chaikin A/D":"ad ad_osc"},
+                            {"Volume other":"obv vpci vpci_ma aobv"},
+                            {"Elder's Force Index":"efi"},
+                            {"Ease of Movement":"eom"},
+                            {"Klinger Volume Osc":"kvo"},
+                            {"Negative Volume Index":"nvi"},
+
+                            {"Positive Volume Index":"pvi"},
+                            {"Price-Volume":"pvol"},
+                            {"Price Volume Rank":"pvr"},
+                            {"Price Volume Trend":"pvt"},
+                            {"Volume Profile":"vp"},
+
+                            # {"SUPtttttttttttt":"ttttttttttttttttt"},
+                            # {"SUPtttttttttttt":"ttttttttttttttttt"},
+                            # {"SUPtttttttttttt":"ttttttttttttttttt"},
+
                ]
 
 MODULE_LIST = ["x_other.BUY_SIGNALS.LOW","x_other.BUY_TRENDS.BUYER_LOW","LOW","x_other.BUY_SIGNALS.MID","x_other.BUY_TRENDS.BUYER_MID", "MID", "x_other.BUY_SIGNALS.HIGH","x_other.BUY_TRENDS.BUYER_HIGH","HIGH",
@@ -715,8 +819,13 @@ MODULE_LIST = ["x_other.BUY_SIGNALS.LOW","x_other.BUY_TRENDS.BUYER_LOW","LOW","x
 
                             "SELL_RULES.CUSTOM.SELLER_NOSTALGIA", "SELLER_NOSTALGIA","SELL_RULES.CUSTOM.SELLER_NOSTALGIA15", "SELLER_NOSTALGIA15",
 
-                            "COMMON.COMMON_FUNCTIONS", "COMMON.CONSTANTS","COMMON.TA_FUNCTIONS","COMMON.POPULATE_INDICATORS",
+                            "COMMON.COMMON_FUNCTIONS", "COMMON.CONSTANTS","COMMON.TA_FUNCTIONS",
                             "COMMON_FUNCTIONS", "CONSTANTS","TA_FUNCTIONS","POPULATE_INDICATORS", "COMMON.BUYS","COMMON.SELLS",
+
+                            "COMMON.POPULATE_INDICATORS","POPULATE_INDICATORS","COMMON.INDICATORS1","INDICATORS1","COMMON.INDICATORS1_RARE","INDICATORS1_RARE",
+                            "COMMON.INDICATORS2","INDICATORS2","COMMON.INDICATORS2_RARE","INDICATORS2_RARE","COMMON.INDICATORS3","INDICATORS3",
+                            "COMMON.INDICATORS3_RARE","INDICATORS3_RARE","COMMON.INDICATORS1H","INDICATORS1H","COMMON.INDICATORS1D","INDICATORS1D",
+                            "COMMON.INDICATORS_OTHER","INDICATORS_OTHER",
 
                             "AltcoinTrader15",
                             "x_Buy1","x_Buy2","x_Buy3","x_Buy4","x_Buy5","x_Sell1","x_Sell2","x_Sell3","x_Sell4","x_Sell5",
@@ -910,7 +1019,7 @@ class App(QWidget):
         self.combobox_indicator1.currentIndexChanged.connect(self.on_select_indicator1_list)
         # Dropdown Indicators 1 RARE
         self.combobox_indicator1_rare = QComboBox(self)
-        self.combobox_indicator1_rare.setGeometry(490, 78, 68, 20)
+        self.combobox_indicator1_rare.setGeometry(490, 78, 120, 20)
         self.combobox_indicator1_rare.setMaxVisibleItems(50)
         self.combobox_indicator1_rare.addItems(self.indicator1_rare_list_labels)
         self.combobox_indicator1_rare.setCurrentIndex(self.data["indicator1_rare_dropdown"])
@@ -948,7 +1057,7 @@ class App(QWidget):
         self.combobox_indicator2.currentIndexChanged.connect(self.on_select_indicator2_list)
         # Dropdown Indicators 2 RARE
         self.combobox_indicator2_rare = QComboBox(self)
-        self.combobox_indicator2_rare.setGeometry(490, 132, 68, 20)
+        self.combobox_indicator2_rare.setGeometry(490, 132, 120, 20)
         self.combobox_indicator2_rare.setMaxVisibleItems(50)
         self.combobox_indicator2_rare.addItems(self.indicator2_rare_list_labels)
         self.combobox_indicator2_rare.setCurrentIndex(self.data["indicator2_rare_dropdown"])
@@ -986,7 +1095,7 @@ class App(QWidget):
         self.combobox_indicator3.currentIndexChanged.connect(self.on_select_indicator3_list)
         # Dropdown Indicators 3 RARE
         self.combobox_indicator3_rare = QComboBox(self)
-        self.combobox_indicator3_rare.setGeometry(490, 162, 68, 20)
+        self.combobox_indicator3_rare.setGeometry(490, 162, 120, 20)
         self.combobox_indicator3_rare.setMaxVisibleItems(50)
         self.combobox_indicator3_rare.addItems(self.indicator3_rare_list_labels)
         self.combobox_indicator3_rare.setCurrentIndex(self.data["indicator3_rare_dropdown"])
@@ -1650,7 +1759,7 @@ class App(QWidget):
         # print("Saving data to JSON")
         try:
             with open(config_file, 'w') as file:
-                json.dump(self.data, file)
+                json.dump(self.data, file,indent=2)
         except Exception as e:
             print(e)
 
@@ -1662,6 +1771,7 @@ class App(QWidget):
                 winsound.PlaySound('Welcome.wav', winsound.SND_FILENAME)
 
             self.set_label_processing_time(processing_time)
+            self.set_max_pairs_label(None)
             self.backtesting_clicked = False
             self.show_plot_clicked = False
             self.hyperopt_clicked = False
@@ -1696,8 +1806,8 @@ class App(QWidget):
     def on_click_plot(self):
         if (self.show_plot_clicked):
             processing_time = main(self.command_list)
-
             self.set_label_processing_time(processing_time)
+            self.set_max_pairs_label(None)
             # commands = "main.py " +' '.join(self.command_list)
             # os.system('cmd /c python ' + commands)
             # Opens the plot in the default browser
@@ -1714,11 +1824,10 @@ class App(QWidget):
         else:
             self.update_config_pairs()
             self.on_click_save_json()
-            self.get_plot_processing_power()
+            # self.get_plot_processing_power()
             time_until = ""
             if (self.data["time"]["time_until_enabled"]):
                 time_until = self.data["time"]["time_until"]
-
             pair = self.data["pairs1"].split()[self.data["plot_pair"]]
 
             command = "plot-dataframe"
@@ -1799,6 +1908,7 @@ class App(QWidget):
                 processing_time = main(self.command_list)
 
                 self.set_label_processing_time(processing_time)
+                self.set_max_pairs_label(None)
                 if enable_sound:
                     winsound.PlaySound('Welcome.wav', winsound.SND_FILENAME)
                 self.backtesting_clicked = False
@@ -2623,7 +2733,7 @@ class App(QWidget):
         config_json = self.update_config_funds(config_json)
         try:
             with open(config_url, 'w') as file:
-                json.dump(config_json, file)
+                json.dump(config_json, file,indent=2)
         except Exception as e:
             print(e)
 
@@ -2670,7 +2780,23 @@ class App(QWidget):
             self.label_processing_time.setText(f"Process: {time:0.1f} sec")
 
     def set_max_pairs_label(self,max_pairs):
-        self.label_max_pairs.setText(f"Max Trades: {max_pairs}")
+        if max_pairs:
+            if(production_max_trades_enable):
+                if max_pairs <= production_max_trades:
+                    self.label_max_pairs.setText(f"Max Trades: {max_pairs}")
+                else:
+                    self.label_max_pairs.setText(f"Max Trades: {production_max_trades}")
+        else:
+            pair_length = len(self.data["pairs1"].split())
+            if(production_max_trades_enable):
+                if pair_length <= production_max_trades:
+                    self.label_max_pairs.setText(f"Max Trades: {len(self.data['pairs1'].split())}")
+                else:
+                    self.label_max_pairs.setText(f"Max Trades: {production_max_trades}")
+            else:
+                self.label_max_pairs.setText(f"Max Trades: {len(self.data['pairs1'].split())}")
+
+
 
     def update_funds(self):
         self.label_funds.setText(f"Funds: {self.data['max_open_trades'] * balance_per_pair}")

@@ -32,7 +32,7 @@ computer_processing_power = 1.3  # 0.00001 to.. 2.0
 
 balance_per_pair= 1000  #ADJUST BALANCE, WAS 2000, trying with 1000
 
-stake_amount=800
+stake_amount=500
 
 fee_enable = True
 fee_amount = 0.0025   #CHANGED TO 25 RECENTLY!!!! 3% fees or so amount to about 0.4% percent profit
@@ -370,7 +370,7 @@ strategy_json = [{"MAIN": "AltcoinTrader15"},
 
                  ]
 
-timeframes_json = [ {"13":1702526400000},  # 14 September  2023 4pm GMT
+timeframes_json = [ {"13":1702526400000},  # 14 December  2023 4pm GMT
                     {"12":1695566238000},  # 24 September  2023 5pm GMT
                     {"11":1687941699000},  # 28 June  2023 8am GMT
                     {"10": 1679114962000},  # 18 March  2023 4am GMT
@@ -445,6 +445,7 @@ indicators2_list  = [   {"---FAVORITES---":""},
                         {"PPO mix":"ppo5 ppo10 ppo25 ppo50 ppo100 ppo200 ppo500"},#ppos
                         {"ROC candlesize mix":"candlesize roc roc2 "},
                         {"RSI":"rsi rsi5"},
+                        {"MUL":"mul mul_conv"},
 
                         {"---RATE OF CHANGE---":""},
                         {"Short ROC":"roc roc2 roc10"},
@@ -484,7 +485,7 @@ indicators2_list  = [   {"---FAVORITES---":""},
 indicators3_list  = [   {"---FAVORITES---":""},
                         {"Volatility":"vol50 vol100 vol175 vol250"},
                         {"Convergence":"convsmall convmedium"},
-
+                        {"MUL":"mul mul_conv"},
                         {"---VOLATILITY---":""},
                         {"Volatility":"vol50 vol100 vol175 vol250"},
                         {"Mid Volatility":"vol500 vol1000 volultra"},

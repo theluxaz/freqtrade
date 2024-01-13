@@ -32,7 +32,7 @@ computer_processing_power = 1.3  # 0.00001 to.. 2.0
 
 balance_per_pair= 1000  #ADJUST BALANCE, WAS 2000, trying with 1000
 
-stake_amount=500
+stake_amount=800
 
 fee_enable = True
 fee_amount = 0.0025   #CHANGED TO 25 RECENTLY!!!! 3% fees or so amount to about 0.4% percent profit
@@ -86,6 +86,12 @@ strategy_json = [{"MAIN": "AltcoinTrader15"},
                  {"LOW BUY 9": "x_BUY_LOW9"},
                  {"LOW BUY 10": "x_BUY_LOW10"},
                  {"LOW BUY 11": "x_BUY_LOW11"},
+                 {"LOW BUY 12": "x_BUY_LOW12"},
+                 {"LOW BUY 13": "x_BUY_LOW13"},
+                 {"LOW BUY 14": "x_BUY_LOW14"},
+                 {"LOW BUY 15": "x_BUY_LOW15"},
+                 {"LOW BUY 16": "x_BUY_LOW16"},
+                 {"LOW BUY 17": "x_BUY_LOW17"},
 
                  #MID RULES
                  {"MID BUY 1": "x_BUY_MID1"},
@@ -99,6 +105,12 @@ strategy_json = [{"MAIN": "AltcoinTrader15"},
                  {"MID BUY 9": "x_BUY_MID9"},
                  {"MID BUY 10": "x_BUY_MID10"},
                  {"MID BUY 11": "x_BUY_MID11"},
+                 {"MID BUY 12": "x_BUY_MID12"},
+                 {"MID BUY 13": "x_BUY_MID13"},
+                 {"MID BUY 14": "x_BUY_MID14"},
+                 {"MID BUY 15": "x_BUY_MID15"},
+                 {"MID BUY 16": "x_BUY_MID16"},
+                 {"MID BUY 17": "x_BUY_MID17"},
 
                  #HIGH RULES
                  {"HIGH BUY 1": "x_BUY_HIGH1"},
@@ -116,6 +128,11 @@ strategy_json = [{"MAIN": "AltcoinTrader15"},
                  {"HIGH BUY 13": "x_BUY_HIGH13"},
                  {"HIGH BUY 14": "x_BUY_HIGH14"},
                  {"HIGH BUY 15": "x_BUY_HIGH15"},
+                 {"HIGH BUY 16": "x_BUY_HIGH16"},
+                 {"HIGH BUY 17": "x_BUY_HIGH17"},
+                 {"HIGH BUY 18": "x_BUY_HIGH18"},
+                 {"HIGH BUY 19": "x_BUY_HIGH19"},
+                 {"HIGH BUY 20": "x_BUY_HIGH20"},
 
                  #LONG UPTREND RULES
                  {"LONG UPTREND BUY 1": "x_BUY_LONG_UPTREND1"},
@@ -156,11 +173,11 @@ strategy_json = [{"MAIN": "AltcoinTrader15"},
                  {"LONG DOWNTREND BUY 13": "x_BUY_LONG_DOWNTREND13"},
                  {"LONG DOWNTREND BUY 14": "x_BUY_LONG_DOWNTREND14"},
                  {"LONG DOWNTREND BUY 15": "x_BUY_LONG_DOWNTREND15"},
-                 # {"LONG DOWNTREND BUY 16": "x_BUY_LONG_DOWNTREND16"},
-                 # {"LONG DOWNTREND BUY 17": "x_BUY_LONG_DOWNTREND17"},
-                 # {"LONG DOWNTREND BUY 18": "x_BUY_LONG_DOWNTREND18"},
-                 # {"LONG DOWNTREND BUY 19": "x_BUY_LONG_DOWNTREND19"},
-                 # {"LONG DOWNTREND BUY 20": "x_BUY_LONG_DOWNTREND20"},
+                 {"LONG DOWNTREND BUY 16": "x_BUY_LONG_DOWNTREND16"},
+                 {"LONG DOWNTREND BUY 17": "x_BUY_LONG_DOWNTREND17"},
+                 {"LONG DOWNTREND BUY 18": "x_BUY_LONG_DOWNTREND18"},
+                 {"LONG DOWNTREND BUY 19": "x_BUY_LONG_DOWNTREND19"},
+                 {"LONG DOWNTREND BUY 20": "x_BUY_LONG_DOWNTREND20"},
 
 
                  # DANGER ZONE RULES
@@ -169,6 +186,11 @@ strategy_json = [{"MAIN": "AltcoinTrader15"},
                  {"DANGER ZONE BUY 3": "x_BUY_DANGER_ZONE3"},
                  {"DANGER ZONE BUY 4": "x_BUY_DANGER_ZONE4"},
                  {"DANGER ZONE BUY 5": "x_BUY_DANGER_ZONE5"},
+                 {"DANGER ZONE BUY 6": "x_BUY_DANGER_ZONE6"},
+                 {"DANGER ZONE BUY 7": "x_BUY_DANGER_ZONE7"},
+                 {"DANGER ZONE BUY 8": "x_BUY_DANGER_ZONE8"},
+                 {"DANGER ZONE BUY 9": "x_BUY_DANGER_ZONE9"},
+                 {"DANGER ZONE BUY 10": "x_BUY_DANGER_ZONE10"},
 
 
                  #SLOW DOWNTREND RULES

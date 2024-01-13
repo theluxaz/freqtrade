@@ -1,23 +1,23 @@
 {
-  "max_open_trades": 1,
-  "strategy": 0,
+  "max_open_trades": 12,
+  "strategy": 91,
   "indicators1": {
     "text": "sma30k_1h sma10k sma100",
     "enabled": true
   },
   "indicators2": {
-    "text": "plus_di minus_di ",
+    "text": "ppo5 ppo10 ppo25 ppo50 ppo100 ppo200 ppo500 ppo1000",
     "enabled": true
   },
   "indicators3": {
-    "text": "BULL BEAR",
+    "text": "convsmall convmedium",
     "enabled": true
   },
   "indicator1_dropdown": 2,
-  "indicator2_dropdown": 0,
-  "indicator3_dropdown": 4,
+  "indicator2_dropdown": 1,
+  "indicator3_dropdown": 2,
   "indicator1_rare_dropdown": 1,
-  "indicator2_rare_dropdown": 0,
+  "indicator2_rare_dropdown": 2,
   "indicator3_rare_dropdown": 3,
   "indicators_extra": {
     "main": false,
@@ -27,12 +27,12 @@
     "uptrend": true,
     "uptrendsmall": false,
     "sec_trend": false,
-    "solo_trend": 3
+    "solo_trend": 1
   },
   "time": {
-    "time_from": 1695566238000,
+    "time_from": 1600312000000,
     "time_until": 1702526400000,
-    "time_from_index": 1,
+    "time_from_index": 13,
     "time_until_index": 0,
     "time_from_date": false,
     "time_until_date": false,
@@ -56,15 +56,15 @@
   "config": "config.json",
   "stake_amount": 100,
   "funds": 1000,
-  "previous_processing_time": 6.280322600156069,
-  "pairs1": "SOL",
-  "pairs2": "",
+  "previous_processing_time": 29.587149700004375,
+  "pairs1": "ETH\nXRP\nSOL\nMATIC\nUNI\nLINK\nXMR\nQNT\nAXS\nMKR\nSNX\nZIL\nHBAR\nRNDR",
+  "pairs2": "BULL BEAR",
   "pairs3": "BTC\nETH\nBNB\nXRP\nADA\nSOL\nDOGE\nMATIC\nSHIB\nUNI\nLTC\nLINK\nXLM\nXMR\nBCH\nQNT\nEGLD\nAXS\nIOTA\nMKR\nNEO\nSNX\nWAVES\nZIL\nXNO\nHBAR\nINJ\nRNDR",
   "pair_set1": "BTC\nBNB\nADA\nDOGE\nSHIB\nLTC\nXLM\nBCH\nEGLD\nIOTA\nNEO\nWAVES\nXNO\nINJ",
   "pair_set2": "ETH\nXRP\nSOL\nMATIC\nUNI\nLINK\nXMR\nQNT\nAXS\nMKR\nSNX\nZIL\nHBAR\nRNDR",
   "plot_pair": 0,
   "plot_profit": false,
-  "command": "backtesting --config user_data/config.json --fee 0.0025 --timeframe 15m --cache none --strategy AltcoinTrader15 --export trades --timerange=1693751238000-1702526400000",
+  "command": "backtesting --config user_data/config.json --fee 0.0025 --timeframe 15m --cache none --strategy x_BUY_LONG_DOWNTREND11 --export trades --timerange=1598497000000-1702526400000",
   "download": {
     "days_to_download": 2401,
     "days": 2401,

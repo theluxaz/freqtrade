@@ -39,6 +39,7 @@ freqtrade/file
 freqtrade/file*
 /freqtrade/file*
 /freqtrade/user_data
+/freqtrade/user_data/
 /freqtrade/user_data/*
 freqtrade-profit-plot.html
 freqtrade/rpc/api_server/ui/*

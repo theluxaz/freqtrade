@@ -65,12 +65,12 @@ strategy_json = [{"MAIN": "AltcoinTrader15"},
                  {"DANGER ZONE SELL": "SellerDevDangerZone"},
                  {"UPPER DANGER ZONE SELL": "SellerDevUpperDangerZone"},
 
-                 #DRAFT RULES
-                 {"BUY 1": "x_Buy1"},
-                 {"BUY 2": "x_Buy2"},
-                 {"BUY 3": "x_Buy3"},
-                 {"BUY 4": "x_Buy4"},
-                 {"BUY 5": "x_Buy5"},
+                 # #DRAFT RULES
+                 # {"BUY 1": "x_Buy1"},
+                 # {"BUY 2": "x_Buy2"},
+                 # {"BUY 3": "x_Buy3"},
+                 # {"BUY 4": "x_Buy4"},
+                 # {"BUY 5": "x_Buy5"},
 
 
 
@@ -255,12 +255,12 @@ strategy_json = [{"MAIN": "AltcoinTrader15"},
 
 
 
-                 #DRAFT SELL RULES
-                 {"SELL 1": "x_Sell1"},
-                 {"SELL 2": "x_Sell2"},
-                 {"SELL 3": "x_Sell3"},
-                 {"SELL 4": "x_Sell4"},
-                 {"SELL 5": "x_Sell5"},
+                 # #DRAFT SELL RULES
+                 # {"SELL 1": "x_Sell1"},
+                 # {"SELL 2": "x_Sell2"},
+                 # {"SELL 3": "x_Sell3"},
+                 # {"SELL 4": "x_Sell4"},
+                 # {"SELL 5": "x_Sell5"},
 
 
                  # LOW SELL RULES
@@ -608,8 +608,7 @@ indicators3_rare_list  = [  {"---FAVORITES---":""},
                             {"Increasing":"increasing100 increasing250 increasing500 increasing1000"},
 
                             {"---VOLUME---":""},
-                            {"Chaikin A/D":"ad ad_osc"},
-                            {"Volume other":"obv vpci vpci_ma aobv"},
+                            {"Volume other":"vpci vpci_ma aobv"},
                             {"Elder's Force Index":"efi"},
                             {"Ease of Movement":"eom"},
                             {"Klinger Volume Osc":"kvo"},
@@ -618,7 +617,6 @@ indicators3_rare_list  = [  {"---FAVORITES---":""},
                             {"Positive Volume Index":"pvi"},
                             {"Price-Volume":"pvol"},
                             {"Price Volume Rank":"pvr"},
-                            {"Price Volume Trend":"pvt"},
                             {"Volume Profile":"vp"},
 
                             # {"SUPtttttttttttt":"ttttttttttttttttt"},
@@ -627,15 +625,17 @@ indicators3_rare_list  = [  {"---FAVORITES---":""},
 
                ]
 
-MODULE_LIST = ["x_other.BUY_SIGNALS.LOW","x_other.BUY_TRENDS.BUYER_LOW","LOW","x_other.BUY_SIGNALS.MID","x_other.BUY_TRENDS.BUYER_MID", "MID", "x_other.BUY_SIGNALS.HIGH","x_other.BUY_TRENDS.BUYER_HIGH","HIGH",
-                            "x_other.BUY_SIGNALS.LONG_UPTREND","x_other.BUY_TRENDS.BUYER_LONG_UPTREND","LONG_UPTREND","x_other.BUY_SIGNALS.LONG_DOWNTREND","x_other.BUY_TRENDS.BUYER_LONG_DOWNTREND","LONG_DOWNTREND",
-                            "x_other.BUY_SIGNALS.SLOW_DOWNTREND","x_other.BUY_TRENDS.BUYER_SLOW_DOWNTREND","SLOW_DOWNTREND","x_other.BUY_SIGNALS.DOWNTREND_UPSWING","x_other.BUY_TRENDS.BUYER_DOWNTREND_UPSWING","DOWNTREND_UPSWING",
-                            "x_other.BUY_SIGNALS.DANGER_ZONE","x_other.BUY_TRENDS.BUYER_DANGER_ZONE","DANGER_ZONE","x_other.BUY_TRENDS.BUYER_NOSTALGIA","x_other.BUY_SIGNALS.UPPER_DANGER_ZONE","x_other.BUY_TRENDS.BUYER_UPPER_DANGER_ZONE","UPPER_DANGER_ZONE",
-                            "x_other.BUY_xCOMMON.COMMON_BUYERS","x_other.BUY_xCOMMON.COMMON_BUYERS_LOW", "x_other.BUY_xCOMMON.COMMON_BUYERS_MID", "BUY_xCOMMON.COMMON_BUYERS_HIGH",
+MODULE_LIST = [
+                            # "x_other.BUY_SIGNALS.LOW","x_other.BUY_TRENDS.BUYER_LOW","LOW","x_other.BUY_SIGNALS.MID","x_other.BUY_TRENDS.BUYER_MID", "MID", "x_other.BUY_SIGNALS.HIGH","x_other.BUY_TRENDS.BUYER_HIGH","HIGH",
+                            # "x_other.BUY_SIGNALS.LONG_UPTREND","x_other.BUY_TRENDS.BUYER_LONG_UPTREND","LONG_UPTREND","x_other.BUY_SIGNALS.LONG_DOWNTREND","x_other.BUY_TRENDS.BUYER_LONG_DOWNTREND","LONG_DOWNTREND",
+                            # "x_other.BUY_SIGNALS.SLOW_DOWNTREND","x_other.BUY_TRENDS.BUYER_SLOW_DOWNTREND","SLOW_DOWNTREND","x_other.BUY_SIGNALS.DOWNTREND_UPSWING","x_other.BUY_TRENDS.BUYER_DOWNTREND_UPSWING","DOWNTREND_UPSWING",
+                            # "x_other.BUY_SIGNALS.DANGER_ZONE","x_other.BUY_TRENDS.BUYER_DANGER_ZONE","DANGER_ZONE","x_other.BUY_TRENDS.BUYER_NOSTALGIA","x_other.BUY_SIGNALS.UPPER_DANGER_ZONE","x_other.BUY_TRENDS.BUYER_UPPER_DANGER_ZONE","UPPER_DANGER_ZONE",
+                            # "x_other.BUY_xCOMMON.COMMON_BUYERS","x_other.BUY_xCOMMON.COMMON_BUYERS_LOW", "x_other.BUY_xCOMMON.COMMON_BUYERS_MID", "BUY_xCOMMON.COMMON_BUYERS_HIGH",
 
-                            "OLD_SELL_SIGNALS.SELLER_LOW","OLD_SELL_SIGNALS.SELLER_MID","OLD_SELL_SIGNALS.SELLER_HIGH","OLD_SELL_SIGNALS.SELLER_LONG_DOWNTREND","OLD_SELL_SIGNALS.SELLER_SLOW_DOWNTREND",
-                            "OLD_SELL_SIGNALS.SELLER_LONG_UPTREND","OLD_SELL_SIGNALS.SELLER_DOWNTREND_UPSWING", "OLD_SELL_SIGNALS.SELLER_DANGER_ZONE","OLD_SELL_SIGNALS.SELLER_UPPER_DANGER_ZONE",
-                            "COMMON_SELL.COMMON_SELLERS", "COMMON_SELL.COMMON_SELLERS_LOW","COMMON_SELL.COMMON_SELLERS_MID","COMMON_SELL.COMMON_SELLERS_HIGH","SELL_TRENDS.SELLER_NOSTALGIA","SELLER_NOSTALGIA",
+                            # "OLD_SELL_SIGNALS.SELLER_LOW","OLD_SELL_SIGNALS.SELLER_MID","OLD_SELL_SIGNALS.SELLER_HIGH","OLD_SELL_SIGNALS.SELLER_LONG_DOWNTREND","OLD_SELL_SIGNALS.SELLER_SLOW_DOWNTREND",
+                            # "OLD_SELL_SIGNALS.SELLER_LONG_UPTREND","OLD_SELL_SIGNALS.SELLER_DOWNTREND_UPSWING", "OLD_SELL_SIGNALS.SELLER_DANGER_ZONE","OLD_SELL_SIGNALS.SELLER_UPPER_DANGER_ZONE",
+                            # "COMMON_SELL.COMMON_SELLERS", "COMMON_SELL.COMMON_SELLERS_LOW","COMMON_SELL.COMMON_SELLERS_MID","COMMON_SELL.COMMON_SELLERS_HIGH",
+                            # "SELL_TRENDS.SELLER_NOSTALGIA","SELLER_NOSTALGIA",
 
 
                             #BUY RULE MODULES
@@ -882,8 +882,6 @@ MODULE_LIST = ["x_other.BUY_SIGNALS.LOW","x_other.BUY_TRENDS.BUYER_LOW","LOW","x
                              "SELL_RULES.DANGER_ZONE.x_SELL_DANGER_ZONE19", "x_SELL_DANGER_ZONE19","SELL_RULES.DANGER_ZONE.x_SELL_DANGER_ZONE20", "x_SELL_DANGER_ZONE20",
 
 
-                            "SELL_RULES.CUSTOM.SELLER_NOSTALGIA", "SELLER_NOSTALGIA","SELL_RULES.CUSTOM.SELLER_NOSTALGIA15", "SELLER_NOSTALGIA15",
-
                             "COMMON.COMMON_FUNCTIONS", "COMMON.CONSTANTS","COMMON.TA_FUNCTIONS",
                             "COMMON_FUNCTIONS", "CONSTANTS","TA_FUNCTIONS","POPULATE_INDICATORS", "COMMON.BUYS","COMMON.SELLS",
 
@@ -893,9 +891,10 @@ MODULE_LIST = ["x_other.BUY_SIGNALS.LOW","x_other.BUY_TRENDS.BUYER_LOW","LOW","x
                             "COMMON.INDICATORS_OTHER","INDICATORS_OTHER",
 
                             "AltcoinTrader15",
-                            "x_Buy1","x_Buy2","x_Buy3","x_Buy4","x_Buy5","x_Sell1","x_Sell2","x_Sell3","x_Sell4","x_Sell5",
-                            "x_Buys_ANY","x_Buys_NOTREND","x_Buys_LOW","x_Buys_MID","x_Buys_HIGH","x_Buys_LONG_UPTREND","x_Buys_LONG_DOWNTREND","x_Buys_SLOW_DOWNTREND","x_Buys_DOWNTREND_UPSWING","x_Buys_DANGER_ZONE",
-                            "x_Sells_ANY","x_Sells_NOTREND","x_Sells_LOW","x_Sells_MID","x_Sells_HIGH","x_Sells_LONG_UPTREND","x_Sells_LONG_DOWNTREND","x_Sells_SLOW_DOWNTREND","x_Sells_DOWNTREND_UPSWING","x_Sells_DANGER_ZONE","x_Sells_UPPER_DANGER_ZONE",
+                            # "x_Buy1","x_Buy2","x_Buy3","x_Buy4","x_Buy5","x_Sell1","x_Sell2","x_Sell3","x_Sell4","x_Sell5",
+                            # "x_Buys_ANY","x_Buys_NOTREND","x_Buys_LOW","x_Buys_MID","x_Buys_HIGH","x_Buys_LONG_UPTREND","x_Buys_LONG_DOWNTREND","x_Buys_SLOW_DOWNTREND","x_Buys_DOWNTREND_UPSWING","x_Buys_DANGER_ZONE",
+                            # "x_Sells_ANY","x_Sells_NOTREND","x_Sells_LOW","x_Sells_MID","x_Sells_HIGH","x_Sells_LONG_UPTREND","x_Sells_LONG_DOWNTREND","x_Sells_SLOW_DOWNTREND","x_Sells_DOWNTREND_UPSWING","x_Sells_DANGER_ZONE","x_Sells_UPPER_DANGER_ZONE",
+                            "z____placeholders______",
 
                             "BuyerDevDangerZone","buyer_dev_DANGER_ZONE","BuyerDevDowntrendUpswing","buyer_dev_DOWNTREND_UPSWING","BuyerDevHigh","buyer_dev_HIGH",
                             "BuyerDevLongDowntrend","buyer_dev_LONG_DOWNTREND","BuyerDevLongUptrend","buyer_dev_LONG_UPTREND","BuyerDevLow","buyer_dev_LOW",
@@ -907,7 +906,7 @@ MODULE_LIST = ["x_other.BUY_SIGNALS.LOW","x_other.BUY_TRENDS.BUYER_LOW","LOW","x
                             "SellerDevMid","seller_dev_MID","SellerDevSlowDowntrend","seller_dev_SLOW_DOWNTREND","SellerDevUpperDangerZone","seller_dev_UPPER_DANGER_ZONE",
                             "SellerDevAny", "seller_dev_ANY", "SellerDevNotrend", "seller_dev_NOTREND",
 
-                            "Common","CommonBuyerLOW","CommonBuyerMID","CommonBuyerHIGH","Constants","BUYS","SELLS"
+                            "Common","CommonBuyerLOW","CommonBuyerMID","CommonBuyerHIGH","Constants","BUYS","SELLS","ALL_RULES_BUYS","ALL_RULES_SELLS"
                             ]
 
 timeframes_needed_list=["15m","1h","1d"]

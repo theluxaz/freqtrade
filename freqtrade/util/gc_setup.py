@@ -14,5 +14,5 @@ def gc_set_threshold():
     """
     if platform.python_implementation() == "CPython":
         # allocs, g1, g2 = gc.get_threshold()
-        gc.set_threshold(50_000, 500, 1000)
+        gc.set_threshold(100000, 500, 1000)
         logger.debug("Adjusting python allocations to reduce GC runs")

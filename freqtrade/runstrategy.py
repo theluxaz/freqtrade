@@ -74,6 +74,14 @@ strategy_json = [{"MAIN": "AltcoinTrader15"},
 
 
 
+                 #DRAFT RULES
+                 {"Template Buy": "TemplateBuy"},
+                 {"Template Buy NFI": "TemplateBuyNfi"},
+                 {"Template Sell": "TemplateSellNfi"},
+                 {"Template Sell NFI": "TemplateSellNfi"},
+
+
+
                  #LOW RULES
                  {"LOW BUY 1": "x_BUY_LOW1"},
                  {"LOW BUY 2": "x_BUY_LOW2"},

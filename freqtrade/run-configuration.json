@@ -1,5 +1,5 @@
 {
-  "max_open_trades": 12,
+  "max_open_trades": 5,
   "strategy": 0,
   "indicators1": {
     "text": "sma30k_1h sma10k sma100",
@@ -23,11 +23,11 @@
     "main": false,
     "solo": true,
     "default": true,
-    "volatility": true,
+    "volatility": false,
     "uptrend": false,
     "uptrendsmall": false,
     "sec_trend": false,
-    "solo_trend": 1
+    "solo_trend": 2
   },
   "time": {
     "time_from": 1486080000000,
@@ -56,7 +56,7 @@
   "config": "config.json",
   "stake_amount": 100,
   "funds": 1000,
-  "previous_processing_time": 282.09866150000016,
+  "previous_processing_time": 0,
   "pairs1": "BTC\nETH\nBNB\nXRP\nADA\nSOL\nDOGE\nMATIC\nSHIB\nUNI\nLTC\nLINK\nXLM\nBCH\nQNT\nEGLD\nAXS\nIOTA\nMKR\nNEO\nSNX\nWAVES\nZIL\nXNO\nHBAR\nINJ\nRNDR",
   "pairs2": "BULL BEAR",
   "pairs3": "BTC\nETH\nBNB\nXRP\nADA\nSOL\nDOGE\nMATIC\nSHIB\nUNI\nLTC\nLINK\nXLM\nBCH\nQNT\nEGLD\nAXS\nIOTA\nMKR\nNEO\nSNX\nWAVES\nZIL\nXNO\nHBAR\nINJ\nRNDR",

@@ -388,7 +388,9 @@ strategy_json = [{"MAIN": "AltcoinTrader15"},
 
                  ]
 
-timeframes_json = [ {"13":1702526400000},  # 14 December  2023 4pm GMT
+timeframes_json = [
+                    {"14":1709215200000},  # 29 February 2023 11:59am GMT
+                    {"13":1702526400000},  # 14 December  2023 4pm GMT
                     {"12":1695566238000},  # 24 September  2023 5pm GMT
                     {"11":1687941699000},  # 28 June  2023 8am GMT
                     {"10": 1679114962000},  # 18 March  2023 4am GMT

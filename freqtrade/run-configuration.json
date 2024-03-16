@@ -1,38 +1,37 @@
 {
-  "max_open_trades": 5,
+  "max_open_trades": 1,
   "strategy": 0,
   "indicators1": {
-    "text": "sma30k_1h sma10k sma100",
+    "text": "sma50 sma30k_1h sma10k sma100 sma200 sma400",
     "enabled": true
   },
   "indicators2": {
-    "text": "ppo5 ppo10 ppo25 ppo50 ppo100 ppo200 ppo500 ppo1000",
+    "text": "ppo5 ppo10 ppo25 ppo50",
     "enabled": true
   },
   "indicators3": {
-    "text": "vol50 vol100 vol175 vol250",
+    "text": "BULL BEAR",
     "enabled": true
   },
-  "indicator1_dropdown": 2,
-  "indicator2_dropdown": 1,
-  "indicator3_dropdown": 5,
+  "indicator1_dropdown": 1,
+  "indicator2_dropdown": 2,
+  "indicator3_dropdown": 4,
   "indicator1_rare_dropdown": 1,
   "indicator2_rare_dropdown": 2,
-  "indicator3_rare_dropdown": 3,
+  "indicator3_rare_dropdown": 0,
   "indicators_extra": {
     "main": false,
     "solo": true,
     "default": true,
-    "volatility": false,
+    "volatility": true,
     "uptrend": false,
     "uptrendsmall": false,
-    "sec_trend": false,
-    "solo_trend": 2
+    "solo_trend": 1
   },
   "time": {
-    "time_from": 1486080000000,
-    "time_until": 1702526400000,
-    "time_from_index": 17,
+    "time_from": 1702526400000,
+    "time_until": 1709215200000,
+    "time_from_index": 1,
     "time_until_index": 0,
     "time_from_date": false,
     "time_until_date": false,
@@ -56,31 +55,31 @@
   "config": "config.json",
   "stake_amount": 100,
   "funds": 1000,
-  "previous_processing_time": 0,
-  "pairs1": "BTC\nETH\nBNB\nXRP\nADA\nSOL\nDOGE\nMATIC\nSHIB\nUNI\nLTC\nLINK\nXLM\nBCH\nQNT\nEGLD\nAXS\nIOTA\nMKR\nNEO\nSNX\nWAVES\nZIL\nXNO\nHBAR\nINJ\nRNDR",
+  "previous_processing_time": 17.183476499980316,
+  "pairs1": "BTC",
   "pairs2": "BULL BEAR",
-  "pairs3": "BTC\nETH\nBNB\nXRP\nADA\nSOL\nDOGE\nMATIC\nSHIB\nUNI\nLTC\nLINK\nXLM\nBCH\nQNT\nEGLD\nAXS\nIOTA\nMKR\nNEO\nSNX\nWAVES\nZIL\nXNO\nHBAR\nINJ\nRNDR",
+  "pairs3": "BTC\nETH\nBNB\nXRP\nADA\nSOL\nDOGE\nMATIC\nSHIB\nUNI\nLTC\nLINK\nXLM\nBCH\nQNT\nEGLD\nAXS\nIOTA\nMKR\nNEO\nWAVES\nZIL\nXNO\nHBAR\nINJ\nRNDR",
   "pair_set1": "BTC\nBNB\nADA\nDOGE\nSHIB\nLTC\nXLM\nBCH\nEGLD\nIOTA\nNEO\nWAVES\nXNO\nINJ",
-  "pair_set2": "ETH\nXRP\nSOL\nMATIC\nUNI\nLINK\nQNT\nAXS\nMKR\nSNX\nZIL\nHBAR\nRNDR",
+  "pair_set2": "ETH\nXRP\nSOL\nMATIC\nUNI\nLINK\nQNT\nAXS\nMKR\nZIL\nHBAR\nRNDR",
   "plot_pair": 0,
   "plot_profit": false,
-  "command": "backtesting --config user_data/config.json --fee 0.0025 --timeframe 15m --cache none --strategy AltcoinTrader15 --export trades --timerange=1484265000000-1702526400000",
+  "command": "plot-dataframe --config user_data/config.json --strategy AltcoinTrader15 -p BTC/USDT --timerange=1700711400000-1709215200000 --indicators1 solo=3 sma50 sma200 sma400 sma10k volatility sma50 sma30k_1h sma10k sma100 sma200 sma400 --indicators2 ppo5 ppo10 ppo25 ppo50 --indicators3 BULL BEAR",
   "download": {
-    "days_to_download": 2500,
-    "days": 2500,
-    "absolute_latest_update": 1705151030095,
-    "latest_update": 1705151030095,
-    "latest_days": 2500,
+    "days_to_download": 2650,
+    "days": 2650,
+    "absolute_latest_update": 1710606539060,
+    "latest_update": 1710606539060,
+    "latest_days": 2650,
     "pairs": [
       {
         "name": "UNI",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "ADA",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "PAXG",
@@ -94,28 +93,28 @@
       },
       {
         "name": "ETH",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "BTC",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "SOL",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "DOGE",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "IOTA",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "AION",
@@ -149,8 +148,8 @@
       },
       {
         "name": "AXS",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "BAT",
@@ -159,13 +158,13 @@
       },
       {
         "name": "BCH",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "BNB",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "BTT",
@@ -219,8 +218,8 @@
       },
       {
         "name": "EGLD",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "ENJ",
@@ -259,8 +258,8 @@
       },
       {
         "name": "HBAR",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "HNT",
@@ -299,8 +298,8 @@
       },
       {
         "name": "LINK",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "LPT",
@@ -309,8 +308,8 @@
       },
       {
         "name": "LTC",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "USDC",
@@ -324,18 +323,18 @@
       },
       {
         "name": "MATIC",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "MKR",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "NEO",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "NMR",
@@ -364,8 +363,8 @@
       },
       {
         "name": "QNT",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "PERP",
@@ -429,8 +428,8 @@
       },
       {
         "name": "WAVES",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "XEM",
@@ -439,13 +438,13 @@
       },
       {
         "name": "XLM",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "XRP",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "XTZ",
@@ -469,8 +468,8 @@
       },
       {
         "name": "ZIL",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "ZRX",
@@ -479,8 +478,8 @@
       },
       {
         "name": "SHIB",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "ATOM",
@@ -499,8 +498,8 @@
       },
       {
         "name": "SNX",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1709210198054,
+        "days": 2600
       },
       {
         "name": "NEXO",
@@ -514,8 +513,8 @@
       },
       {
         "name": "XNO",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "KNC",
@@ -534,13 +533,13 @@
       },
       {
         "name": "INJ",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       },
       {
         "name": "RNDR",
-        "latest_update": 1705151030095,
-        "days": 2500
+        "latest_update": 1710606539060,
+        "days": 2650
       }
     ]
   }

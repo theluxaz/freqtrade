@@ -25,7 +25,7 @@ from freqtrade.strategy import IStrategy
 
 ## List of available main plot render commands
 
-plot_indicators = ["sec_trend","sec_trend-above","volatility",
+plot_indicators = ["volatility",
                    "volatility-above","uptrend","uptrend-above","uptrendsmall","uptrendsmall-above"]
 
 default_indicators1 = ['main', 'volatility', 'sma50', 'sma200', 'sma400', 'sma10k']
@@ -395,23 +395,23 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
     if( label=="main"):
 
 
-        main_trend_color_hex = {  5:"rgba(24, 69, 13,0.4)",#"name":"UPPER_DANGER_ZONE"}
+        main_trend_color_hex = {  5:"rgba(24, 69, 13,0.4)",#"name":"UPPER_DANGER"}
                             3:"rgba(0,128,0, 0.2)",#"name":"LONG_UPTREND"},
                             # 2:"rgba(70, 130, 180,0.25)",#"name":"DOWNTREND_UPSWING"},
                             1:"rgba(255,255,159,0.25)",#"name":"DATA_NOT_LOADED"}, #"rgba(255,255,159,0.1)",
                             0:"rgba(255, 255, 255, 0)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
                             -1:"rgba(233, 150, 122,0.25)",#"name":"SLOW_DOWNTREND"},
                             -2:"rgba(255, 0, 0,0.2)",#"name":"LONG_DOWNTREND"},
-                            -3:"rgba(106, 11, 16,0.4)",#"name":"DANGER_ZONE"},
+                            -3:"rgba(106, 11, 16,0.4)",#"name":"BOTTOM_DANGER"},
                         }
-        main_trend_labels = {  "5":"UPPER_DANGER_ZONE",
+        main_trend_labels = {  "5":"UPPER_DANGER",
                             "3":"LONG_UPTREND",
                             # "2":"DOWNTREND_UPSWING",
                             "1":"DATA_NOT_LOADED",
                             "0":"NOTREND",
                             "-1":"SLOW_DOWNTREND",
                             "-2":"LONG_DOWNTREND",
-                            "-3":"DANGER_ZONE"
+                            "-3":"BOTTOM_DANGER"
 
                         }
 
@@ -477,23 +477,23 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
         m_trend = int(label.split("=")[1])
 
 
-        main_trend_color_hex = {  5:"rgba(24, 69, 13,0.4)",#"name":"UPPER_DANGER_ZONE"}
+        main_trend_color_hex = {  5:"rgba(24, 69, 13,0.4)",#"name":"UPPER_DANGER"}
                             3:"rgba(0,128,0, 0.2)",#"name":"LONG_UPTREND"},
                             # 2:"rgba(70, 130, 180,0.25)",#"name":"DOWNTREND_UPSWING"},
                             1:"rgba(255,255,159,0.25)",#"name":"DATA_NOT_LOADED"}, #"rgba(255,255,159,0.1)",
                             0:"rgba(255, 255, 255, 0)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
                             -1:"rgba(233, 150, 122,0.25)",#"name":"SLOW_DOWNTREND"},
                             -2:"rgba(255, 0, 0,0.2)",#"name":"LONG_DOWNTREND"},
-                            -3:"rgba(106, 11, 16,0.4)",#"name":"DANGER_ZONE"},
+                            -3:"rgba(106, 11, 16,0.4)",#"name":"BOTTOM_DANGER"},
                         }
-        main_trend_labels = {  "5":"UPPER_DANGER_ZONE",
+        main_trend_labels = {  "5":"UPPER_DANGER",
                             "3":"LONG_UPTREND",
                             # "2":"DOWNTREND_UPSWING",
                             "1":"DATA_NOT_LOADED",
                             "0":"NOTREND",
                             "-1":"SLOW_DOWNTREND",
                             "-2":"LONG_DOWNTREND",
-                            "-3":"DANGER_ZONE"
+                            "-3":"BOTTOM_DANGER"
 
                         }
 
@@ -630,13 +630,13 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
     if( label=="main_trend"):
         distance = 18
 
-        main_color_hex = {  "5":"#8FBC8F",#"name":"UPPER_DANGER_ZONE"}
+        main_color_hex = {  "5":"#8FBC8F",#"name":"UPPER_DANGER"}
                             "3":"rgba(0,128,0, 0.8)",#"name":"LONG_UPTREND"},
                             "2":"#4682B4",#"name":"DOWNTREND_UPSWING"},
                               "0": "rgba(255, 255, 255, 0.01)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
                             "-1":"#E9967A",#"name":"SLOW_DOWNTREND"},
                                  "-2":"#FF0000",#"name":"LONG_DOWNTREND"},
-                                "-3":"#006400",#"name":"DANGER_ZONE"},
+                                "-3":"#006400",#"name":"BOTTOM_DANGER"},
 
             }
         main_volatility_hex = {
@@ -656,8 +656,8 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
                              "-1":"triangle-down",#"name":"SLOW_DOWNTREND"},
                              "0": "circle",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
                             "2":"cross",#"name":"DOWNTREND_UPSWING"},
-                            "-3":"x",#"name":"DANGER_ZONE"},
-                             "5":"x"#"name":"UPPER_DANGER_ZONE"}
+                            "-3":"x",#"name":"BOTTOM_DANGER"},
+                             "5":"x"#"name":"UPPER_DANGER"}
                 }
 
 
@@ -793,65 +793,6 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
         # fig.add_traces(
         #     list(trace_upper2.select_traces())
         # )
-
-    if(label == "sec_trend"):
-        distance = 18
-
-        sec_trend_color_hex = {
-                    "5":"rgba(143, 188, 143, 0.7)",#"name":"UPPER_DANGER_ZONE"},
-                     #"4":"YELLOW",#"name":"HUGE_FALL_TURNAROUND"},     ##FIX LATER
-                    "3":"rgba(0,128,0,0.5)",#"name":"LONG_UPTREND"},
-                         "2":"rgba(70, 130, 180, 0.57)",#"name":"DOWNTREND_UPSWING"},
-                        "1":"rgba(144, 238, 144, 0.7)",#"name":"SMALL_UPSWING"},
-                      "0": "rgba(0, 0, 0, 0.01)",#"name":"NOTREND"},
-                           # "-1":"#E9967A",#"name":"SLOW_DOWNTREND"},
-                         "-2":"rgba(220,20,60,0.5)",#"name":"LONG_DOWNTREND"},
-                        "-3":"rgba(0, 100, 0, 0.7)",#"name":"DANGER_ZONE"},
-
-        }
-
-        sec_trend_symbols = {
-                             "5":"x",#"name":"UPPER_DANGER_ZONE"},
-                            # "4":"cross",#"name":"HUGE_FALL_TURNAROUND"},     ##FIX LATER
-                            "3":"star-triangle-up",#"name":"LONG_UPTREND"},
-                             "2":"cross",#"name":"DOWNTREND_UPSWING"},
-                            "1":"triangle-up",#"name":"SMALL UPSWING"},
-                             "0": "triangle-down",#"name":"NOTREND"},
-                            "-2":"star-triangle-down",#"name":"LONG_DOWNTREND"},
-                             "-1":"triangle-down",#"name":"SLOW_DOWNTREND"},
-                            "-3":"x",#"name":"DANGER_ZONE"},
-
-                }
-
-
-        data['sec_trend'] = data['sec_trend'].astype(str)
-
-
-
-        sec_trend_df = data[data['sec_trend'] != "0"]
-
-
-        if(display == "above"):
-            sec_trend_df['sma_sec_trend_display'] =(sec_trend_df['sma25']+(sec_trend_df['sma25']/100*distance))
-        else:
-            sec_trend_df['sma_sec_trend_display'] =(sec_trend_df['sma25']-(sec_trend_df['sma25']/100*distance))
-
-
-        trace_sec1 = px.scatter(sec_trend_df, x="date", y="sma_sec_trend_display",#,
-                            # hover_name="main_trend",
-                             color_discrete_sequence=px.colors.qualitative.Alphabet,
-                             color_discrete_map=sec_trend_color_hex,
-                             color ="sec_trend",
-                             symbol ="sec_trend",
-                             symbol_map =sec_trend_symbols
-                             # symbol ="main_trend",
-                             # height=30,
-                             # opacity =0.5,
-                          )
-        print("Drawing sec_trend line on chart...")
-        fig.add_traces(
-            list(trace_sec1.select_traces())
-        )
 
     if(label == "uptrend"):
         distance = 16
@@ -1291,15 +1232,15 @@ def generate_enter_tag_style(enter_tag, color, symbol):
                                     "symbol":"triangle-down",
                                     "size":8},
 
-                    "DOWNTREND_UPSWING":{"color":"#00FA9A",
-                                    "symbol":"cross",
-                                    "size":11},
+                    # "DOWNTREND_UPSWING":{"color":"#00FA9A",
+                    #                 "symbol":"cross",
+                    #                 "size":11},
 
-                    "DANGER_ZONE":  {"color":"#006400",
+                    "BOTTOM_DANGER":  {"color":"#006400",
                                     "symbol":"x",
                                     "size":11},
 
-                    "UPPER_DANGER_ZONE":{"color":"#8FBC8F",
+                    "UPPER_DANGER":{"color":"#8FBC8F",
                                     "symbol":"x",
                                     "size":11}
         }

@@ -30,12 +30,12 @@ from runstrategy_strategies import *
 
 
 balance_per_pair= 1000  #ADJUST BALANCE, WAS 2000, trying with 1000
-stake_amount=800
+stake_amount=700
 
 fee_enable = True
 fee_amount = 0.0025   #CHANGED TO 25 RECENTLY!!!! 3% fees or so amount to about 0.4% percent profit
 
-production_max_trades_enable = False
+production_max_trades_enable = True
 production_max_trades = 6
 
 enable_sound = True
@@ -168,9 +168,10 @@ class App(QWidget):
 
         self.command_list = []
 
-        self.ctrl_or_shift_pressed = False
-        self.x_pressed = False #Adds indicators to Indicators2
-        self.c_pressed = False #Adds indicators to Indicators3
+        self.ctrl_pressed = False # Add to pressed
+        # self.tab_pressed = False# Adds indicators to Indicators1
+        self.caps_lock_pressed = False # Adds indicators to Indicators2
+        self.shift_pressed = False # Adds indicators to Indicators3
 
                 # Collect events until released
         self.listener = Listener(
@@ -219,7 +220,7 @@ class App(QWidget):
         self.combobox_indicator1.setMaxVisibleItems(50)
         self.combobox_indicator1.addItems(self.indicator1_list_labels)
         self.combobox_indicator1.setCurrentIndex(self.data["indicator1_dropdown"])
-        self.combobox_indicator1.setToolTip('Hold SHIFT or CTRL to add to the indicators, instead of replacing.')
+        self.combobox_indicator1.setToolTip('Hold CTRL to add to the indicators, instead of replacing.')
         self.combobox_indicator1.currentIndexChanged.connect(self.on_select_indicator1_list)
         # Dropdown Indicators 1 RARE
         self.combobox_indicator1_rare = QComboBox(self)
@@ -227,7 +228,7 @@ class App(QWidget):
         self.combobox_indicator1_rare.setMaxVisibleItems(50)
         self.combobox_indicator1_rare.addItems(self.indicator1_rare_list_labels)
         self.combobox_indicator1_rare.setCurrentIndex(self.data["indicator1_rare_dropdown"])
-        self.combobox_indicator1_rare.setToolTip('Hold SHIFT or CTRL to add to the indicators, instead of replacing.')
+        self.combobox_indicator1_rare.setToolTip('Hold CTRL to add to the indicators, instead of replacing.')
         self.combobox_indicator1_rare.currentIndexChanged.connect(self.on_select_indicator1_rare_list)
 
         # Checkbox Indicators 1 Enable
@@ -257,7 +258,7 @@ class App(QWidget):
         self.combobox_indicator2.setMaxVisibleItems(50)
         self.combobox_indicator2.addItems(self.indicator2_list_labels)
         self.combobox_indicator2.setCurrentIndex(self.data["indicator2_dropdown"])
-        self.combobox_indicator2.setToolTip('Hold SHIFT or CTRL to add to the indicators, instead of replacing. Hold X to add to Indicators 3.')
+        self.combobox_indicator2.setToolTip('Hold CTRL to add to the indicators, instead of replacing. Hold SHIFT to add to Indicators 3.')
         self.combobox_indicator2.currentIndexChanged.connect(self.on_select_indicator2_list)
         # Dropdown Indicators 2 RARE
         self.combobox_indicator2_rare = QComboBox(self)
@@ -265,7 +266,7 @@ class App(QWidget):
         self.combobox_indicator2_rare.setMaxVisibleItems(50)
         self.combobox_indicator2_rare.addItems(self.indicator2_rare_list_labels)
         self.combobox_indicator2_rare.setCurrentIndex(self.data["indicator2_rare_dropdown"])
-        self.combobox_indicator2_rare.setToolTip('Hold SHIFT or CTRL to add to the indicators, instead of replacing.')
+        self.combobox_indicator2_rare.setToolTip('Hold CTRL to add to the indicators, instead of replacing.')
         self.combobox_indicator2_rare.currentIndexChanged.connect(self.on_select_indicator2_rare_list)
 
         # Checkbox Indicators 2 Enable
@@ -295,7 +296,7 @@ class App(QWidget):
         self.combobox_indicator3.setMaxVisibleItems(50)
         self.combobox_indicator3.addItems(self.indicator3_list_labels)
         self.combobox_indicator3.setCurrentIndex(self.data["indicator3_dropdown"])
-        self.combobox_indicator3.setToolTip('Hold SHIFT or CTRL to add to the indicators, instead of replacing. Hold Z to add to Indicators 2.')
+        self.combobox_indicator3.setToolTip('Hold CTRL to add to the indicators, instead of replacing. Hold CAPS_LOCK to add to Indicators 2.')
         self.combobox_indicator3.currentIndexChanged.connect(self.on_select_indicator3_list)
         # Dropdown Indicators 3 RARE
         self.combobox_indicator3_rare = QComboBox(self)
@@ -303,7 +304,7 @@ class App(QWidget):
         self.combobox_indicator3_rare.setMaxVisibleItems(50)
         self.combobox_indicator3_rare.addItems(self.indicator3_rare_list_labels)
         self.combobox_indicator3_rare.setCurrentIndex(self.data["indicator3_rare_dropdown"])
-        self.combobox_indicator3_rare.setToolTip('Hold SHIFT or CTRL to add to the indicators, instead of replacing.')
+        self.combobox_indicator3_rare.setToolTip('Hold CTRL to add to the indicators, instead of replacing.')
         self.combobox_indicator3_rare.currentIndexChanged.connect(self.on_select_indicator3_rare_list)
 
         # Checkbox Indicators 3 Enable
@@ -1607,7 +1608,7 @@ class App(QWidget):
         self.data["strategy"] = i
 
     def on_select_indicator1_list(self, i):
-        if self.ctrl_or_shift_pressed:
+        if self.ctrl_pressed:
             self.data["indicator1_dropdown"] = i
             self.data["indicators1"]["text"] = self.data["indicators1"]["text"]+ " "+self.indicator1_list[i]
             self.indicator1_textbox.setText(self.data["indicators1"]["text"])
@@ -1617,8 +1618,8 @@ class App(QWidget):
             self.indicator1_textbox.setText(self.indicator1_list[i])
 
     def on_select_indicator2_list(self, i):
-        if self.ctrl_or_shift_pressed:
-            if(self.c_pressed):
+        if self.ctrl_pressed:
+            if(self.shift_pressed):
                 self.data["indicator2_dropdown"] = i
                 self.data["indicators3"]["text"] = self.data["indicators3"]["text"]+" "+self.indicator2_list[i]
                 self.indicator3_textbox.setText(self.data["indicators3"]["text"])
@@ -1627,7 +1628,7 @@ class App(QWidget):
                 self.data["indicators2"]["text"] = self.data["indicators2"]["text"]+" "+self.indicator2_list[i]
                 self.indicator2_textbox.setText(self.data["indicators2"]["text"])
         else:
-            if(self.c_pressed):
+            if(self.shift_pressed):
                 self.data["indicator2_dropdown"] = i
                 self.data["indicators3"]["text"] = self.indicator2_list[i]
                 self.indicator3_textbox.setText(self.indicator2_list[i])
@@ -1637,8 +1638,8 @@ class App(QWidget):
                 self.indicator2_textbox.setText(self.indicator2_list[i])
 
     def on_select_indicator3_list(self, i):
-        if self.ctrl_or_shift_pressed:
-            if(self.x_pressed):
+        if self.ctrl_pressed:
+            if(self.caps_lock_pressed):
                 self.data["indicator3_dropdown"] = i
                 self.data["indicators2"]["text"] = self.data["indicators2"]["text"]+" "+self.indicator3_list[i]
                 self.indicator2_textbox.setText(self.data["indicators2"]["text"])
@@ -1647,7 +1648,7 @@ class App(QWidget):
                 self.data["indicators3"]["text"] = self.data["indicators3"]["text"]+" "+self.indicator3_list[i]
                 self.indicator3_textbox.setText(self.data["indicators3"]["text"])
         else:
-            if(self.x_pressed):
+            if(self.caps_lock_pressed):
                 self.data["indicator3_dropdown"] = i
                 self.data["indicators2"]["text"] = self.indicator3_list[i]
                 self.indicator2_textbox.setText(self.indicator3_list[i])
@@ -1663,7 +1664,7 @@ class App(QWidget):
         self.indicator1_textbox.setText(self.data["indicators1"]["text"])
 
     def on_select_indicator2_rare_list(self, i):
-        if(self.c_pressed):
+        if(self.shift_pressed):
             self.data["indicator2_rare_dropdown"] = i
             self.data["indicators3"]["text"] = self.data["indicators3"]["text"]+" "+self.indicator2_rare_list[i]
             self.indicator3_textbox.setText(self.data["indicators3"]["text"])
@@ -1674,7 +1675,7 @@ class App(QWidget):
 
 
     def on_select_indicator3_rare_list(self, i):
-        if(self.x_pressed):
+        if(self.caps_lock_pressed):
             self.data["indicator3_rare_dropdown"] = i
             self.data["indicators2"]["text"] = self.data["indicators2"]["text"]+" "+self.indicator3_rare_list[i]
             self.indicator2_textbox.setText(self.data["indicators2"]["text"])
@@ -2034,39 +2035,51 @@ class App(QWidget):
         # print("button pressed")
         # print('{0} pressed'.format(key))
         if key == Key.ctrl_l or key == Key.ctrl_r:
-            # print("ctrl-l pressed")
-            self.ctrl_or_shift_pressed = True
+            # print("ctrl pressed")
+            self.ctrl_pressed = True
         elif key == Key.shift:
             # print("shift pressed")
-            self.ctrl_or_shift_pressed = True
+            self.shift_pressed = True
+        elif key == Key.caps_lock:
+            # print("caps_lock pressed")
+            self.caps_lock_pressed = True
+        # elif key == Key.tab:
+        #     # print("tab pressed")
+        #     self.tab = True
         # elif hasattr(key, "char") and ( key.char == "z" or key.char == "Z"):
         #     # print("z pressed")
         #     self.z_pressed = True
-        elif hasattr(key, "char") and ( key.char == "x" or key.char == "X"):
-            # print("x pressed")
-            self.x_pressed = True
-        elif hasattr(key, "char") and ( key.char == "c" or key.char == "C"):
-            # print("c pressed")
-            self.c_pressed = True
+        # elif hasattr(key, "char") and ( key.char == "x" or key.char == "X"):
+        #     # print("x pressed")
+        #     self.x_pressed = True
+        # elif hasattr(key, "char") and ( key.char == "c" or key.char == "C"):
+        #     # print("c pressed")
+        #     self.c_pressed = True
 
     def on_release(self, key):
         # print("button released")
         # print('{0} released'.format(key))
         if key == Key.ctrl_l or key == Key.ctrl_r:
-            # print("ctrl-l released")
-            self.ctrl_or_shift_pressed = False
+            # print("ctrl released")
+            self.ctrl_pressed = False
         elif key == Key.shift:
             # print("shift released")
-            self.ctrl_or_shift_pressed = False
+            self.shift_pressed = False
+        elif key == Key.caps_lock:
+            # print("caps_lock released")
+            self.caps_lock_pressed = False
+        # elif key == Key.tab:
+        #     # print("tab released")
+        #     self.tab = False
         # elif hasattr(key, "char") and ( key.char == "z" or key.char == "Z"):
         #     # print("z released")
         #     self.z_pressed = False
-        elif hasattr(key, "char") and (key.char == "x" or key.char == "X"):
-            # print("x released")
-            self.x_pressed = False
-        elif hasattr(key, "char") and (key.char == "c" or key.char == "C"):
-            # print("c released")
-            self.c_pressed = False
+        # elif hasattr(key, "char") and (key.char == "x" or key.char == "X"):
+        #     # print("x released")
+        #     self.x_pressed = False
+        # elif hasattr(key, "char") and (key.char == "c" or key.char == "C"):
+        #     # print("c released")
+        #     self.c_pressed = False
 
 def unix_to_datetime(timestamp, to_string, to_simple):
     if (to_string):

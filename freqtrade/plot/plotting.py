@@ -26,7 +26,7 @@ from freqtrade.strategy import IStrategy
 ## List of available main plot render commands
 
 plot_indicators = ["volatility",
-                   "volatility-above","uptrend","uptrend-above","uptrendsmall","uptrendsmall-above"]
+                   "volatility-above","uptrend","uptrend-above","uptrendsmall","uptrendsmall-above","BULL"]
 
 default_indicators1 = ['main', 'volatility', 'sma50', 'sma200', 'sma400', 'sma10k']
 
@@ -852,6 +852,52 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
         print("Drawing uptrend line on chart...")
         fig.add_traces(
             list(trace_uptrend1.select_traces())
+        )
+
+    if(label == "BULL"):
+        distance = 20
+
+        bull_bear_color_hex = {
+                        "1":"rgba(31,233,255,0.45)",
+                      "0": "rgba(0, 0, 0, 0)",
+                         "-1":"rgba(229,102,255,0.45)",
+        }
+
+        bull_bear_symbols = {
+                            "1":"triangle-up",
+                             "0": "triangle-down",
+                             "-1":"triangle-down",
+                }
+
+
+        data['BULL'] = data['BULL'].astype(str)
+
+        bull_bear_df = data[(data['BULL'] != "0")&(data['BULL'] != "nan")]
+
+        # print(bull_bear_df['BULL'].value_counts())
+
+        display="below"
+
+        if(display == "above"):
+            bull_bear_df['sma_bull_bear_display'] =(bull_bear_df['sma25']+(bull_bear_df['sma25']/100*distance))
+        else:
+            bull_bear_df['sma_bull_bear_display'] =(bull_bear_df['sma25']-(bull_bear_df['sma25']/100*distance))
+
+
+        trace_bull_bear1 = px.scatter(bull_bear_df, x="date", y="sma_bull_bear_display",#,
+                            # hover_name="main_trend",
+                             color_discrete_sequence=px.colors.qualitative.Alphabet,
+                             color_discrete_map=bull_bear_color_hex,
+                             color ="BULL",
+                             symbol ="BULL",
+                             symbol_map =bull_bear_symbols
+                             # symbol ="main_trend",
+                             # height=30,
+                             # opacity =0.5,
+                          )
+        print("Drawing bull_bear line on chart...")
+        fig.add_traces(
+            list(trace_bull_bear1.select_traces())
         )
 
                 #Main trend

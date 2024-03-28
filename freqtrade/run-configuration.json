@@ -1,38 +1,39 @@
 {
   "max_open_trades": 1,
-  "strategy": 0,
+  "strategy": 197,
   "indicators1": {
     "text": "sma50 sma30k_1h sma10k sma100 sma200 sma400",
     "enabled": true
   },
   "indicators2": {
-    "text": "ppo5 ppo10 ppo25 ppo50",
+    "text": "ppo5 ppo10 ppo25 ppo50 ppo100 ppo200 ppo500",
     "enabled": true
   },
   "indicators3": {
-    "text": "BULL BEAR",
+    "text": "candlesize roc roc2 ",
     "enabled": true
   },
   "indicator1_dropdown": 1,
-  "indicator2_dropdown": 2,
-  "indicator3_dropdown": 4,
+  "indicator2_dropdown": 1,
+  "indicator3_dropdown": 1,
   "indicator1_rare_dropdown": 1,
-  "indicator2_rare_dropdown": 2,
+  "indicator2_rare_dropdown": 7,
   "indicator3_rare_dropdown": 0,
   "indicators_extra": {
     "main": false,
     "solo": true,
     "default": true,
     "volatility": true,
+    "BULL": true,
     "uptrend": false,
     "uptrendsmall": false,
-    "solo_trend": 1
+    "solo_trend": 4
   },
   "time": {
-    "time_from": 1702526400000,
-    "time_until": 1709215200000,
-    "time_from_index": 1,
-    "time_until_index": 0,
+    "time_from": 1617235200000,
+    "time_until": 1625097600000,
+    "time_from_index": 12,
+    "time_until_index": 11,
     "time_from_date": false,
     "time_until_date": false,
     "time_until_enabled": true
@@ -55,15 +56,15 @@
   "config": "config.json",
   "stake_amount": 100,
   "funds": 1000,
-  "previous_processing_time": 17.183476499980316,
-  "pairs1": "BTC",
+  "previous_processing_time": 19.163644599961117,
+  "pairs1": "IOTA",
   "pairs2": "BULL BEAR",
   "pairs3": "BTC\nETH\nBNB\nXRP\nADA\nSOL\nDOGE\nMATIC\nSHIB\nUNI\nLTC\nLINK\nXLM\nBCH\nQNT\nEGLD\nAXS\nIOTA\nMKR\nNEO\nWAVES\nZIL\nXNO\nHBAR\nINJ\nRNDR",
   "pair_set1": "BTC\nBNB\nADA\nDOGE\nSHIB\nLTC\nXLM\nBCH\nEGLD\nIOTA\nNEO\nWAVES\nXNO\nINJ",
   "pair_set2": "ETH\nXRP\nSOL\nMATIC\nUNI\nLINK\nQNT\nAXS\nMKR\nZIL\nHBAR\nRNDR",
   "plot_pair": 0,
   "plot_profit": false,
-  "command": "plot-dataframe --config user_data/config.json --strategy AltcoinTrader15 -p BTC/USDT --timerange=1700711400000-1709215200000 --indicators1 solo=3 sma50 sma200 sma400 sma10k volatility sma50 sma30k_1h sma10k sma100 sma200 sma400 --indicators2 ppo5 ppo10 ppo25 ppo50 --indicators3 BULL BEAR",
+  "command": "plot-dataframe --config user_data/config.json --strategy x_SELL_LONG_DOWNTREND1 -p IOTA/USDT --timerange=1615420200000-1625097600000 --indicators1 solo=-2 sma50 sma200 sma400 sma10k volatility BULL sma50 sma30k_1h sma10k sma100 sma200 sma400 --indicators2 ppo5 ppo10 ppo25 ppo50 ppo100 ppo200 ppo500 --indicators3 candlesize roc roc2",
   "download": {
     "days_to_download": 2650,
     "days": 2650,

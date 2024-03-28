@@ -376,15 +376,15 @@ class App(QWidget):
         self.indicator_extra_checkbox_uptrendsmall.move(222, 212)
         self.indicator_extra_checkbox_uptrendsmall.setChecked(self.data["indicators_extra"]["uptrendsmall"])
         self.indicator_extra_checkbox_uptrendsmall.stateChanged.connect(self.checkbox_indicators_extra_uptrendsmall)
-        ## Label Indicators extra Sec Trend
-        # self.indicator_extra_label_sec_trend = QLabel(self)
-        # self.indicator_extra_label_sec_trend.setText('Sec.Trend:')
-        # self.indicator_extra_label_sec_trend.move(20, 212)
-        # # Checkbox Indicators extra Sec Trend
-        # self.indicator_extra_checkbox_sec_trend = QCheckBox(self)
-        # self.indicator_extra_checkbox_sec_trend.move(78, 212)
-        # self.indicator_extra_checkbox_sec_trend.setChecked(self.data["indicators_extra"]["sec_trend"])
-        # self.indicator_extra_checkbox_sec_trend.stateChanged.connect(self.checkbox_indicators_extra_sec_trend)
+        # Label Indicators extra Bull/Bear
+        self.indicator_extra_label_bull_bear = QLabel(self)
+        self.indicator_extra_label_bull_bear.setText('Bull/Bear:')
+        self.indicator_extra_label_bull_bear.move(20, 212)
+        # Checkbox Indicators extra Bull Bear
+        self.indicator_extra_checkbox_bull_bear = QCheckBox(self)
+        self.indicator_extra_checkbox_bull_bear.move(78, 212)
+        self.indicator_extra_checkbox_bull_bear.setChecked(self.data["indicators_extra"]["BULL"])
+        self.indicator_extra_checkbox_bull_bear.stateChanged.connect(self.checkbox_indicators_extra_bull_bear)
 
         # Time From label
         self.time_from_label = QLabel(self)
@@ -1059,8 +1059,8 @@ class App(QWidget):
                     indicators1_temp.append("uptrend")
                 if (self.data["indicators_extra"]["uptrendsmall"]):
                     indicators1_temp.append("uptrendsmall")
-                # if (self.data["indicators_extra"]["sec_trend"]):
-                #     indicators1_temp.append("sec_trend")
+                if (self.data["indicators_extra"]["BULL"]):
+                    indicators1_temp.append("BULL")
                 if (self.data["indicators1"]["enabled"]):
                     if (self.data["indicators1"]["text"] and len(self.data["indicators1"]["text"]) > 2):
                         for item in self.data["indicators1"]["text"].split():
@@ -1318,12 +1318,12 @@ class App(QWidget):
         else:
             self.data["indicators_extra"]["uptrendsmall"] = True
 
-    # @pyqtSlot()
-    # def checkbox_indicators_extra_sec_trend(self):
-    #     if (self.data["indicators_extra"]["sec_trend"] == True):
-    #         self.data["indicators_extra"]["sec_trend"] = False
-    #     else:
-    #         self.data["indicators_extra"]["sec_trend"] = True
+    @pyqtSlot()
+    def checkbox_indicators_extra_bull_bear(self):
+        if (self.data["indicators_extra"]["BULL"] == True):
+            self.data["indicators_extra"]["BULL"] = False
+        else:
+            self.data["indicators_extra"]["BULL"] = True
 
     def on_select_solo_trend(self, i):
         self.data["indicators_extra"]["solo_trend"] = i

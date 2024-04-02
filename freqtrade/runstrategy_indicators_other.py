@@ -20,7 +20,7 @@ timeframes_needed_list=["15m","1h","1d"]
 
 indicators1_default = ['sma50', 'sma200', 'sma400', 'sma10k']
 
-indicators1_solo_trends = [{"5": "Upper Danger Zone"},
+indicators1_solo_trends = [{"5": "Upper Danger"},
                            # {"4":"Huge Fall Turnaround"},
                            {"3": "Long Uptrend"},
                            # {"2": "Downtrend Upswing"},
@@ -28,7 +28,7 @@ indicators1_solo_trends = [{"5": "Upper Danger Zone"},
                            {"0": "Normal"},
                            {"-1": "Slow Downtrend"},
                            {"-2": "Long Downtrend"},
-                           {"-3": "Danger Zone"},
+                           {"-3": "Bottom Danger"},
                            ]
 
 indicators1_list  = [   {"---FAVORITES---":""},

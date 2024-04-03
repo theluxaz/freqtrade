@@ -1,6 +1,6 @@
 {
-  "max_open_trades": 1,
-  "strategy": 197,
+  "max_open_trades": 16,
+  "strategy": 0,
   "indicators1": {
     "text": "sma50 sma30k_1h sma10k sma100 sma200 sma400",
     "enabled": true
@@ -23,17 +23,17 @@
     "main": false,
     "solo": true,
     "default": true,
-    "volatility": true,
-    "BULL": true,
+    "volatility": false,
+    "BULL": false,
     "uptrend": false,
     "uptrendsmall": false,
-    "solo_trend": 4
+    "solo_trend": 5
   },
   "time": {
-    "time_from": 1617235200000,
-    "time_until": 1625097600000,
-    "time_from_index": 12,
-    "time_until_index": 11,
+    "time_from": 1486080000000,
+    "time_until": 1710608400000,
+    "time_from_index": 18,
+    "time_until_index": 0,
     "time_from_date": false,
     "time_until_date": false,
     "time_until_enabled": true
@@ -54,17 +54,19 @@
   "config_default": true,
   "config_selection": 0,
   "config": "config.json",
-  "stake_amount": 100,
+  "stake_amount": 700,
+  "max_trades_limit_enable": false,
+  "max_trades_limit": 6,
   "funds": 1000,
-  "previous_processing_time": 19.163644599961117,
-  "pairs1": "IOTA",
+  "previous_processing_time": 0,
+  "pairs1": "BTC\nETH\nBNB\nXRP\nADA\nSOL\nDOGE\nMATIC\nSHIB\nUNI\nLTC\nLINK\nXLM\nBCH\nQNT\nEGLD",
   "pairs2": "BULL BEAR",
   "pairs3": "BTC\nETH\nBNB\nXRP\nADA\nSOL\nDOGE\nMATIC\nSHIB\nUNI\nLTC\nLINK\nXLM\nBCH\nQNT\nEGLD\nAXS\nIOTA\nMKR\nNEO\nWAVES\nZIL\nXNO\nHBAR\nINJ\nRNDR",
   "pair_set1": "BTC\nBNB\nADA\nDOGE\nSHIB\nLTC\nXLM\nBCH\nEGLD\nIOTA\nNEO\nWAVES\nXNO\nINJ",
   "pair_set2": "ETH\nXRP\nSOL\nMATIC\nUNI\nLINK\nQNT\nAXS\nMKR\nZIL\nHBAR\nRNDR",
   "plot_pair": 0,
   "plot_profit": false,
-  "command": "plot-dataframe --config user_data/config.json --strategy x_SELL_LONG_DOWNTREND1 -p IOTA/USDT --timerange=1615420200000-1625097600000 --indicators1 solo=-2 sma50 sma200 sma400 sma10k volatility BULL sma50 sma30k_1h sma10k sma100 sma200 sma400 --indicators2 ppo5 ppo10 ppo25 ppo50 ppo100 ppo200 ppo500 --indicators3 candlesize roc roc2",
+  "command": "backtesting --config user_data/config.json --fee 0.0025 --timeframe 15m --cache none --strategy AltcoinTrader15 --export trades --timerange=1484265000000-1710608400000",
   "download": {
     "days_to_download": 2650,
     "days": 2650,

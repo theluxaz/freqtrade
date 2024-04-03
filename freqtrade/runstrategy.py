@@ -30,13 +30,9 @@ from runstrategy_strategies import *
 
 
 balance_per_pair= 1000  #ADJUST BALANCE, WAS 2000, trying with 1000
-stake_amount=700
 
 fee_enable = True
 fee_amount = 0.0025   #CHANGED TO 25 RECENTLY!!!! 3% fees or so amount to about 0.4% percent profit
-
-production_max_trades_enable = True
-production_max_trades = 6
 
 enable_sound = True
 
@@ -699,8 +695,38 @@ class App(QWidget):
 
         # Stake  label
         self.label_stake = QLabel(self)
-        self.label_stake.move(979, 232)
-        self.label_stake.setText(f"Stake: {stake_amount}")
+        self.label_stake.move(960, 234)
+        self.label_stake.setText("Stake:")
+        # Stake amount textbox
+        self.textbox_stake = QLineEdit(self)
+        self.textbox_stake.move(994, 232)
+        self.textbox_stake.resize(45, 18)
+        self.textbox_stake.setText(str(self.data["stake_amount"]))
+        self.textbox_stake.textChanged.connect(self.on_textchange_stake_amount)
+
+        # Max Trades enable label
+        self.label_max_trades_enable = QLabel(self)
+        self.label_max_trades_enable.move(880, 252)
+        self.label_max_trades_enable.setText("Max trades:")
+        # Max Trades Checkbox
+        self.max_trades_limit_checkbox = QCheckBox(self)
+        self.max_trades_limit_checkbox.move(942, 253)
+        self.max_trades_limit_checkbox.setChecked(self.data["max_trades_limit_enable"])
+        self.max_trades_limit_checkbox.stateChanged.connect(self.checkbox_production_max_trades_enable)
+        # Max Trades  label
+        self.label_max_trades = QLabel(self)
+        self.label_max_trades.move(880, 273)
+        self.label_max_trades.setText("Max:")
+        if (self.data["max_trades_limit_enable"] != True):
+            self.label_max_trades.hide()
+        # Max Trades textbox
+        self.textbox_max_trades_limit = QLineEdit(self)
+        self.textbox_max_trades_limit.move(911, 271)
+        self.textbox_max_trades_limit.resize(45, 18)
+        self.textbox_max_trades_limit.setText(str(self.data["max_trades_limit"]))
+        self.textbox_max_trades_limit.textChanged.connect(self.on_textchange_max_trades_limit)
+        if (self.data["max_trades_limit_enable"] != True):
+            self.textbox_max_trades_limit.hide()
 
         # Fee  label
         self.label_fee = QLabel(self)
@@ -1348,11 +1374,11 @@ class App(QWidget):
         self.dropdown_plot_pair.clear()
         self.dropdown_plot_pair.addItems(self.data["pairs1"].split())
         self.label_pairs_no.setText("Pairs: " + str(len(self.data["pairs1"].split())))
-        if (production_max_trades_enable):
-            if (len(self.data["pairs1"].split()) < production_max_trades):
+        if (self.data["max_trades_limit_enable"]):
+            if (len(self.data["pairs1"].split()) < self.data["max_trades_limit"]):
                 self.data["max_open_trades"] = len(self.data["pairs1"].split())
             else:
-                self.data["max_open_trades"] = production_max_trades
+                self.data["max_open_trades"] = self.data["max_trades_limit"]
         else:
             self.data["max_open_trades"] = len(self.data["pairs1"].split())
         self.set_max_pairs_label(self.data["max_open_trades"])
@@ -1389,11 +1415,11 @@ class App(QWidget):
         self.dropdown_plot_pair.clear()
         self.dropdown_plot_pair.addItems(self.data["pairs1"].split())
         self.label_pairs_no.setText("Pairs: " + str(len(self.data["pairs1"].split())))
-        if (production_max_trades_enable):
-            if (len(self.data["pairs1"].split()) < production_max_trades):
+        if (self.data["max_trades_limit_enable"]):
+            if (len(self.data["pairs1"].split()) < self.data["max_trades_limit"]):
                 self.data["max_open_trades"] = len(self.data["pairs1"].split())
             else:
-                self.data["max_open_trades"] = production_max_trades
+                self.data["max_open_trades"] = self.data["max_trades_limit"]
         else:
             self.data["max_open_trades"] = len(self.data["pairs1"].split())
         self.set_max_pairs_label(self.data["max_open_trades"])
@@ -1412,11 +1438,11 @@ class App(QWidget):
         self.dropdown_plot_pair.clear()
         self.dropdown_plot_pair.addItems(self.data["pairs1"].split())
         self.label_pairs_no.setText("Pairs: " + str(len(self.data["pairs1"].split())))
-        if (production_max_trades_enable):
-            if (len(self.data["pairs1"].split()) < production_max_trades):
+        if (self.data["max_trades_limit_enable"]):
+            if (len(self.data["pairs1"].split()) < self.data["max_trades_limit"]):
                 self.data["max_open_trades"] = len(self.data["pairs1"].split())
             else:
-                self.data["max_open_trades"] = production_max_trades
+                self.data["max_open_trades"] = self.data["max_trades_limit"]
         else:
             self.data["max_open_trades"] = len(self.data["pairs1"].split())
         self.set_max_pairs_label(self.data["max_open_trades"])
@@ -1434,11 +1460,11 @@ class App(QWidget):
         self.dropdown_plot_pair.clear()
         self.dropdown_plot_pair.addItems(self.data["pairs1"].split())
         self.label_pairs_no.setText("Pairs: " + str(len(self.data["pairs1"].split())))
-        if (production_max_trades_enable):
-            if (len(self.data["pairs1"].split()) < production_max_trades):
+        if (self.data["max_trades_limit_enable"]):
+            if (len(self.data["pairs1"].split()) < self.data["max_trades_limit"]):
                 self.data["max_open_trades"] = len(self.data["pairs1"].split())
             else:
-                self.data["max_open_trades"] = production_max_trades
+                self.data["max_open_trades"] = self.data["max_trades_limit"]
         else:
             self.data["max_open_trades"] = len(self.data["pairs1"].split())
         self.set_max_pairs_label(self.data["max_open_trades"])
@@ -1463,6 +1489,15 @@ class App(QWidget):
     @pyqtSlot()
     def on_textchange_download_days(self):
         self.data["download"]["days_to_download"] = int(self.textbox_download_days.text())
+
+    @pyqtSlot()
+    def on_textchange_max_trades_limit(self):
+        self.data["max_trades_limit"] = int(self.textbox_max_trades_limit.text())
+        self.update_max_trades()
+
+    @pyqtSlot()
+    def on_textchange_stake_amount(self):
+        self.data["stake_amount"]= int(self.textbox_stake.text())
 
     @pyqtSlot()
     def checkbox_search_space_all(self):
@@ -1594,6 +1629,19 @@ class App(QWidget):
             self.data["plot_profit"] = True
 
     @pyqtSlot()
+    def checkbox_production_max_trades_enable(self):
+        if (self.data["max_trades_limit_enable"] == True):
+            self.data["max_trades_limit_enable"] = False
+            self.label_max_trades.hide()
+            self.textbox_max_trades_limit.hide()
+            self.update_max_trades()
+        else:
+            self.data["max_trades_limit_enable"] = True
+            self.label_max_trades.show()
+            self.textbox_max_trades_limit.show()
+            self.update_max_trades()
+
+    @pyqtSlot()
     def checkbox_config(self):
         if (self.data["config_default"] == True):
             self.data["config_default"] = False
@@ -1603,6 +1651,20 @@ class App(QWidget):
             self.data["config"] = "config.json"
             self.data["config_default"] = True
             self.dropdown_config.hide()
+
+    def update_max_trades(self):
+        if (self.data["max_trades_limit_enable"]):
+            if (len(self.data["pairs1"].split()) < self.data["max_trades_limit"]):
+                self.data["max_open_trades"] = len(self.data["pairs1"].split())
+            else:
+                self.data["max_open_trades"] = self.data["max_trades_limit"]
+        else:
+            self.data["max_open_trades"] = len(self.data["pairs1"].split())
+        self.set_max_pairs_label(self.data["max_open_trades"])
+        self.label_pairs_no.adjustSize()
+        self.update_download_data_labels()
+        self.update_onclick_triggers()
+        self.update_funds()
 
     def on_select_strategy(self, i):
         self.data["strategy"] = i
@@ -1927,13 +1989,13 @@ class App(QWidget):
                 processed_pairs.append(pair + "/" + fiat_currency)
         config_json["exchange"]["pair_whitelist"] = processed_pairs
 
-        if (production_max_trades_enable):
-            if (len(self.data["pairs1"].split()) < production_max_trades):
+        if (self.data["max_trades_limit_enable"]):
+            if (len(self.data["pairs1"].split()) < self.data["max_trades_limit"]):
                 config_json["max_open_trades"] = len(self.data["pairs1"].split())
                 self.data["max_open_trades"] = len(self.data["pairs1"].split())
             else:
-                config_json["max_open_trades"] = production_max_trades
-                self.data["max_open_trades"] = production_max_trades
+                config_json["max_open_trades"] = self.data["max_trades_limit"]
+                self.data["max_open_trades"] = self.data["max_trades_limit"]
         else:
             config_json["max_open_trades"] = len(self.data["pairs1"].split())
         self.set_max_pairs_label(self.data["max_open_trades"])
@@ -1988,19 +2050,23 @@ class App(QWidget):
 
     def set_max_pairs_label(self,max_pairs):
         if max_pairs:
-            if(production_max_trades_enable):
-                if max_pairs <= production_max_trades:
+            print("yo1")
+            if(self.data["max_trades_limit_enable"]):
+                if max_pairs <= self.data["max_trades_limit"]:
                     self.label_max_pairs.setText(f"Max Trades: {max_pairs}")
                 else:
-                    self.label_max_pairs.setText(f"Max Trades: {production_max_trades}")
+                    self.label_max_pairs.setText(f"Max Trades: {self.data['max_trades_limit']}")
+            else:
+                    self.label_max_pairs.setText(f"Max Trades: {max_pairs}")
         else:
             pair_length = len(self.data["pairs1"].split())
-            if(production_max_trades_enable):
-                if pair_length <= production_max_trades:
+            if(self.data["max_trades_limit_enable"]):
+                if pair_length <= self.data["max_trades_limit"]:
                     self.label_max_pairs.setText(f"Max Trades: {len(self.data['pairs1'].split())}")
                 else:
-                    self.label_max_pairs.setText(f"Max Trades: {production_max_trades}")
+                    self.label_max_pairs.setText(f"Max Trades: {self.data['max_trades_limit']}")
             else:
+                print("yo")
                 self.label_max_pairs.setText(f"Max Trades: {len(self.data['pairs1'].split())}")
 
 
@@ -2028,7 +2094,7 @@ class App(QWidget):
 
     def update_config_funds(self,config_json):
         config_json["dry_run_wallet"] = self.data["max_open_trades"] * balance_per_pair
-        config_json["stake_amount"] = stake_amount
+        config_json["stake_amount"] = self.data["stake_amount"]
         return config_json
 
     def on_press(self, key):

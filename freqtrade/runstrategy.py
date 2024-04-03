@@ -34,8 +34,6 @@ balance_per_pair= 1000  #ADJUST BALANCE, WAS 2000, trying with 1000
 fee_enable = True
 fee_amount = 0.0025   #CHANGED TO 25 RECENTLY!!!! 3% fees or so amount to about 0.4% percent profit
 
-enable_sound = True
-
 data_loading_time_ms = 1815000000   #21 days
 date_until_gap = 7889238000  # - 3 months ### 5259492000 - 2 months ### 9289238000 - 3.5 months
 
@@ -728,6 +726,16 @@ class App(QWidget):
         if (self.data["max_trades_limit_enable"] != True):
             self.textbox_max_trades_limit.hide()
 
+        # Sound enable label
+        self.label_sound_enable = QLabel(self)
+        self.label_sound_enable.move(188, 11)
+        self.label_sound_enable.setText("Sound:")
+        # Sound enable Checkbox
+        self.sound_enable_checkbox = QCheckBox(self)
+        self.sound_enable_checkbox.move(225, 12)
+        self.sound_enable_checkbox.setChecked(self.data["enable_sound"])
+        self.sound_enable_checkbox.stateChanged.connect(self.checkbox_sound_enable_checkbox)
+
         # Fee  label
         self.label_fee = QLabel(self)
         self.label_fee.move(979, 252)
@@ -998,7 +1006,7 @@ class App(QWidget):
     def on_click_backtest(self):
         if (self.backtesting_clicked):
             processing_time = main(self.command_list)
-            if enable_sound:
+            if self.data["enable_sound"]:
                 winsound.PlaySound('Welcome.wav', winsound.SND_FILENAME)
 
             self.set_label_processing_time(processing_time)
@@ -1140,7 +1148,7 @@ class App(QWidget):
 
                 self.set_label_processing_time(processing_time)
                 self.set_max_pairs_label(None)
-                if enable_sound:
+                if self.data["enable_sound"]:
                     winsound.PlaySound('Welcome.wav', winsound.SND_FILENAME)
                 self.backtesting_clicked = False
                 self.show_plot_clicked = False
@@ -1239,7 +1247,7 @@ class App(QWidget):
                 processing_time = main(["download-data", "-t", timeframe, "--days", str(days)])
                 print(f"Processing time for {timeframe} was {processing_time:0.1f}s")
 
-            if enable_sound:
+            if self.data["enable_sound"]:
                 winsound.PlaySound('Welcome.wav', winsound.SND_FILENAME)
             print("FINISHED DOWNLOADING DATA")
 
@@ -1640,6 +1648,14 @@ class App(QWidget):
             self.label_max_trades.show()
             self.textbox_max_trades_limit.show()
             self.update_max_trades()
+
+    @pyqtSlot()
+    def checkbox_sound_enable_checkbox(self):
+        if (self.data["enable_sound"] == True):
+            self.data["enable_sound"] = False
+        else:
+            self.data["enable_sound"] = True
+
 
     @pyqtSlot()
     def checkbox_config(self):

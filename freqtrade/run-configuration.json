@@ -54,6 +54,7 @@
   "config_default": true,
   "config_selection": 0,
   "config": "config.json",
+  "enable_sound": true,
   "stake_amount": 700,
   "max_trades_limit_enable": false,
   "max_trades_limit": 6,

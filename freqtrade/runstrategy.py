@@ -38,6 +38,11 @@ data_loading_time_ms = 1815000000   #21 days
 date_until_gap = 7889238000  # - 3 months ### 5259492000 - 2 months ### 9289238000 - 3.5 months
 
 timeframes_json = [
+                    {"19":1747112400000},  # 13 May 2025 5:00pm GMT -> move up until July 1 2025 later
+                    {"18":1740718800000},  # 01 Mar 2025 5:00pm GMT ->
+                    {"17":1734282000000},  # 15 Dec 2024 5:00pm GMT
+                    {"16":1727542800000},  # 28 Sept 2024 5:00pm GMT
+                    {"15":1718557200000},  # 16 June 2024 5:00pm GMT
                     {"14":1710608400000},  # 16 March 2024 5:00pm GMT
                     {"13":1702526400000},  # 14 December  2023 4pm GMT
                     {"12":1695566238000},  # 24 September  2023 5pm GMT
@@ -2066,7 +2071,6 @@ class App(QWidget):
 
     def set_max_pairs_label(self,max_pairs):
         if max_pairs:
-            print("yo1")
             if(self.data["max_trades_limit_enable"]):
                 if max_pairs <= self.data["max_trades_limit"]:
                     self.label_max_pairs.setText(f"Max Trades: {max_pairs}")
@@ -2082,7 +2086,6 @@ class App(QWidget):
                 else:
                     self.label_max_pairs.setText(f"Max Trades: {self.data['max_trades_limit']}")
             else:
-                print("yo")
                 self.label_max_pairs.setText(f"Max Trades: {len(self.data['pairs1'].split())}")
 
 

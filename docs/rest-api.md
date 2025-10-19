@@ -1,19 +1,8 @@
-# REST API & FreqUI
+# REST API
 
 ## FreqUI
 
-Freqtrade provides a builtin webserver, which can serve [FreqUI](https://github.com/freqtrade/frequi), the freqtrade UI.
-
-By default, the UI is not included in the installation (except for docker images), and must be installed explicitly with `freqtrade install-ui`.
-This same command can also be used to update freqUI, should there be a new release.
-
-Once the bot is started in trade / dry-run mode (with `freqtrade trade`) - the UI will be available under the configured port below (usually `http://127.0.0.1:8080`).
-
-!!! info "Alpha release"
-    FreqUI is still considered an alpha release - if you encounter bugs or inconsistencies please open a [FreqUI issue](https://github.com/freqtrade/frequi/issues/new/choose).
-
-!!! Note "developers"
-    Developers should not use this method, but instead use the method described in the [freqUI repository](https://github.com/freqtrade/frequi) to get the source-code of freqUI.
+FreqUI now has it's own dedicated [documentation section](freq-ui.md) - please refer to that section for all information regarding the FreqUI.
 
 ## Configuration
 
@@ -92,17 +81,21 @@ Make sure that the following 2 lines are available in your docker-compose file:
 ```
 
 !!! Danger "Security warning"
-    By using `8080:8080` in the docker port mapping, the API will be available to everyone connecting to the server under the correct port, so others may be able to control your bot.
+    By using `"8080:8080"` (or `"0.0.0.0:8080:8080"`) in the docker port mapping, the API will be available to everyone connecting to the server under the correct port, so others may be able to control your bot.
+    This **may** be safe if you're running the bot in a secure environment (like your home network), but it's not recommended to expose the API to the internet.
 
 ## Rest API
 
 ### Consuming the API
 
-You can consume the API by using the script `scripts/rest_client.py`.
-The client script only requires the `requests` module, so Freqtrade does not need to be installed on the system.
+We advise consuming the API by using the supported `freqtrade-client` package (also available as `scripts/rest_client.py`).
+
+This command can be installed independent of any running freqtrade bot by using `pip install freqtrade-client`.
+
+This module is designed to be lightweight, and only depends on the `requests` and `python-rapidjson` modules, skipping all heavy dependencies freqtrade otherwise needs.
 
 ``` bash
-python3 scripts/rest_client.py <command> [optional parameters]
+freqtrade-client <command> [optional parameters]
 ```
 
 By default, the script assumes `127.0.0.1` (localhost) and port `8080` to be used, however you can specify a configuration file to override this behaviour.
@@ -123,140 +116,133 @@ By default, the script assumes `127.0.0.1` (localhost) and port `8080` to be use
 ```
 
 ``` bash
-python3 scripts/rest_client.py --config rest_config.json <command> [optional parameters]
+freqtrade-client --config rest_config.json <command> [optional parameters]
 ```
 
-### Available endpoints
+Commands with many arguments may require keyword arguments (for clarity) - which can be provided as follows:
 
-|  Command | Description |
-|----------|-------------|
-| `ping` | Simple command testing the API Readiness - requires no authentication.
-| `start` | Starts the trader.
-| `stop` | Stops the trader.
-| `stopbuy` | Stops the trader from opening new trades. Gracefully closes open trades according to their rules.
-| `reload_config` | Reloads the configuration file.
-| `trades` | List last trades. Limited to 500 trades per call.
-| `trade/<tradeid>` | Get specific trade.
-| `delete_trade <trade_id>` | Remove trade from the database. Tries to close open orders. Requires manual handling of this trade on the exchange.
-| `show_config` | Shows part of the current configuration with relevant settings to operation.
-| `logs` | Shows last log messages.
-| `status` | Lists all open trades.
-| `count` | Displays number of trades used and available.
-| `locks` | Displays currently locked pairs.
-| `delete_lock <lock_id>` | Deletes (disables) the lock by id.
-| `profit` | Display a summary of your profit/loss from close trades and some stats about your performance.
-| `forceexit <trade_id>` | Instantly exits the given trade  (Ignoring `minimum_roi`).
-| `forceexit all` | Instantly exits all open trades (Ignoring `minimum_roi`).
-| `forceenter <pair> [rate]` | Instantly enters the given pair. Rate is optional. (`force_entry_enable` must be set to True)
-| `forceenter <pair> <side> [rate]` | Instantly longs or shorts the given pair. Rate is optional. (`force_entry_enable` must be set to True)
-| `performance` | Show performance of each finished trade grouped by pair.
-| `balance` | Show account balance per currency.
-| `daily <n>` | Shows profit or loss per day, over the last n days (n defaults to 7).
-| `stats` | Display a summary of profit / loss reasons as well as average holding times.
-| `whitelist` | Show the current whitelist.
-| `blacklist [pair]` | Show the current blacklist, or adds a pair to the blacklist.
-| `edge` | Show validated pairs by Edge if it is enabled.
-| `pair_candles` | Returns dataframe for a pair / timeframe combination while the bot is running. **Alpha**
-| `pair_history` | Returns an analyzed dataframe for a given timerange, analyzed by a given strategy. **Alpha**
-| `plot_config` | Get plot config from the strategy (or nothing if not configured). **Alpha**
-| `strategies` | List strategies in strategy directory. **Alpha**
-| `strategy <strategy>` | Get specific Strategy content. **Alpha**
-| `available_pairs` | List available backtest data. **Alpha**
-| `version` | Show version.
-| `sysinfo` | Show information about the system load.
-| `health` | Show bot health (last bot loop).
+``` bash
+freqtrade-client --config rest_config.json forceenter BTC/USDT long enter_tag=GutFeeling
+```
 
-!!! Warning "Alpha status"
-    Endpoints labeled with *Alpha status* above may change at any time without notice.
+This method will work for all arguments - check the "show" command for a list of available parameters.
+
+??? Note "Programmatic use"
+    The `freqtrade-client` package (installable independent of freqtrade) can be used in your own scripts to interact with the freqtrade API.
+    to do so, please use the following:
+
+    ``` python
+    from freqtrade_client import FtRestClient
+    
+
+    client = FtRestClient(server_url, username, password)
+
+    # Get the status of the bot
+    ping = client.ping()
+    print(ping)
+
+    # Add pairs to blacklist
+    client.blacklist("BTC/USDT", "ETH/USDT")
+    # Add pairs to blacklist by supplying a list
+    client.blacklist(*listPairs)
+    # ... 
+    ```
+
+    For a full list of available commands, please refer to the list below.
 
 Possible commands can be listed from the rest-client script using the `help` command.
 
 ``` bash
-python3 scripts/rest_client.py help
+freqtrade-client help
 ```
 
 ``` output
 Possible commands:
 
 available_pairs
-	Return available pair (backtest data) based on timeframe / stake_currency selection
+    Return available pair (backtest data) based on timeframe / stake_currency selection
 
         :param timeframe: Only pairs with this timeframe available.
         :param stake_currency: Only pairs that include this timeframe
 
 balance
-	Get the account balance.
+    Get the account balance.
 
 blacklist
-	Show the current blacklist.
+    Show the current blacklist.
 
         :param add: List of coins to add (example: "BNB/BTC")
 
 cancel_open_order
-	Cancel open order for trade.
+    Cancel open order for trade.
 
         :param trade_id: Cancels open orders for this trade.
 
 count
-	Return the amount of open trades.
+    Return the amount of open trades.
 
 daily
-	Return the profits for each day, and amount of trades.
+    Return the profits for each day, and amount of trades.
 
 delete_lock
-	Delete (disable) lock from the database.
+    Delete (disable) lock from the database.
 
         :param lock_id: ID for the lock to delete
 
 delete_trade
-	Delete trade from the database.
+    Delete trade from the database.
         Tries to close open orders. Requires manual handling of this asset on the exchange.
 
         :param trade_id: Deletes the trade with this ID from the database.
 
-edge
-	Return information about edge.
-
 forcebuy
-	Buy an asset.
+    Buy an asset.
 
         :param pair: Pair to buy (ETH/BTC)
         :param price: Optional - price to buy
 
 forceenter
-	Force entering a trade
+    Force entering a trade
 
         :param pair: Pair to buy (ETH/BTC)
         :param side: 'long' or 'short'
         :param price: Optional - price to buy
 
 forceexit
-	Force-exit a trade.
+    Force-exit a trade.
 
         :param tradeid: Id of the trade (can be received via status command)
         :param ordertype: Order type to use (must be market or limit)
         :param amount: Amount to sell. Full sell if not given
 
 health
-	Provides a quick health check of the running bot.
+    Provides a quick health check of the running bot.
+
+lock_add
+    Manually lock a specific pair
+
+        :param pair: Pair to lock
+        :param until: Lock until this date (format "2024-03-30 16:00:00Z")
+        :param side: Side to lock (long, short, *)
+        :param reason: Reason for the lock        
 
 locks
-	Return current locks
+    Return current locks
 
 logs
-	Show latest logs.
+    Show latest logs.
 
         :param limit: Limits log messages to the last <limit> logs. No limit to get the entire log.
 
 pair_candles
-	Return live dataframe for <pair><timeframe>.
+    Return live dataframe for <pair><timeframe>.
 
         :param pair: Pair to get data for
         :param timeframe: Only pairs with this timeframe available.
         :param limit: Limit result to the last n candles.
 
 pair_history
-	Return historic, analyzed dataframe
+    Return historic, analyzed dataframe
 
         :param pair: Pair to get data for
         :param timeframe: Only pairs with this timeframe available.
@@ -264,68 +250,140 @@ pair_history
         :param timerange: Timerange to get data for (same format than --timerange endpoints)
 
 performance
-	Return the performance of the different coins.
+    Return the performance of the different coins.
 
 ping
-	simple ping
+    simple ping
 
 plot_config
-	Return plot configuration if the strategy defines one.
+    Return plot configuration if the strategy defines one.
 
 profit
-	Return the profit summary.
+    Return the profit summary.
 
 reload_config
-	Reload configuration.
+    Reload configuration.
 
 show_config
-        Returns part of the configuration, relevant for trading operations.
+    Returns part of the configuration, relevant for trading operations.
 
 start
-	Start the bot if it's in the stopped state.
+    Start the bot if it's in the stopped state.
+
+pause
+    Pause the bot if it's in the running state. If triggered on stopped state will handle open positions.
 
 stats
-	Return the stats report (durations, sell-reasons).
+    Return the stats report (durations, sell-reasons).
 
 status
-	Get the status of open trades.
+    Get the status of open trades.
 
 stop
-	Stop the bot. Use `start` to restart.
+    Stop the bot. Use `start` to restart.
 
 stopbuy
-	Stop buying (but handle sells gracefully). Use `reload_config` to reset.
+    Stop buying (but handle sells gracefully). Use `reload_config` to reset.
 
 strategies
-	Lists available strategies
+    Lists available strategies
 
 strategy
-	Get strategy details
+    Get strategy details
 
         :param strategy: Strategy class name
 
 sysinfo
-	Provides system information (CPU, RAM usage)
+    Provides system information (CPU, RAM usage)
 
 trade
-	Return specific trade
+    Return specific trade
 
         :param trade_id: Specify which trade to get.
 
 trades
-	Return trades history, sorted by id
+    Return trades history, sorted by id
 
         :param limit: Limits trades to the X last trades. Max 500 trades.
         :param offset: Offset by this amount of trades.
 
+list_open_trades_custom_data
+    Return a dict containing open trades custom-datas
+
+        :param key: str, optional - Key of the custom-data
+        :param limit: Limits trades to X trades.
+        :param offset: Offset by this amount of trades.
+
+list_custom_data
+    Return a dict containing custom-datas of a specified trade
+
+        :param trade_id: int - ID of the trade
+        :param key: str, optional - Key of the custom-data
+
 version
-	Return the version of the bot.
+    Return the version of the bot.
 
 whitelist
-	Show the current whitelist.
+    Show the current whitelist.
 
 
 ```
+
+### Available endpoints
+
+If you wish to call the REST API manually via another route, e.g. directly via `curl`, the table below shows the relevant URL endpoints and parameters.
+All endpoints in the below table need to be prefixed with the base URL of the API, e.g. `http://127.0.0.1:8080/api/v1/` - so the command becomes `http://127.0.0.1:8080/api/v1/<command>`.
+
+|  Endpoint | Method | Description / Parameters |
+|-----------|--------|--------------------------|
+| `/ping` | GET | Simple command testing the API Readiness - requires no authentication.
+| `/start` | POST | Starts the trader.
+| `/pause` | POST | Pause the trader. Gracefully handle open trades according to their rules. Do not enter new positions.
+| `/stop` | POST | Stops the trader.
+| `/stopbuy` | POST | Stops the trader from opening new trades. Gracefully closes open trades according to their rules.
+| `/reload_config` | POST | Reloads the configuration file.
+| `/trades` | GET | List last trades. Limited to 500 trades per call.
+| `/trade/<tradeid>` | GET | Get specific trade.<br/>*Params:*<br/>- `tradeid` (`int`)
+| `/trades/<tradeid>` | DELETE | Remove trade from the database. Tries to close open orders. Requires manual handling of this trade on the exchange.<br/>*Params:*<br/>- `tradeid` (`int`)
+| `/trades/<tradeid>/open-order` | DELETE | Cancel open order for this trade.<br/>*Params:*<br/>- `tradeid` (`int`)
+| `/trades/<tradeid>/reload` | POST | Reload a trade from the Exchange. Only works in live, and can potentially help recover a trade that was manually sold on the exchange.<br/>*Params:*<br/>- `tradeid` (`int`)
+| `/show_config` | GET | Shows part of the current configuration with relevant settings to operation.
+| `/logs` | GET | Shows last log messages.
+| `/status` | GET | Lists all open trades.
+| `/count` | GET | Displays number of trades used and available.
+| `/entries` | GET | Shows profit statistics for each enter tags for given pair (or all pairs if pair isn't given). Pair is optional.<br/>*Params:*<br/>- `pair` (`str`)
+| `/exits` | GET | Shows profit statistics for each exit reasons for given pair (or all pairs if pair isn't given). Pair is optional.<br/>*Params:*<br/>- `pair` (`str`)
+| `/mix_tags` | GET | Shows profit statistics for each combinations of enter tag + exit reasons for given pair (or all pairs if pair isn't given). Pair is optional.<br/>*Params:*<br/>- `pair` (`str`)
+| `/locks` | GET | Displays currently locked pairs.
+| `/locks` | POST | Locks a pair until "until". (Until will be rounded up to the nearest timeframe). Side is optional and is either `long` or `short` (default is `long`). Reason is optional.<br/>*Params:*<br/>- `<pair>` (`str`)<br/>- `<until>` (`datetime`)<br/>- `[side]` (`str`)<br/>- `[reason]` (`str`)
+| `/locks/<lockid>` | DELETE | Deletes (disables) the lock by id.<br/>*Params:*<br/>- `lockid` (`int`)
+| `/profit` | GET | Display a summary of your profit/loss from close trades and some stats about your performance.
+| `/forceexit` | POST | Instantly exits the given trade (ignoring `minimum_roi`), using the given order type ("market" or "limit", uses your config setting if not specified), and the chosen amount (full sell if not specified). If `all` is supplied as the `tradeid`, then all currently open trades will be forced to exit.<br/>*Params:*<br/>- `<tradeid>` (`int` or `str`)<br/>- `<ordertype>` (`str`)<br/>- `[amount]` (`float`)
+| `/forceenter` | POST | Instantly enters the given pair. Side is optional and is either `long` or `short` (default is `long`). Rate is optional. (`force_entry_enable` must be set to True)<br/>*Params:*<br/>- `<pair>` (`str`)<br/>- `<side>` (`str`)<br/>- `[rate]` (`float`)
+| `/performance` | GET | Show performance of each finished trade grouped by pair.
+| `/balance` | GET | Show account balance per currency.
+| `/daily` | GET | Shows profit or loss per day, over the last n days (n defaults to 7).<br/>*Params:*<br/>- `timescale` (`int`)
+| `/weekly` | GET | Shows profit or loss per week, over the last n days (n defaults to 4).<br/>*Params:*<br/>- `timescale` (`int`)
+| `/monthly` | GET | Shows profit or loss per month, over the last n days (n defaults to 3).<br/>*Params:*<br/>- `timescale` (`int`)
+| `/stats` | GET | Display a summary of profit / loss reasons as well as average holding times.
+| `/whitelist` | GET | Show the current whitelist.
+| `/blacklist` | GET | Show the current blacklist.
+| `/blacklist` | POST | Adds the specified pair to the blacklist.<br/>*Params:*<br/>- `blacklist` (`str`)
+| `/blacklist` | DELETE | Deletes the specified list of pairs from the blacklist.<br/>*Params:*<br/>- `[pair,pair]` (`list[str]`)
+| `/pair_candles` | GET | Returns dataframe for a pair / timeframe combination while the bot is running. **Alpha**
+| `/pair_candles` | POST | Returns dataframe for a pair / timeframe combination while the bot is running, filtered by a provided list of columns to return. **Alpha**<br/>*Params:*<br/>- `<column_list>` (`list[str]`)
+| `/pair_history` | GET | Returns an analyzed dataframe for a given timerange, analyzed by a given strategy. **Alpha**
+| `/pair_history` | POST | Returns an analyzed dataframe for a given timerange, analyzed by a given strategy, filtered by a provided list of columns to return. **Alpha**<br/>*Params:*<br/>- `<column_list>` (`list[str]`)
+| `/plot_config` | GET | Get plot config from the strategy (or nothing if not configured). **Alpha**
+| `/strategies` | GET | List strategies in strategy directory. **Alpha**
+| `/strategy/<strategy>` | GET | Get specific Strategy content by strategy class name. **Alpha**<br/>*Params:*<br/>- `<strategy>` (`str`)
+| `/available_pairs` | GET | List available backtest data. **Alpha**
+| `/version` | GET | Show version.
+| `/sysinfo` | GET | Show information about the system load.
+| `/health` | GET | Show bot health (last bot loop).
+
+!!! Warning "Alpha status"
+    Endpoints labeled with *Alpha status* above may change at any time without notice.
 
 ### Message WebSocket
 
@@ -429,13 +487,13 @@ To properly configure your reverse proxy (securely), please consult it's documen
 - **Caddy**: Caddy v2 supports websockets out of the box, see the [documentation](https://caddyserver.com/docs/v2-upgrade#proxy)
 
 !!! Tip "SSL certificates"
-    You can use tools like certbot to setup ssl certificates to access your bot's UI through encrypted connection by using any fo the above reverse proxies.
+    You can use tools like certbot to setup ssl certificates to access your bot's UI through encrypted connection by using any of the above reverse proxies.
     While this will protect your data in transit, we do not recommend to run the freqtrade API outside of your private network (VPN, SSH tunnel).
 
 ### OpenAPI interface
 
 To enable the builtin openAPI interface (Swagger UI), specify `"enable_openapi": true` in the api_server configuration.
-This will enable the Swagger UI at the `/docs` endpoint. By default, that's running at http://localhost:8080/docs - but it'll depend on your settings.
+This will enable the Swagger UI at the `/docs` endpoint. By default, that's running at <http://localhost:8080/docs> - but it'll depend on your settings.
 
 ### Advanced API usage using JWT tokens
 
@@ -462,42 +520,4 @@ Since the access token has a short timeout (15 min) - the `token/refresh` reques
 {"access_token":"eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpYXQiOjE1ODkxMTk5NzQsIm5iZiI6MTU4OTExOTk3NCwianRpIjoiMDBjNTlhMWUtMjBmYS00ZTk0LTliZjAtNWQwNTg2MTdiZDIyIiwiZXhwIjoxNTg5MTIwODc0LCJpZGVudGl0eSI6eyJ1IjoiRnJlcXRyYWRlciJ9LCJmcmVzaCI6ZmFsc2UsInR5cGUiOiJhY2Nlc3MifQ.1seHlII3WprjjclY6DpRhen0rqdF4j6jbvxIhUFaSbs"}
 ```
 
-### CORS
-
-This whole section is only necessary in cross-origin cases (where you multiple bot API's running on `localhost:8081`, `localhost:8082`, ...), and want to combine them into one FreqUI instance.
-
-??? info "Technical explanation"
-    All web-based front-ends are subject to [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS) - Cross-Origin Resource Sharing.
-    Since most of the requests to the Freqtrade API must be authenticated, a proper CORS policy is key to avoid security problems.
-    Also, the standard disallows `*` CORS policies for requests with credentials, so this setting must be set appropriately.
-
-Users can allow access from different origin URL's to the bot API via the `CORS_origins` configuration setting.
-It consists of a list of allowed URL's that are allowed to consume resources from the bot's API.
-
-Assuming your application is deployed as `https://frequi.freqtrade.io/home/` - this would mean that the following configuration becomes necessary:
-
-```jsonc
-{
-    //...
-    "jwt_secret_key": "somethingrandom",
-    "CORS_origins": ["https://frequi.freqtrade.io"],
-    //...
-}
-```
-
-In the following (pretty common) case, FreqUI is accessible on `http://localhost:8080/trade` (this is what you see in your navbar when navigating to freqUI).
-![freqUI url](assets/frequi_url.png)
-
-The correct configuration for this case is `http://localhost:8080` - the main part of the URL including the port.
-
-```jsonc
-{
-    //...
-    "jwt_secret_key": "somethingrandom",
-    "CORS_origins": ["http://localhost:8080"],
-    //...
-}
-```
-
-!!! Note
-    We strongly recommend to also set `jwt_secret_key` to something random and known only to yourself to avoid unauthorized access to your bot.
+--8<-- "includes/cors.md"

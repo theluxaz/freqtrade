@@ -1,5 +1,5 @@
 import logging
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 import random
@@ -12,8 +12,12 @@ from freqtrade.data.btanalysis import (analyze_trade_parallelism,# calculate_max
 from freqtrade.data.converter import trim_dataframe
 from freqtrade.data.dataprovider import DataProvider
 from freqtrade.data.history import get_timerange, load_data
-from freqtrade.data.metrics import (calculate_max_drawdown, calculate_underwater,
-                                    combine_dataframes_with_mean, create_cum_profit)
+from freqtrade.data.metrics import (
+    calculate_max_drawdown,
+    calculate_underwater,
+    combine_dataframes_with_mean,
+    create_cum_profit,
+)
 from freqtrade.enums import CandleType
 from freqtrade.exceptions import OperationalException
 from freqtrade.exchange import timeframe_to_prev_date, timeframe_to_seconds
@@ -21,6 +25,8 @@ from freqtrade.misc import pair_to_filename
 from freqtrade.plugins.pairlist.pairlist_helpers import expand_pairlist
 from freqtrade.resolvers import ExchangeResolver, StrategyResolver
 from freqtrade.strategy import IStrategy
+from freqtrade.strategy.strategy_wrapper import strategy_safe_wrapper
+from freqtrade.util import get_dry_run_wallet
 
 
 ## List of available main plot render commands
@@ -47,65 +53,67 @@ except ImportError:
     exit(1)
 
 
-def init_plotscript(config, markets: List, startup_candles: int = 0):
+def init_plotscript(config, markets: list, startup_candles: int = 0):
     """
     Initialize objects needed for plotting
     :return: Dict with candle (OHLCV) data, trades and pairs
     """
 
     if "pairs" in config:
-        pairs = expand_pairlist(config['pairs'], markets)
+        pairs = expand_pairlist(config["pairs"], markets)
     else:
-        pairs = expand_pairlist(config['exchange']['pair_whitelist'], markets)
+        pairs = expand_pairlist(config["exchange"]["pair_whitelist"], markets)
 
     # Set timerange to use
-    timerange = TimeRange.parse_timerange(config.get('timerange'))
+    timerange = TimeRange.parse_timerange(config.get("timerange"))
 
     data = load_data(
-        datadir=config.get('datadir'),
+        datadir=config.get("datadir"),
         pairs=pairs,
-        timeframe=config['timeframe'],
+        timeframe=config["timeframe"],
         timerange=timerange,
         startup_candles=startup_candles,
-        data_format=config.get('dataformat_ohlcv', 'json'),
-        candle_type=config.get('candle_type_def', CandleType.SPOT)
+        data_format=config["dataformat_ohlcv"],
+        candle_type=config.get("candle_type_def", CandleType.SPOT),
     )
 
     if startup_candles and data:
         min_date, max_date = get_timerange(data)
         logger.info(f"Loading data from {min_date} to {max_date}")
-        timerange.adjust_start_if_necessary(timeframe_to_seconds(config['timeframe']),
-                                            startup_candles, min_date)
+        timerange.adjust_start_if_necessary(
+            timeframe_to_seconds(config["timeframe"]), startup_candles, min_date
+        )
 
     no_trades = False
     filename = config.get('exportfilename')
     if config.get('no_trades', False):
         no_trades = True
-    elif config['trade_source'] == 'file':
+    elif config["trade_source"] == "file":
         if not filename.is_dir() and not filename.is_file():
             logger.warning("Backtest file is missing skipping trades.")
             no_trades = True
     try:
         trades = load_trades(
-            config['trade_source'],
-            db_url=config.get('db_url'),
+            config["trade_source"],
+            db_url=config.get("db_url"),
             exportfilename=filename,
             no_trades=no_trades,
-            strategy=config.get('strategy'),
+            strategy=config.get("strategy"),
         )
     except ValueError as e:
         raise OperationalException(e) from e
     if not trades.empty:
-        trades = trim_dataframe(trades, timerange, 'open_date')
+        trades = trim_dataframe(trades, timerange, df_date_col="open_date")
 
-    return {"ohlcv": data,
-            "trades": trades,
-            "pairs": pairs,
-            "timerange": timerange,
-            }
+    return {
+        "ohlcv": data,
+        "trades": trades,
+        "pairs": pairs,
+        "timerange": timerange,
+    }
 
 
-def add_indicators(fig, row, indicators: Dict[str, Dict], data: pd.DataFrame) -> make_subplots:
+def add_indicators(fig, row, indicators: dict[str, dict], data: pd.DataFrame) -> make_subplots:
     """
     Generate all the indicators selected by the user for a specific row, based on the configuration
     :param fig: Plot figure to append to
@@ -115,8 +123,8 @@ def add_indicators(fig, row, indicators: Dict[str, Dict], data: pd.DataFrame) ->
     :param data: candlestick DataFrame
     """
     plot_kinds = {
-        'scatter': go.Scatter,
-        'bar': go.Bar,
+        "scatter": go.Scatter,
+        "bar": go.Bar,
     }
     for indicator, conf in indicators.items():
         logger.debug(f"indicator {indicator} with config {conf}")
@@ -131,20 +139,26 @@ def add_indicators(fig, row, indicators: Dict[str, Dict], data: pd.DataFrame) ->
                       'name': indicator
                       }
 
-            plot_type = conf.get('type', 'scatter')
-            color = conf.get('color')
-            if plot_type == 'bar':
-                kwargs.update({'marker_color': color or 'DarkSlateGrey',
-                               'marker_line_color': color or 'DarkSlateGrey'})
+            plot_type = conf.get("type", "scatter")
+            color = conf.get("color")
+            if plot_type == "bar":
+                kwargs.update(
+                    {
+                        "marker_color": color or "DarkSlateGrey",
+                        "marker_line_color": color or "DarkSlateGrey",
+                    }
+                )
             else:
                 if color:
-                    kwargs.update({'line': {'color': color}})
-                kwargs['mode'] = 'lines'
-                if plot_type != 'scatter':
-                    logger.warning(f'Indicator {indicator} has unknown plot trace kind {plot_type}'
-                                   f', assuming "scatter".')
+                    kwargs.update({"line": {"color": color}})
+                kwargs["mode"] = "lines"
+                if plot_type != "scatter":
+                    logger.warning(
+                        f"Indicator {indicator} has unknown plot trace kind {plot_type}"
+                        f', assuming "scatter".'
+                    )
 
-            kwargs.update(conf.get('plotly', {}))
+            kwargs.update(conf.get("plotly", {}))
             trace = plot_kinds[plot_type](**kwargs)
             fig.add_trace(trace, row, 1)
         else:
@@ -178,33 +192,25 @@ def add_profit(fig, row, data: pd.DataFrame, column: str, name: str) -> make_sub
     return fig
 
 
-def add_max_drawdown(fig, row, trades: pd.DataFrame, df_comb: pd.DataFrame,
-                     timeframe: str, starting_balance: float) -> make_subplots:
+def add_max_drawdown(
+    fig, row, trades: pd.DataFrame, df_comb: pd.DataFrame, timeframe: str, starting_balance: float
+) -> make_subplots:
     """
     Add scatter points indicating max drawdown
     """
     try:
-        _, highdate, lowdate, _, _, max_drawdown = calculate_max_drawdown(
-            trades,
-            starting_balance=starting_balance
-        )
+        drawdown = calculate_max_drawdown(trades, starting_balance=starting_balance)
 
         drawdown = go.Scatter(
-            x=[highdate, lowdate],
+            x=[drawdown.high_date, drawdown.low_date],
             y=[
-                df_comb.loc[timeframe_to_prev_date(timeframe, highdate), 'cum_profit'],
-                df_comb.loc[timeframe_to_prev_date(timeframe, lowdate), 'cum_profit'],
+                df_comb.loc[timeframe_to_prev_date(timeframe, drawdown.high_date), "cum_profit"],
+                df_comb.loc[timeframe_to_prev_date(timeframe, drawdown.low_date), "cum_profit"],
             ],
-            mode='markers',
-            name=f"Max drawdown {max_drawdown * 100:.2f}%",
-            text=f"Max drawdown {max_drawdown * 100:.2f}%",
-            marker=dict(
-                symbol='square-open',
-                size=9,
-                line=dict(width=2),
-                color='green'
-
-            )
+            mode="markers",
+            name=f"Max drawdown {drawdown.relative_account_drawdown:.2%}",
+            text=f"Max drawdown {drawdown.relative_account_drawdown:.2%}",
+            marker=dict(symbol="square-open", size=9, line=dict(width=2), color="green"),
         )
         fig.add_trace(drawdown, row, 1)
     except ValueError:
@@ -218,27 +224,25 @@ def add_underwater(fig, row, trades: pd.DataFrame, starting_balance: float) -> m
     """
     try:
         underwater = calculate_underwater(
-            trades,
-            value_col="profit_abs",
-            starting_balance=starting_balance
+            trades, value_col="profit_abs", starting_balance=starting_balance
         )
 
         underwater_plot = go.Scatter(
-            x=underwater['date'],
-            y=underwater['drawdown'],
+            x=underwater["date"],
+            y=underwater["drawdown"],
             name="Underwater Plot",
-            fill='tozeroy',
-            fillcolor='#cc362b',
-            line={'color': '#cc362b'}
+            fill="tozeroy",
+            fillcolor="#cc362b",
+            line={"color": "#cc362b"},
         )
 
         underwater_plot_relative = go.Scatter(
-            x=underwater['date'],
-            y=(-underwater['drawdown_relative']),
+            x=underwater["date"],
+            y=(-underwater["drawdown_relative"]),
             name="Underwater Plot (%)",
-            fill='tozeroy',
-            fillcolor='green',
-            line={'color': 'green'}
+            fill="tozeroy",
+            fillcolor="green",
+            line={"color": "green"},
         )
 
         fig.add_trace(underwater_plot, row, 1)
@@ -257,11 +261,11 @@ def add_parallelism(fig, row, trades: pd.DataFrame, timeframe: str) -> make_subp
 
         drawdown = go.Scatter(
             x=result.index,
-            y=result['open_trades'],
+            y=result["open_trades"],
             name="Parallel trades",
-            fill='tozeroy',
-            fillcolor='#242222',
-            line={'color': '#242222'},
+            fill="tozeroy",
+            fillcolor="#242222",
+            line={"color": "#242222"},
         )
         fig.add_trace(drawdown, row, 1)
     except ValueError:
@@ -276,17 +280,18 @@ def plot_trades(fig, trades: pd.DataFrame) -> make_subplots:
     # Trades can be empty
     if trades is not None and len(trades) > 0:
         # Create description for exit summarizing the trade
-        trades['desc'] = trades.apply(
-            lambda row: f"{row['profit_ratio']:.2%}, " +
-            (f"{row['enter_tag']}, " if row['enter_tag'] is not None else "") +
-            f"{row['exit_reason']}, " +
-            f"{row['trade_duration']} min",
-            axis=1)
+        trades["desc"] = trades.apply(
+            lambda row: f"{row['profit_ratio']:.2%}, "
+            + (f"{row['enter_tag']}, " if row["enter_tag"] is not None else "")
+            + f"{row['exit_reason']}, "
+            + f"{row['trade_duration']} min",
+            axis=1,
+        )
         trade_entries = go.Scatter(
             x=trades["open_date"],
             y=trades["open_rate"],
-            mode='markers',
-            name='Trade entry',
+            mode="markers",
+            name="Trade entry",
             text=trades["desc"],
             marker=dict(
                 symbol='circle-open',
@@ -343,7 +348,7 @@ def create_plotconfig(indicators1: List[str], indicators2: List[str], indicators
 
     if plot_config:
         if indicators1:
-            plot_config['main_plot'] = {ind: {} for ind in indicators1}
+            plot_config["main_plot"] = {ind: {} for ind in indicators1}
         if indicators2:
             plot_config['subplots'] = {'Indicator 2': {ind: {} for ind in indicators2}}
         if indicators3:
@@ -376,10 +381,16 @@ def create_plotconfig(indicators1: List[str], indicators2: List[str], indicators
     return plot_config
 
 
-def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
-              indicator_b: str, label: str = "",
-              fill_color: str = "rgba(0,176,246,0.2)") -> make_subplots:
-    """ Creates a plot for the area between two traces and adds it to fig.
+def plot_area(
+    fig,
+    row: int,
+    data: pd.DataFrame,
+    indicator_a: str,
+    indicator_b: str,
+    label: str = "",
+    fill_color: str = "rgba(0,176,246,0.2)",
+) -> make_subplots:
+    """Creates a plot for the area between two traces and adds it to fig.
     :param fig: Plot figure to append to
     :param row: row number for this plot
     :param data: candlestick DataFrame
@@ -389,211 +400,7 @@ def plot_area(fig, row: int, data: pd.DataFrame, indicator_a: str,
     :param fill_color: color to be used for the filled area
     :return: fig with added  filled_traces plot
     """
-
-    data = data.copy()
-
-    if( label=="main"):
-
-
-        main_trend_color_hex = {  5:"rgba(24, 69, 13,0.4)",#"name":"UPPER_DANGER"}
-                            3:"rgba(0,128,0, 0.2)",#"name":"LONG_UPTREND"},
-                            # 2:"rgba(70, 130, 180,0.25)",#"name":"DOWNTREND_UPSWING"},
-                            1:"rgba(255,255,159,0.25)",#"name":"DATA_NOT_LOADED"}, #"rgba(255,255,159,0.1)",
-                            0:"rgba(255, 255, 255, 0)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
-                            -1:"rgba(233, 150, 122,0.25)",#"name":"SLOW_DOWNTREND"},
-                            -2:"rgba(255, 0, 0,0.2)",#"name":"LONG_DOWNTREND"},
-                            -3:"rgba(106, 11, 16,0.4)",#"name":"BOTTOM_DANGER"},
-                        }
-        main_trend_labels = {  "5":"UPPER_DANGER",
-                            "3":"LONG_UPTREND",
-                            # "2":"DOWNTREND_UPSWING",
-                            "1":"DATA_NOT_LOADED",
-                            "0":"NOTREND",
-                            "-1":"SLOW_DOWNTREND",
-                            "-2":"LONG_DOWNTREND",
-                            "-3":"BOTTOM_DANGER"
-
-                        }
-
-        main_volatility_hex = {
-                    0:"rgba(0, 0, 0, 0)",#"name":"NONE"},
-                    1:"rgba(175, 225, 233, 0.25)",#"name":"LOW"},
-                    2:"rgba(73, 187, 204, 0.25)",#"name":"MID"},
-                    3:"rgba(0, 139, 251, 0.22)",#"name":"HIGH"}
-                        }
-        main_volatility_labels = {
-                    "0":"NONE",
-                    "1":"LOW_VOL",
-                    "2":"MID_VOL",
-                    "3":"HIGH_VOL"
-                        }
-        line = {'color': 'rgba(255,255,255,0)'}
-
-        for m_trend in data["main_trend"].copy().drop_duplicates():
-            if(m_trend != 0):
-                newframe = data.copy()
-
-                newframe.loc[( newframe['main_trend'] != m_trend), 'bb_upperband'] = newframe['bb_middleband']
-                newframe.loc[( newframe['main_trend'] != m_trend), 'bb_lowerband'] = newframe['bb_middleband']
-
-
-                main_trend_area_style = main_trend_color_hex[m_trend]
-                main_trend_label_style = main_trend_labels[str(m_trend)]
-
-
-                trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
-                                 showlegend=False,
-                                 line=line)
-                trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=main_trend_label_style,
-                                     fill="tonexty", fillcolor=main_trend_area_style,
-                                     line=line)
-                fig.add_trace(trace_a, row, 1)
-                fig.add_trace(trace_b, row, 1)
-            else:
-                for vol in range(3):
-                    vol+=1
-                    newframe = data.copy()
-
-                    newframe.loc[(( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)&(newframe['volatility'] != 0))), 'bb_upperband'] = newframe['bb_middleband']
-                    newframe.loc[(( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)&(newframe['volatility'] != 0))), 'bb_lowerband'] = newframe['bb_middleband']
-
-
-                    vol_area_style = main_volatility_hex[vol]
-                    vol_area_labels = main_volatility_labels[str(vol)]
-
-
-                    trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
-                                     showlegend=False,
-                                     line=line)
-                    trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=vol_area_labels,
-                                         fill="tonexty", fillcolor=vol_area_style,
-                                         line=line)
-                    fig.add_trace(trace_a, row, 1)
-                    fig.add_trace(trace_b, row, 1)
-
-
-    if( label.startswith('solo')):
-
-        m_trend = int(label.split("=")[1])
-
-
-        main_trend_color_hex = {  5:"rgba(24, 69, 13,0.4)",#"name":"UPPER_DANGER"}
-                            3:"rgba(0,128,0, 0.2)",#"name":"LONG_UPTREND"},
-                            # 2:"rgba(70, 130, 180,0.25)",#"name":"DOWNTREND_UPSWING"},
-                            1:"rgba(255,255,159,0.25)",#"name":"DATA_NOT_LOADED"}, #"rgba(255,255,159,0.1)",
-                            0:"rgba(255, 255, 255, 0)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
-                            -1:"rgba(233, 150, 122,0.25)",#"name":"SLOW_DOWNTREND"},
-                            -2:"rgba(255, 0, 0,0.2)",#"name":"LONG_DOWNTREND"},
-                            -3:"rgba(106, 11, 16,0.4)",#"name":"BOTTOM_DANGER"},
-                        }
-        main_trend_labels = {  "5":"UPPER_DANGER",
-                            "3":"LONG_UPTREND",
-                            # "2":"DOWNTREND_UPSWING",
-                            "1":"DATA_NOT_LOADED",
-                            "0":"NOTREND",
-                            "-1":"SLOW_DOWNTREND",
-                            "-2":"LONG_DOWNTREND",
-                            "-3":"BOTTOM_DANGER"
-
-                        }
-
-        main_volatility_hex = {
-                    0:"rgba(0, 0, 0, 0)",#"name":"NONE"},
-                    1:"rgba(175, 225, 233, 0.25)",#"name":"LOW"},
-                    2:"rgba(73, 187, 204, 0.25)",#"name":"MID"},
-                    3:"rgba(0, 139, 251, 0.22)",#"name":"HIGH"}
-                        }
-        main_volatility_labels = {
-                    "0":"NONE",
-                    "1":"LOW_VOL",
-                    "2":"MID_VOL",
-                    "3":"HIGH_VOL"
-                        }
-        line = {'color': 'rgba(255,255,255,0)'}
-
-
-        if(m_trend != 0):
-
-
-            newframe = data.copy()
-
-            newframe.loc[(newframe['main_trend'] != m_trend), 'bb_upperband'] = newframe['bb_middleband']
-            newframe.loc[(newframe['main_trend'] != m_trend), 'bb_lowerband'] = newframe['bb_middleband']
-
-            main_trend_area_style = main_trend_color_hex[m_trend]
-            main_trend_label_style = main_trend_labels[str(m_trend)]
-
-            trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
-                                 showlegend=False,
-                                 line=line)
-            trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=main_trend_label_style,
-                                 fill="tonexty", fillcolor=main_trend_area_style,
-                                 line=line)
-            fig.add_trace(trace_a, row, 1)
-            fig.add_trace(trace_b, row, 1)
-
-            # draws danger zone on -1 and -2 BOTH DOWNTRENDS
-            if ((m_trend == -1) or (m_trend == -2)):
-                newframe = data.copy()
-
-                newframe.loc[(newframe['main_trend'] != -3) , 'bb_upperband'] = newframe['bb_middleband']
-                newframe.loc[(newframe['main_trend'] != -3) , 'bb_lowerband'] = newframe['bb_middleband']
-
-                main_trend_area_style = main_trend_color_hex[-3]
-                main_trend_label_style = main_trend_labels[str(-3)]
-
-                trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
-                                     showlegend=False,
-                                     line=line)
-                trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=main_trend_label_style,
-                                     fill="tonexty", fillcolor=main_trend_area_style,
-                                     line=line)
-                fig.add_trace(trace_a, row, 1)
-                fig.add_trace(trace_b, row, 1)
-            # draws upper danger zone on LONG UPTREND
-            if (m_trend == 3):
-                newframe = data.copy()
-
-                newframe.loc[(newframe['main_trend'] != 5) , 'bb_upperband'] = newframe['bb_middleband']
-                newframe.loc[(newframe['main_trend'] != 5) , 'bb_lowerband'] = newframe['bb_middleband']
-
-                main_trend_area_style = main_trend_color_hex[5]
-                main_trend_label_style = main_trend_labels[str(5)]
-
-                trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
-                                     showlegend=False,
-                                     line=line)
-                trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=main_trend_label_style,
-                                     fill="tonexty", fillcolor=main_trend_area_style,
-                                     line=line)
-                fig.add_trace(trace_a, row, 1)
-                fig.add_trace(trace_b, row, 1)
-        else:
-            for vol in range(3):
-                vol+=1
-                newframe = data.copy()
-
-                newframe.loc[(( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)&(newframe['volatility'] != 0))), 'bb_upperband'] = newframe['bb_middleband']
-                newframe.loc[(( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)&(newframe['volatility'] != 0))), 'bb_lowerband'] = newframe['bb_middleband']
-
-
-                vol_area_style = main_volatility_hex[vol]
-                vol_area_labels = main_volatility_labels[str(vol)]
-
-
-                trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
-                                 showlegend=False,
-                                 line=line)
-                trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=vol_area_labels,
-                                     fill="tonexty", fillcolor=vol_area_style,
-                                     line=line)
-                fig.add_trace(trace_a, row, 1)
-                fig.add_trace(trace_b, row, 1)
-
-
-
-
-    if label=="Bolinger Bands" and indicator_a in data and indicator_b in data:
+    if indicator_a in data and indicator_b in data:
         # make lines invisible to get the area plotted, only.
         line = {'color': 'rgba(255,255,255,0)'}
         # TODO: Figure out why scattergl causes problems plotly/plotly.js#2284
@@ -1000,7 +807,7 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
 
 
 def add_areas(fig, row: int, data: pd.DataFrame, indicators) -> make_subplots:
-    """ Adds all area plots (specified in plot_config) to fig.
+    """Adds all area plots (specified in plot_config) to fig.
     :param fig: Plot figure to append to
     :param row: row number for this plot
     :param data: candlestick DataFrame
@@ -1009,48 +816,42 @@ def add_areas(fig, row: int, data: pd.DataFrame, indicators) -> make_subplots:
     :return: fig with added  filled_traces plot
     """
     for indicator, ind_conf in indicators.items():
-        if 'fill_to' in ind_conf:
-            indicator_b = ind_conf['fill_to']
+        if "fill_to" in ind_conf:
+            indicator_b = ind_conf["fill_to"]
             if indicator in data and indicator_b in data:
-                label = ind_conf.get('fill_label',
-                                     f'{indicator}<>{indicator_b}')
-                fill_color = ind_conf.get('fill_color', 'rgba(0,176,246,0.2)')
-                fig = plot_area(fig, row, data, indicator, indicator_b,
-                                label=label, fill_color=fill_color)
+                label = ind_conf.get("fill_label", f"{indicator}<>{indicator_b}")
+                fill_color = ind_conf.get("fill_color", "rgba(0,176,246,0.2)")
+                fig = plot_area(
+                    fig, row, data, indicator, indicator_b, label=label, fill_color=fill_color
+                )
             elif indicator not in data:
                 logger.info(
-                    'Indicator "%s" ignored. Reason: This indicator is not '
-                    'found in your strategy.', indicator
+                    'Indicator "%s" ignored. Reason: This indicator is not found in your strategy.',
+                    indicator,
                 )
             elif indicator_b not in data:
                 logger.info(
-                    'fill_to: "%s" ignored. Reason: This indicator is not '
-                    'in your strategy.', indicator_b
+                    'fill_to: "%s" ignored. Reason: This indicator is not in your strategy.',
+                    indicator_b,
                 )
     return fig
 
 
-def create_scatter(
-    data,
-    column_name,
-    color,
-    direction
-) -> Optional[go.Scatter]:
-
+def create_scatter(data, column_name, color, direction) -> go.Scatter | None:
     if column_name in data.columns:
         df_short = data[data[column_name] == 1]
         if len(df_short) > 0:
             shorts = go.Scatter(
                 x=df_short.date,
                 y=df_short.close,
-                mode='markers',
+                mode="markers",
                 name=column_name,
                 marker=dict(
                     symbol=f"triangle-{direction}-dot",
                     size=9,
                     line=dict(width=1),
                     color=color,
-                )
+                ),
             )
             return shorts
         else:
@@ -1067,7 +868,7 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
                                ) -> go.Figure:
     """
     Generate the graph from the data generated by Backtesting or from DB
-    Volume will always be ploted in row2, so Row 1 and 3 are to our disposal for custom indicators
+    Volume will always be plotted in row2, so Row 1 and 3 are to our disposal for custom indicators
     :param pair: Pair to Display on the graph
     :param data: OHLCV DataFrame containing indicators and entry/exit signals
     :param trades: All trades created
@@ -1076,9 +877,14 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
     :param plot_config: Dict of Dicts containing advanced plot configuration
     :return: Plotly figure
     """
-    plot_config = create_plotconfig(indicators1, indicators2, indicators3, plot_config)
-    rows = 1 + len(plot_config['subplots'])
-    row_widths = [1 for _ in plot_config['subplots']]
+    plot_config = create_plotconfig(
+        indicators1 or [],
+        indicators2 or [],
+        indicators3 or [],
+        plot_config or {},
+    )
+    rows = 1 + len(plot_config["subplots"])
+    row_widths = [1 for _ in plot_config["subplots"]]
     # Define the graph
     fig = make_subplots(
         rows=rows,
@@ -1087,24 +893,25 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
         row_width=[1] + [1, 4],
         vertical_spacing=0.0001,
     )
-    fig['layout'].update(title=pair)
-    fig['layout']['yaxis1'].update(title='Price')
-    fig['layout']['yaxis2'].update(title='Price')
-    for i, name in enumerate(plot_config['subplots']):
-        fig['layout'][f'yaxis{2 + i}'].update(title=name)
-    fig['layout']['xaxis']['rangeslider'].update(visible=False)
+    fig["layout"].update(title=pair)
+    fig["layout"]["yaxis1"].update(title="Price")
+    fig["layout"]["yaxis2"].update(title="Volume")
+    for i, name in enumerate(plot_config["subplots"]):
+        fig["layout"][f"yaxis{2 + i}"].update(title=name)
+    fig["layout"]["xaxis"]["rangeslider"].update(visible=False)
     fig.update_layout(modebar_add=["v1hovermode", "toggleSpikeLines"])
 
     # Common information
     candles = go.Candlestick(
-        x=data.date,
-        open=data.open,
-        high=data.high,
-        low=data.low,
-        close=data.close,
-        name='Price'
+        x=data.date, open=data.open, high=data.high, low=data.low, close=data.close, name="Price"
     )
     fig.add_trace(candles, 1, 1)
+    
+    # Enable for shorter code or if futures don't work
+    # longs = create_scatter(data, "enter_long", "green", "up")
+    # exit_longs = create_scatter(data, "exit_long", "red", "down")
+    # shorts = create_scatter(data, "enter_short", "blue", "down")
+    # exit_shorts = create_scatter(data, "exit_short", "violet", "up")
 
     buy_colours_hex=["#7CFC00"  ,  "#32CD32"  , "#006400" , "#9ACD32" , "#00FA9A" , "#8FBC8F" ,     #green colours
                          "#20B2AA" , "#00FFFF" , "#00CED1" , "#008B8B",   ##electric color
@@ -1221,13 +1028,13 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
 
     # prevent bb_lower and bb_upper from plotting
     try:
-        del plot_config['main_plot']['bb_lowerband']
-        del plot_config['main_plot']['bb_upperband']
+        del plot_config["main_plot"]["bb_lowerband"]
+        del plot_config["main_plot"]["bb_upperband"]
     except KeyError:
         pass
     # main plot goes to row 1
-    fig = add_indicators(fig=fig, row=1, indicators=plot_config['main_plot'], data=data)
-    fig = add_areas(fig, 1, data, plot_config['main_plot'])
+    fig = add_indicators(fig=fig, row=1, indicators=plot_config["main_plot"], data=data)
+    fig = add_areas(fig, 1, data, plot_config["main_plot"])
     fig = plot_trades(fig, trades)
 
     #  Disabled Volume, indicators 3 enabled
@@ -1344,60 +1151,76 @@ def generate_sell_reason_style(sell_reason, color, symbol):
 
 
 
-def generate_profit_graph(pairs: str, data: Dict[str, pd.DataFrame],
-                          trades: pd.DataFrame, timeframe: str, stake_currency: str,
-                          starting_balance: float) -> go.Figure:
+def generate_profit_graph(
+    pairs: str,
+    data: dict[str, pd.DataFrame],
+    trades: pd.DataFrame,
+    timeframe: str,
+    stake_currency: str,
+    starting_balance: float,
+) -> go.Figure:
     # Combine close-values for all pairs, rename columns to "pair"
-    df_comb = combine_dataframes_with_mean(data, "close")
+    try:
+        df_comb = combine_dataframes_with_mean(data, "close")
+    except ValueError:
+        raise OperationalException(
+            "No data found. Please make sure that data is available for "
+            "the timerange and pairs selected."
+        )
 
     # Trim trades to available OHLCV data
     trades = extract_trades_of_period(df_comb, trades, date_index=True)
     if len(trades) == 0:
-        raise OperationalException('No trades found in selected timerange.')
+        raise OperationalException("No trades found in selected timerange.")
 
     # Add combined cumulative profit
-    df_comb = create_cum_profit(df_comb, trades, 'cum_profit', timeframe)
+    df_comb = create_cum_profit(df_comb, trades, "cum_profit", timeframe)
 
     # Plot the pairs average close prices, and total profit growth
     avgclose = go.Scatter(
         x=df_comb.index,
-        y=df_comb['mean'],
-        name='Avg close price',
+        y=df_comb["mean"],
+        name="Avg close price",
     )
 
-    fig = make_subplots(rows=6, cols=1, shared_xaxes=True,
-                        row_heights=[1, 1, 1, 0.5, 0.75, 0.75],
-                        vertical_spacing=0.05,
-                        subplot_titles=[
-                            "AVG Close Price",
-                            "Combined Profit",
-                            "Profit per pair",
-                            "Parallelism",
-                            "Underwater",
-                            "Relative Drawdown",
-                        ])
-    fig['layout'].update(title="Freqtrade Profit plot")
-    fig['layout']['yaxis1'].update(title='Price')
-    fig['layout']['yaxis2'].update(title=f'Profit {stake_currency}')
-    fig['layout']['yaxis3'].update(title=f'Profit {stake_currency}')
-    fig['layout']['yaxis4'].update(title='Trade count')
-    fig['layout']['yaxis5'].update(title='Underwater Plot')
-    fig['layout']['yaxis6'].update(title='Underwater Plot Relative (%)', tickformat=',.2%')
-    fig['layout']['xaxis']['rangeslider'].update(visible=False)
+    fig = make_subplots(
+        rows=6,
+        cols=1,
+        shared_xaxes=True,
+        row_heights=[1, 1, 1, 0.5, 0.75, 0.75],
+        vertical_spacing=0.05,
+        subplot_titles=[
+            "AVG Close Price",
+            "Combined Profit",
+            "Profit per pair",
+            "Parallelism",
+            "Underwater",
+            "Relative Drawdown",
+        ],
+    )
+    fig["layout"].update(title="Freqtrade Profit plot")
+    fig["layout"]["yaxis1"].update(title="Price")
+    fig["layout"]["yaxis2"].update(title=f"Profit {stake_currency}")
+    fig["layout"]["yaxis3"].update(title=f"Profit {stake_currency}")
+    fig["layout"]["yaxis4"].update(title="Trade count")
+    fig["layout"]["yaxis5"].update(title="Underwater Plot")
+    fig["layout"]["yaxis6"].update(title="Underwater Plot Relative (%)", tickformat=",.2%")
+    fig["layout"]["xaxis"]["rangeslider"].update(visible=False)
     fig.update_layout(modebar_add=["v1hovermode", "toggleSpikeLines"])
 
     fig.add_trace(avgclose, 1, 1)
-    fig = add_profit(fig, 2, df_comb, 'cum_profit', 'Profit')
+    fig = add_profit(fig, 2, df_comb, "cum_profit", "Profit")
     fig = add_max_drawdown(fig, 2, trades, df_comb, timeframe, starting_balance)
     fig = add_parallelism(fig, 4, trades, timeframe)
     # Two rows consumed
     fig = add_underwater(fig, 5, trades, starting_balance)
 
     for pair in pairs:
-        profit_col = f'cum_profit_{pair}'
+        profit_col = f"cum_profit_{pair}"
         try:
-            df_comb = create_cum_profit(df_comb, trades[trades['pair'] == pair], profit_col,
-                                        timeframe)
+            df_comb = create_cum_profit(
+                df_comb, trades[trades["pair"] == pair], profit_col, timeframe
+            )
             fig = add_profit(fig, 3, df_comb, profit_col, f"Profit {pair}")
         except ValueError:
             pass
@@ -1409,9 +1232,9 @@ def generate_plot_filename(pair: str, timeframe: str) -> str:
     Generate filenames per pair/timeframe to be used for storing plots
     """
     pair_s = pair_to_filename(pair)
-    file_name = 'freqtrade-plot-' + pair_s + '-' + timeframe + '.html'
+    file_name = "freqtrade-plot-" + pair_s + "-" + timeframe + ".html"
 
-    logger.info('Generate plot file for %s', pair)
+    logger.info("Generate plot file for %s", pair)
 
     return file_name
 
@@ -1428,8 +1251,7 @@ def store_plot_file(fig, filename: str, directory: Path, auto_open: bool = False
     directory.mkdir(parents=True, exist_ok=True)
 
     _filename = directory.joinpath(filename)
-    plot(fig, filename=str(_filename),
-         auto_open=auto_open)
+    plot(fig, filename=str(_filename), auto_open=auto_open)
     logger.info(f"Stored plot as {_filename}")
 
 
@@ -1446,22 +1268,22 @@ def load_and_plot_trades(config: Config):
     """
     strategy = StrategyResolver.load_strategy(config)
 
-    exchange = ExchangeResolver.load_exchange(config['exchange']['name'], config)
+    exchange = ExchangeResolver.load_exchange(config)
     IStrategy.dp = DataProvider(config, exchange)
     strategy.ft_bot_start()
-    strategy.bot_loop_start(datetime.now(timezone.utc))
+    strategy_safe_wrapper(strategy.bot_loop_start)(current_time=datetime.now(UTC))
     plot_elements = init_plotscript(config, list(exchange.markets), strategy.startup_candle_count)
-    timerange = plot_elements['timerange']
-    trades = plot_elements['trades']
+    timerange = plot_elements["timerange"]
+    trades = plot_elements["trades"]
     pair_counter = 0
     for pair, data in plot_elements["ohlcv"].items():
         pair_counter += 1
         logger.info("analyse pair %s", pair)
 
-        df_analyzed = strategy.analyze_ticker(data, {'pair': pair})
+        df_analyzed = strategy.analyze_ticker(data, {"pair": pair})
         df_analyzed = trim_dataframe(df_analyzed, timerange)
         if not trades.empty:
-            trades_pair = trades.loc[trades['pair'] == pair]
+            trades_pair = trades.loc[trades["pair"] == pair]
             trades_pair = extract_trades_of_period(df_analyzed, trades_pair)
         else:
             trades_pair = trades
@@ -1476,41 +1298,53 @@ def load_and_plot_trades(config: Config):
             plot_config=strategy.plot_config if hasattr(strategy, 'plot_config') else {}
         )
 
-        store_plot_file(fig, filename=generate_plot_filename(pair, config['timeframe']),
-                        directory=config['user_data_dir'] / 'plot')
+        store_plot_file(
+            fig,
+            filename=generate_plot_filename(pair, config["timeframe"]),
+            directory=config["user_data_dir"] / "plot",
+        )
 
-    logger.info('End of plotting process. %s plots generated', pair_counter)
+    logger.info("End of plotting process. %s plots generated", pair_counter)
 
 
 def plot_profit(config: Config) -> None:
     """
     Plots the total profit for all pairs.
     Note, the profit calculation isn't realistic.
-    But should be somewhat proportional, and therefor useful
+    But should be somewhat proportional, and therefore useful
     in helping out to find a good algorithm.
     """
-    if 'timeframe' not in config:
-        raise OperationalException('Timeframe must be set in either config or via --timeframe.')
+    if "timeframe" not in config:
+        raise OperationalException("Timeframe must be set in either config or via --timeframe.")
 
-    exchange = ExchangeResolver.load_exchange(config['exchange']['name'], config)
+    exchange = ExchangeResolver.load_exchange(config)
     plot_elements = init_plotscript(config, list(exchange.markets))
-    trades = plot_elements['trades']
+    trades = plot_elements["trades"]
     # Filter trades to relevant pairs
     # Remove open pairs - we don't know the profit yet so can't calculate profit for these.
     # Also, If only one open pair is left, then the profit-generation would fail.
-    trades = trades[(trades['pair'].isin(plot_elements['pairs']))
-                    & (~trades['close_date'].isnull())
-                    ]
+    trades = trades[
+        (trades["pair"].isin(plot_elements["pairs"])) & (~trades["close_date"].isnull())
+    ]
     if len(trades) == 0:
-        raise OperationalException("No trades found, cannot generate Profit-plot without "
-                                   "trades from either Backtest result or database.")
+        raise OperationalException(
+            "No trades found, cannot generate Profit-plot without "
+            "trades from either Backtest result or database."
+        )
 
     # Create an average close price of all the pairs that were involved.
     # this could be useful to gauge the overall market trend
-    fig = generate_profit_graph(plot_elements['pairs'], plot_elements['ohlcv'],
-                                trades, config['timeframe'],
-                                config.get('stake_currency', ''),
-                                config.get('available_capital', config['dry_run_wallet']))
-    store_plot_file(fig, filename='freqtrade-profit-plot.html',
-                    directory=config['user_data_dir'] / 'plot',
-                    auto_open=config.get('plot_auto_open', False))
+    fig = generate_profit_graph(
+        plot_elements["pairs"],
+        plot_elements["ohlcv"],
+        trades,
+        config["timeframe"],
+        config.get("stake_currency", ""),
+        config.get("available_capital", get_dry_run_wallet(config)),
+    )
+    store_plot_file(
+        fig,
+        filename="freqtrade-profit-plot.html",
+        directory=config["user_data_dir"] / "plot",
+        auto_open=config.get("plot_auto_open", False),
+    )

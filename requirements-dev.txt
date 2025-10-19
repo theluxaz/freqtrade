@@ -6,27 +6,27 @@
 -r requirements-freqai-rl.txt
 -r docs/requirements-docs.txt
 
-coveralls==3.3.1
-ruff==0.0.260
-mypy==1.1.1
-pre-commit==3.2.1
-pytest==7.2.2
-pytest-asyncio==0.21.0
-pytest-cov==4.0.0
-pytest-mock==3.10.0
-pytest-random-order==1.1.0
-isort==5.12.0
+ruff==0.14.0
+mypy==1.18.2
+pre-commit==4.3.0
+pytest==8.4.2
+pytest-asyncio==1.2.0
+pytest-cov==7.0.0
+pytest-mock==3.15.1
+pytest-random-order==1.2.0
+pytest-timeout==2.4.0
+pytest-xdist==3.8.0
+isort==7.0.0
 # For datetime mocking
-time-machine==2.9.0
-# fastapi testing
-httpx==0.23.3
+time-machine==2.19.0
 
 # Convert jupyter notebooks to markdown documents
-nbconvert==7.2.10
+nbconvert==7.16.6
 
 # mypy types
-types-cachetools==5.3.0.5
+scipy-stubs==1.16.2.3  # keep in sync with `scipy` in `requirements-hyperopt.txt`
+types-cachetools==6.2.0.20250827
 types-filelock==3.2.7
-types-requests==2.28.11.17
-types-tabulate==0.9.0.2
-types-python-dateutil==2.8.19.11
+types-requests==2.32.4.20250913
+types-tabulate==0.9.0.20241207
+types-python-dateutil==2.9.0.20251008

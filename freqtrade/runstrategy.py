@@ -38,7 +38,7 @@ data_loading_time_ms = 1815000000   #21 days
 date_until_gap = 7889238000  # - 3 months ### 5259492000 - 2 months ### 9289238000 - 3.5 months
 
 timeframes_json = [
-                    {"19":1747112400000},  # 13 May 2025 5:00pm GMT -> move up until July 1 2025 later
+                    {"19":1747112200000},  # 13 May 2025 5:00pm GMT -> move up until July 1 2025 later
                     {"18":1740718800000},  # 01 Mar 2025 5:00pm GMT ->
                     {"17":1734282000000},  # 15 Dec 2024 5:00pm GMT
                     {"16":1727542800000},  # 28 Sept 2024 5:00pm GMT

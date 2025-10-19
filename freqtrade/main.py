@@ -7,8 +7,8 @@ Read the documentation to know what cli arguments you need.
 import logging
 import sys
 from typing import Any, List, Optional
-# import gc
-from freqtrade.util.gc_setup import gc_set_threshold
+import gc
+# from freqtrade.util.gc_setup import gc_set_threshold
 
 
 # check min. python version

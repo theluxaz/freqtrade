@@ -23,10 +23,16 @@ These modes can be configured with these values:
     'stoploss_on_exchange_limit_ratio': 0.99
 ```
 
-!!! Note
-    Stoploss on exchange is only supported for Binance (stop-loss-limit), Huobi (stop-limit), Kraken (stop-loss-market, stop-loss-limit), Gate (stop-limit), and Kucoin (stop-limit and stop-market) as of now.  
-    <ins>Do not set too low/tight stoploss value if using stop loss on exchange!</ins>  
-    If set to low/tight then you have greater risk of missing fill on the order and stoploss will not work.
+Stoploss on exchange is only supported for the following exchanges, and not all exchanges support both stop-limit and stop-market.
+The Order-type will be ignored if only one mode is available.
+
+??? info "Supported exchanges and stoploss types"
+    
+    --8<-- "includes/exchange-features.md"
+
+!!! Note "Tight stoploss"
+    <ins>Do not set too low/tight stoploss value when using stop loss on exchange!</ins>  
+    If set to low/tight you will have greater risk of missing fill on the order and stoploss will not work.
 
 ### stoploss_on_exchange and stoploss_on_exchange_limit_ratio
 
@@ -140,13 +146,13 @@ For example, simplified math:
 
 In summary: The stoploss will be adjusted to be always be -10% of the highest observed price.
 
-### Trailing stop loss, custom positive loss
+### Trailing stop loss, different positive loss
 
-You could also have a default stop loss when you are in the red with your buy (buy - fee), but once you hit a positive result (or an offset you define) the system will utilize a new stop loss, which can have a different value.
-For example, your default stop loss is -10%, but once you have more than 0% profit (example 0.1%) a different trailing stoploss will be used.
+You could also have a default stop loss when you are in the red with your buy (buy - fee), but once you hit a positive result (or an offset you define) the system will utilize a new stop loss, with a different value.
+For example, your default stop loss is -10%, but once you have reached profitability (example 0.1%) a different trailing stoploss will be used.
 
 !!! Note
-    If you want the stoploss to only be changed when you break even of making a profit (what most users want) please refer to next section with [offset enabled](#Trailing-stop-loss-only-once-the-trade-has-reached-a-certain-offset).
+    If you want the stoploss to only be changed when you break even of making a profit (what most users want) please refer to next section with [offset enabled](#trailing-stop-loss-only-once-the-trade-has-reached-a-certain-offset).
 
 Both values require `trailing_stop` to be set to true and `trailing_stop_positive` with a value.
 
@@ -194,13 +200,10 @@ Before this, `stoploss` is used for the trailing stoploss.
 
 You can also keep a static stoploss until the offset is reached, and then trail the trade to take profits once the market turns.
 
-If `trailing_only_offset_is_reached = True` then the trailing stoploss is only activated once the offset is reached. Until then, the stoploss remains at the configured `stoploss`.
-This option can be used with or without `trailing_stop_positive`, but uses `trailing_stop_positive_offset` as offset.
+If `trailing_only_offset_is_reached = True` then the trailing stoploss is only activated once the offset is reached. Until then, the stoploss remains at the configured `stoploss` and is not trailing.
+Leaving this value as `trailing_only_offset_is_reached=False` will allow the trailing stoploss to start trailing as soon as the asset price increases above the initial entry price.
 
-``` python
-    trailing_stop_positive_offset = 0.011
-    trailing_only_offset_is_reached = True
-```
+This option can be used with or without `trailing_stop_positive`, but uses `trailing_stop_positive_offset` as offset.
 
 Configuration (offset is buy-price + 3%):
 
@@ -233,7 +236,7 @@ When using leverage, the same principle is applied - with stoploss defining the 
 
 Therefore, a stoploss of 10% on a 10x trade would trigger on a 1% price move.
 If your stake amount (own capital) was 100$ - this trade would be 1000$ at 10x (after leverage).
-If price moves 1% - you've lost 10$ of your own capital - therfore stoploss will trigger in this case.
+If price moves 1% - you've lost 10$ of your own capital - therefore stoploss will trigger in this case.
 
 Make sure to be aware of this, and avoid using too tight stoploss (at 10x leverage, 10% risk may be too little to allow the trade to "breath" a little).
 
@@ -245,4 +248,4 @@ The new stoploss value will be applied to open trades (and corresponding log-mes
 
 ### Limitations
 
-Stoploss values cannot be changed if `trailing_stop` is enabled and the stoploss has already been adjusted, or if [Edge](edge.md) is enabled (since Edge would recalculate stoploss based on the current market situation).
+Stoploss values cannot be changed if `trailing_stop` is enabled and the stoploss has already been adjusted.

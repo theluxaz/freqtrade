@@ -2,9 +2,10 @@
 -r requirements-freqai.txt
 
 # Required for freqai-rl
-torch==1.13.1; python_version < '3.11'
-stable-baselines3==1.7.0; python_version < '3.11'
-sb3-contrib==1.7.0; python_version < '3.11'
-# Gym is forced to this version by stable-baselines3.
-setuptools==65.5.1 # Should be removed when gym is fixed.
-gym==0.21; python_version < '3.11'
+torch==2.8.0; sys_platform != 'darwin' or platform_machine != 'x86_64'
+gymnasium==0.29.1
+# SB3 >=2.5.0 depends on torch 2.3.0 - which implies it dropped support x86 macos
+stable_baselines3==2.7.0; sys_platform != 'darwin' or platform_machine != 'x86_64'
+sb3_contrib>=2.2.1
+# Progress bar for stable-baselines3 and sb3-contrib
+tqdm==4.67.1

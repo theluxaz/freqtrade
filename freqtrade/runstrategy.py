@@ -17,7 +17,7 @@ import json
 # import time
 import datetime
 # import math
-import winsound
+from playsound3 import playsound
 from importlib import reload, import_module
 from pynput.keyboard import Key, Listener
 from runstrategy_indicators_other import *
@@ -38,8 +38,9 @@ data_loading_time_ms = 1815000000   #21 days
 date_until_gap = 7889238000  # - 3 months ### 5259492000 - 2 months ### 9289238000 - 3.5 months
 
 timeframes_json = [
-                    {"19":1747112200000},  # 13 May 2025 5:00pm GMT -> move up until July 1 2025 later
-                    {"18":1740718800000},  # 01 Mar 2025 5:00pm GMT ->
+                    {"20":1761040800000},  # 21 Oct 2025 10:00am GMT
+                    {"19":1751364000000},  # 1 July 2025 5:00pm GMT
+                    {"18":1740718800000},  # 01 Mar 2025 5:00pm GMT
                     {"17":1734282000000},  # 15 Dec 2024 5:00pm GMT
                     {"16":1727542800000},  # 28 Sept 2024 5:00pm GMT
                     {"15":1718557200000},  # 16 June 2024 5:00pm GMT
@@ -1012,7 +1013,7 @@ class App(QWidget):
         if (self.backtesting_clicked):
             processing_time = main(self.command_list)
             if self.data["enable_sound"]:
-                winsound.PlaySound('Welcome.wav', winsound.SND_FILENAME)
+                playsound("Welcome.wav")
 
             self.set_label_processing_time(processing_time)
             self.set_max_pairs_label(None)
@@ -1154,7 +1155,7 @@ class App(QWidget):
                 self.set_label_processing_time(processing_time)
                 self.set_max_pairs_label(None)
                 if self.data["enable_sound"]:
-                    winsound.PlaySound('Welcome.wav', winsound.SND_FILENAME)
+                    playsound("Welcome.wav")
                 self.backtesting_clicked = False
                 self.show_plot_clicked = False
                 self.hyperopt_clicked = False
@@ -1253,7 +1254,7 @@ class App(QWidget):
                 print(f"Processing time for {timeframe} was {processing_time:0.1f}s")
 
             if self.data["enable_sound"]:
-                winsound.PlaySound('Welcome.wav', winsound.SND_FILENAME)
+                playsound("Welcome.wav")
             print("FINISHED DOWNLOADING DATA")
 
             self.backtesting_clicked = False

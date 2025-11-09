@@ -38,7 +38,7 @@ def _generate_filename(recordfilename: Path, appendix: str, suffix: str) -> Path
     :return: Generated filename as a Path object
     """
     if recordfilename.is_dir():
-        filename = (recordfilename / f"backtest-result-{appendix}").with_suffix(suffix)
+        filename = (recordfilename / f"backtest-result-1").with_suffix(suffix)
     else:
         filename = Path.joinpath(
             recordfilename.parent, f"{recordfilename.stem}-{appendix}"

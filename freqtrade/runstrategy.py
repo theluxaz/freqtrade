@@ -1122,11 +1122,11 @@ class App(QWidget):
             if futures:
                 command_list = [command, "--config", "user_data/" + self.data["config"], "--strategy",
                             self.strategies[self.data["strategy"]], "-p", pair + "/" + fiat_currency + ":" + fiat_currency,
-                            "--timerange=" + str(self.data["time"]["time_from"]-data_loading_time_ms) + "-" + str(time_until)]
+                            "--timerange=" + str(self.data["time"]["time_from"]-data_loading_time_ms) + "-" + str(time_until),"--export-filename=user_data/backtest_results/backtest-result-1.zip"]
             else:
                 command_list = [command, "--config", "user_data/" + self.data["config"], "--strategy",
                             self.strategies[self.data["strategy"]], "-p", pair + "/" + fiat_currency,
-                            "--timerange=" + str(self.data["time"]["time_from"]-data_loading_time_ms) + "-" + str(time_until)]
+                            "--timerange=" + str(self.data["time"]["time_from"]-data_loading_time_ms) + "-" + str(time_until),"--export-filename=user_data/backtest_results/backtest-result-1.zip"]
 
 
             if (len(indicators1) > 0):

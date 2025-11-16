@@ -400,7 +400,211 @@ def plot_area(
     :param fill_color: color to be used for the filled area
     :return: fig with added  filled_traces plot
     """
-    if indicator_a in data and indicator_b in data:
+
+    data = data.copy()
+
+    if( label=="main"):
+
+
+        main_trend_color_hex = {  5:"rgba(24, 69, 13,0.4)",#"name":"UPPER_DANGER"}
+                            3:"rgba(0,128,0, 0.2)",#"name":"LONG_UPTREND"},
+                            # 2:"rgba(70, 130, 180,0.25)",#"name":"DOWNTREND_UPSWING"},
+                            1:"rgba(255,255,159,0.25)",#"name":"DATA_NOT_LOADED"}, #"rgba(255,255,159,0.1)",
+                            0:"rgba(255, 255, 255, 0)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
+                            -1:"rgba(233, 150, 122,0.25)",#"name":"SLOW_DOWNTREND"},
+                            -2:"rgba(255, 0, 0,0.2)",#"name":"LONG_DOWNTREND"},
+                            -3:"rgba(106, 11, 16,0.4)",#"name":"BOTTOM_DANGER"},
+                        }
+        main_trend_labels = {  "5":"UPPER_DANGER",
+                            "3":"LONG_UPTREND",
+                            # "2":"DOWNTREND_UPSWING",
+                            "1":"DATA_NOT_LOADED",
+                            "0":"NOTREND",
+                            "-1":"SLOW_DOWNTREND",
+                            "-2":"LONG_DOWNTREND",
+                            "-3":"BOTTOM_DANGER"
+
+                        }
+
+        main_volatility_hex = {
+                    0:"rgba(0, 0, 0, 0)",#"name":"NONE"},
+                    1:"rgba(175, 225, 233, 0.25)",#"name":"LOW"},
+                    2:"rgba(73, 187, 204, 0.25)",#"name":"MID"},
+                    3:"rgba(0, 139, 251, 0.22)",#"name":"HIGH"}
+                        }
+        main_volatility_labels = {
+                    "0":"NONE",
+                    "1":"LOW_VOL",
+                    "2":"MID_VOL",
+                    "3":"HIGH_VOL"
+                        }
+        line = {'color': 'rgba(255,255,255,0)'}
+
+        for m_trend in data["main_trend"].copy().drop_duplicates():
+            if(m_trend != 0):
+                newframe = data.copy()
+
+                newframe.loc[( newframe['main_trend'] != m_trend), 'bb_upperband'] = newframe['bb_middleband']
+                newframe.loc[( newframe['main_trend'] != m_trend), 'bb_lowerband'] = newframe['bb_middleband']
+
+
+                main_trend_area_style = main_trend_color_hex[m_trend]
+                main_trend_label_style = main_trend_labels[str(m_trend)]
+
+
+                trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
+                                 showlegend=False,
+                                 line=line)
+                trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=main_trend_label_style,
+                                     fill="tonexty", fillcolor=main_trend_area_style,
+                                     line=line)
+                fig.add_trace(trace_a, row, 1)
+                fig.add_trace(trace_b, row, 1)
+            else:
+                for vol in range(3):
+                    vol+=1
+                    newframe = data.copy()
+
+                    newframe.loc[(( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)&(newframe['volatility'] != 0))), 'bb_upperband'] = newframe['bb_middleband']
+                    newframe.loc[(( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)&(newframe['volatility'] != 0))), 'bb_lowerband'] = newframe['bb_middleband']
+
+
+                    vol_area_style = main_volatility_hex[vol]
+                    vol_area_labels = main_volatility_labels[str(vol)]
+
+
+                    trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
+                                     showlegend=False,
+                                     line=line)
+                    trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=vol_area_labels,
+                                         fill="tonexty", fillcolor=vol_area_style,
+                                         line=line)
+                    fig.add_trace(trace_a, row, 1)
+                    fig.add_trace(trace_b, row, 1)
+
+
+    if( label.startswith('solo')):
+
+        m_trend = int(label.split("=")[1])
+
+
+        main_trend_color_hex = {  5:"rgba(24, 69, 13,0.4)",#"name":"UPPER_DANGER"}
+                            3:"rgba(0,128,0, 0.2)",#"name":"LONG_UPTREND"},
+                            # 2:"rgba(70, 130, 180,0.25)",#"name":"DOWNTREND_UPSWING"},
+                            1:"rgba(255,255,159,0.25)",#"name":"DATA_NOT_LOADED"}, #"rgba(255,255,159,0.1)",
+                            0:"rgba(255, 255, 255, 0)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
+                            -1:"rgba(233, 150, 122,0.25)",#"name":"SLOW_DOWNTREND"},
+                            -2:"rgba(255, 0, 0,0.2)",#"name":"LONG_DOWNTREND"},
+                            -3:"rgba(106, 11, 16,0.4)",#"name":"BOTTOM_DANGER"},
+                        }
+        main_trend_labels = {  "5":"UPPER_DANGER",
+                            "3":"LONG_UPTREND",
+                            # "2":"DOWNTREND_UPSWING",
+                            "1":"DATA_NOT_LOADED",
+                            "0":"NOTREND",
+                            "-1":"SLOW_DOWNTREND",
+                            "-2":"LONG_DOWNTREND",
+                            "-3":"BOTTOM_DANGER"
+
+                        }
+
+        main_volatility_hex = {
+                    0:"rgba(0, 0, 0, 0)",#"name":"NONE"},
+                    1:"rgba(175, 225, 233, 0.25)",#"name":"LOW"},
+                    2:"rgba(73, 187, 204, 0.25)",#"name":"MID"},
+                    3:"rgba(0, 139, 251, 0.22)",#"name":"HIGH"}
+                        }
+        main_volatility_labels = {
+                    "0":"NONE",
+                    "1":"LOW_VOL",
+                    "2":"MID_VOL",
+                    "3":"HIGH_VOL"
+                        }
+        line = {'color': 'rgba(255,255,255,0)'}
+
+
+        if(m_trend != 0):
+
+
+            newframe = data.copy()
+
+            newframe.loc[(newframe['main_trend'] != m_trend), 'bb_upperband'] = newframe['bb_middleband']
+            newframe.loc[(newframe['main_trend'] != m_trend), 'bb_lowerband'] = newframe['bb_middleband']
+
+            main_trend_area_style = main_trend_color_hex[m_trend]
+            main_trend_label_style = main_trend_labels[str(m_trend)]
+
+            trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
+                                 showlegend=False,
+                                 line=line)
+            trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=main_trend_label_style,
+                                 fill="tonexty", fillcolor=main_trend_area_style,
+                                 line=line)
+            fig.add_trace(trace_a, row, 1)
+            fig.add_trace(trace_b, row, 1)
+
+            # draws danger zone on -1 and -2 BOTH DOWNTRENDS
+            if ((m_trend == -1) or (m_trend == -2)):
+                newframe = data.copy()
+
+                newframe.loc[(newframe['main_trend'] != -3) , 'bb_upperband'] = newframe['bb_middleband']
+                newframe.loc[(newframe['main_trend'] != -3) , 'bb_lowerband'] = newframe['bb_middleband']
+
+                main_trend_area_style = main_trend_color_hex[-3]
+                main_trend_label_style = main_trend_labels[str(-3)]
+
+                trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
+                                     showlegend=False,
+                                     line=line)
+                trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=main_trend_label_style,
+                                     fill="tonexty", fillcolor=main_trend_area_style,
+                                     line=line)
+                fig.add_trace(trace_a, row, 1)
+                fig.add_trace(trace_b, row, 1)
+            # draws upper danger zone on LONG UPTREND
+            if (m_trend == 3):
+                newframe = data.copy()
+
+                newframe.loc[(newframe['main_trend'] != 5) , 'bb_upperband'] = newframe['bb_middleband']
+                newframe.loc[(newframe['main_trend'] != 5) , 'bb_lowerband'] = newframe['bb_middleband']
+
+                main_trend_area_style = main_trend_color_hex[5]
+                main_trend_label_style = main_trend_labels[str(5)]
+
+                trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
+                                     showlegend=False,
+                                     line=line)
+                trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=main_trend_label_style,
+                                     fill="tonexty", fillcolor=main_trend_area_style,
+                                     line=line)
+                fig.add_trace(trace_a, row, 1)
+                fig.add_trace(trace_b, row, 1)
+        else:
+            for vol in range(3):
+                vol+=1
+                newframe = data.copy()
+
+                newframe.loc[(( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)&(newframe['volatility'] != 0))), 'bb_upperband'] = newframe['bb_middleband']
+                newframe.loc[(( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)&(newframe['volatility'] != 0))), 'bb_lowerband'] = newframe['bb_middleband']
+
+
+                vol_area_style = main_volatility_hex[vol]
+                vol_area_labels = main_volatility_labels[str(vol)]
+
+
+                trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
+                                 showlegend=False,
+                                 line=line)
+                trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=vol_area_labels,
+                                     fill="tonexty", fillcolor=vol_area_style,
+                                     line=line)
+                fig.add_trace(trace_a, row, 1)
+                fig.add_trace(trace_b, row, 1)
+
+
+
+
+    if label=="Bolinger Bands" and indicator_a in data and indicator_b in data:
         # make lines invisible to get the area plotted, only.
         line = {'color': 'rgba(255,255,255,0)'}
         # TODO: Figure out why scattergl causes problems plotly/plotly.js#2284

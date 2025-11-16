@@ -37,6 +37,8 @@ fee_amount = 0.0025   #CHANGED TO 25 RECENTLY!!!! 3% fees or so amount to about 
 data_loading_time_ms = 1815000000   #21 days
 date_until_gap = 7889238000  # - 3 months ### 5259492000 - 2 months ### 9289238000 - 3.5 months
 
+linux=False
+
 timeframes_json = [
                     {"20":1761040800000},  # 21 Oct 2025 10:00am GMT
                     {"19":1751364000000},  # 1 July 2025 5:00pm GMT
@@ -1061,7 +1063,10 @@ class App(QWidget):
                 url = file_dir + "/user_data/plot/freqtrade-plot-" + pair + "_" + fiat_currency + '-15m.html'
             else:
                 url = file_dir + '/user_data/plot/freqtrade-profit-plot.html'
-            os.system('cmd /c start ' + url)
+            if linux:
+                os.system('firefox ' + url)
+            else:
+                os.system('cmd /c start ' + url)
             self.backtesting_clicked = False
             self.show_plot_clicked = False
             self.hyperopt_clicked = False

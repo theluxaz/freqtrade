@@ -408,6 +408,16 @@ class App(QWidget):
         if (self.data["time"]["time_from_date"] == True):
             self.time_from_calendar.show()
             self.time_from_dropdown.hide()
+        # Time From Previous Button
+        self.time_from_prev_button = QPushButton('<', self)
+        self.time_from_prev_button.setGeometry(660, 30, 25, 30)
+        self.time_from_prev_button.setToolTip('Previous timeframe')
+        self.time_from_prev_button.clicked.connect(self.on_click_time_from_prev)
+        # Time From Next Button
+        self.time_from_next_button = QPushButton('>', self)
+        self.time_from_next_button.setGeometry(685, 30, 25, 30)
+        self.time_from_next_button.setToolTip('Next timeframe')
+        self.time_from_next_button.clicked.connect(self.on_click_time_from_next)
         # Time From label checkbox
         self.time_from_date_label = QLabel(self)
         self.time_from_date_label.setText('Date')
@@ -425,9 +435,9 @@ class App(QWidget):
         ## ^ ^ WHEN THIS ONE IS UPDATED, UPDATE THE TIME UNTIL TO THE NEXT NUMBER AUTOMATICALLY
 
         # Time From to Util arrows label
-        self.time_arrow_label = QLabel(self)
-        self.time_arrow_label.setText('----->')
-        self.time_arrow_label.move(670, 36)
+        # self.time_arrow_label = QLabel(self)
+        # self.time_arrow_label.setText('----->')
+        # self.time_arrow_label.move(670, 36)
         self.time_arrow_lower_label = QLabel(self)
         self.time_arrow_lower_label.setText('---->')
         self.time_arrow_lower_label.move(670, 72)
@@ -780,6 +790,30 @@ class App(QWidget):
         self.update_display_dates()
         self.show()
         self.update_hyperopt()
+
+    def keyPressEvent(self, event):
+        if event.key() == QtCore.Qt.Key_F1:
+            from_index = self.data["time"]["time_from_index"]
+            until_index = self.data["time"]["time_until_index"]
+            can_move_from = not self.data["time"]["time_from_date"] and from_index < len(self.timeframes) - 1
+            can_move_until = self.data["time"]["time_until_enabled"] and not self.data["time"]["time_until_date"] and until_index < len(self.timeframes) - 1
+            if can_move_from and can_move_until:
+                self.time_from_dropdown.setCurrentIndex(from_index + 1)
+                self.time_until_dropdown.setCurrentIndex(until_index + 1)
+            elif can_move_from and not self.data["time"]["time_until_enabled"]:
+                self.time_from_dropdown.setCurrentIndex(from_index + 1)
+        elif event.key() == QtCore.Qt.Key_F2:
+            from_index = self.data["time"]["time_from_index"]
+            until_index = self.data["time"]["time_until_index"]
+            can_move_from = not self.data["time"]["time_from_date"] and from_index > 0
+            can_move_until = self.data["time"]["time_until_enabled"] and not self.data["time"]["time_until_date"] and until_index > 0
+            if can_move_from and can_move_until:
+                self.time_from_dropdown.setCurrentIndex(from_index - 1)
+                self.time_until_dropdown.setCurrentIndex(until_index - 1)
+            elif can_move_from and not self.data["time"]["time_until_enabled"]:
+                self.time_from_dropdown.setCurrentIndex(from_index - 1)
+        else:
+            super().keyPressEvent(event)
 
     def addHyperopt(self):
 
@@ -1997,6 +2031,30 @@ class App(QWidget):
             final_timestamp = final_date.timestamp() * 1000
             self.data["time"]["time_until"] = int(final_timestamp)
             self.update_display_dates()
+
+    @pyqtSlot()
+    def on_click_time_from_prev(self):
+        from_index = self.data["time"]["time_from_index"]
+        until_index = self.data["time"]["time_until_index"]
+        can_move_from = not self.data["time"]["time_from_date"] and from_index < len(self.timeframes) - 1
+        can_move_until = self.data["time"]["time_until_enabled"] and not self.data["time"]["time_until_date"] and until_index < len(self.timeframes) - 1
+        if can_move_from and can_move_until:
+            self.time_from_dropdown.setCurrentIndex(from_index + 1)
+            self.time_until_dropdown.setCurrentIndex(until_index + 1)
+        elif can_move_from and not self.data["time"]["time_until_enabled"]:
+            self.time_from_dropdown.setCurrentIndex(from_index + 1)
+
+    @pyqtSlot()
+    def on_click_time_from_next(self):
+        from_index = self.data["time"]["time_from_index"]
+        until_index = self.data["time"]["time_until_index"]
+        can_move_from = not self.data["time"]["time_from_date"] and from_index > 0
+        can_move_until = self.data["time"]["time_until_enabled"] and not self.data["time"]["time_until_date"] and until_index > 0
+        if can_move_from and can_move_until:
+            self.time_from_dropdown.setCurrentIndex(from_index - 1)
+            self.time_until_dropdown.setCurrentIndex(until_index - 1)
+        elif can_move_from and not self.data["time"]["time_until_enabled"]:
+            self.time_from_dropdown.setCurrentIndex(from_index - 1)
 
     # Updates chosen chosen with pairs from GUI
     def update_config_pairs(self):

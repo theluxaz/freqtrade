@@ -485,7 +485,14 @@ def plot_area(
 
     if( label.startswith('solo')):
 
-        m_trend = int(label.split("=")[1])
+        solo_parts = label.split("=")[1]
+        # Parse optional sub-filter (e.g. "solo=-2&uptrend" -> m_trend=-2, sub_filter="uptrend")
+        if "&" in solo_parts:
+            m_trend = int(solo_parts.split("&")[0])
+            sub_filter = solo_parts.split("&")[1]
+        else:
+            m_trend = int(solo_parts)
+            sub_filter = None
 
 
         main_trend_color_hex = {  5:"rgba(24, 69, 13,0.4)",#"name":"UPPER_DANGER"}
@@ -508,6 +515,14 @@ def plot_area(
 
                         }
 
+        # Sub-filter color overrides (slightly different shades to distinguish combos)
+        sub_filter_color_hex = {
+                    "uptrend":  "rgba(0, 200, 80, 0.25)",
+                    "downtrend":"rgba(200, 80, 0, 0.25)",
+                    "BULL":     "rgba(31, 233, 255, 0.25)",
+                    "BEAR":     "rgba(229, 102, 255, 0.25)",
+                        }
+
         main_volatility_hex = {
                     0:"rgba(0, 0, 0, 0)",#"name":"NONE"},
                     1:"rgba(175, 225, 233, 0.25)",#"name":"LOW"},
@@ -522,17 +537,39 @@ def plot_area(
                         }
         line = {'color': 'rgba(255,255,255,0)'}
 
+        # Helper to build the sub-filter mask (True = keep, False = hide)
+        def _sub_filter_mask(frame, sf):
+            if sf == "uptrend":
+                return frame['uptrend'] != 0
+            elif sf == "downtrend":
+                return frame['uptrend'] == 0
+            elif sf == "BULL":
+                return frame['BULL'] == 1
+            elif sf == "BEAR":
+                return frame['BULL'] == -1
+            return True  # no filter
+
 
         if(m_trend != 0):
 
 
             newframe = data.copy()
 
-            newframe.loc[(newframe['main_trend'] != m_trend), 'bb_upperband'] = newframe['bb_middleband']
-            newframe.loc[(newframe['main_trend'] != m_trend), 'bb_lowerband'] = newframe['bb_middleband']
+            # Base condition: main_trend must match
+            hide_mask = (newframe['main_trend'] != m_trend)
+            # Apply sub-filter overlap condition
+            if sub_filter:
+                hide_mask = hide_mask | (~_sub_filter_mask(newframe, sub_filter))
 
-            main_trend_area_style = main_trend_color_hex[m_trend]
-            main_trend_label_style = main_trend_labels[str(m_trend)]
+            newframe.loc[hide_mask, 'bb_upperband'] = newframe['bb_middleband']
+            newframe.loc[hide_mask, 'bb_lowerband'] = newframe['bb_middleband']
+
+            if sub_filter:
+                main_trend_area_style = sub_filter_color_hex.get(sub_filter, main_trend_color_hex[m_trend])
+                main_trend_label_style = main_trend_labels[str(m_trend)] + " + " + sub_filter
+            else:
+                main_trend_area_style = main_trend_color_hex[m_trend]
+                main_trend_label_style = main_trend_labels[str(m_trend)]
 
             trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
                                  showlegend=False,
@@ -543,8 +580,8 @@ def plot_area(
             fig.add_trace(trace_a, row, 1)
             fig.add_trace(trace_b, row, 1)
 
-            # draws danger zone on -1 and -2 BOTH DOWNTRENDS
-            if ((m_trend == -1) or (m_trend == -2)):
+            # draws danger zone on -1 and -2 BOTH DOWNTRENDS (only when no sub-filter)
+            if not sub_filter and ((m_trend == -1) or (m_trend == -2)):
                 newframe = data.copy()
 
                 newframe.loc[(newframe['main_trend'] != -3) , 'bb_upperband'] = newframe['bb_middleband']
@@ -561,8 +598,8 @@ def plot_area(
                                      line=line)
                 fig.add_trace(trace_a, row, 1)
                 fig.add_trace(trace_b, row, 1)
-            # draws upper danger zone on LONG UPTREND
-            if (m_trend == 3):
+            # draws upper danger zone on LONG UPTREND (only when no sub-filter)
+            if not sub_filter and (m_trend == 3):
                 newframe = data.copy()
 
                 newframe.loc[(newframe['main_trend'] != 5) , 'bb_upperband'] = newframe['bb_middleband']
@@ -580,26 +617,46 @@ def plot_area(
                 fig.add_trace(trace_a, row, 1)
                 fig.add_trace(trace_b, row, 1)
         else:
-            for vol in range(3):
-                vol+=1
+            if sub_filter:
+                # m_trend == 0 with sub-filter: show Normal areas overlapping with sub-filter
                 newframe = data.copy()
 
-                newframe.loc[(( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)&(newframe['volatility'] != 0))), 'bb_upperband'] = newframe['bb_middleband']
-                newframe.loc[(( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)&(newframe['volatility'] != 0))), 'bb_lowerband'] = newframe['bb_middleband']
+                hide_mask = (newframe['main_trend'] != m_trend) | (~_sub_filter_mask(newframe, sub_filter))
+                newframe.loc[hide_mask, 'bb_upperband'] = newframe['bb_middleband']
+                newframe.loc[hide_mask, 'bb_lowerband'] = newframe['bb_middleband']
 
-
-                vol_area_style = main_volatility_hex[vol]
-                vol_area_labels = main_volatility_labels[str(vol)]
-
+                area_style = sub_filter_color_hex.get(sub_filter, "rgba(255, 255, 255, 0)")
+                label_style = main_trend_labels[str(m_trend)] + " + " + sub_filter
 
                 trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
                                  showlegend=False,
                                  line=line)
-                trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=vol_area_labels,
-                                     fill="tonexty", fillcolor=vol_area_style,
+                trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=label_style,
+                                     fill="tonexty", fillcolor=area_style,
                                      line=line)
                 fig.add_trace(trace_a, row, 1)
                 fig.add_trace(trace_b, row, 1)
+            else:
+                for vol in range(3):
+                    vol+=1
+                    newframe = data.copy()
+
+                    newframe.loc[(( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)&(newframe['volatility'] != 0))), 'bb_upperband'] = newframe['bb_middleband']
+                    newframe.loc[(( newframe['main_trend'] != m_trend | (newframe['volatility'] != vol)&(newframe['volatility'] != 0))), 'bb_lowerband'] = newframe['bb_middleband']
+
+
+                    vol_area_style = main_volatility_hex[vol]
+                    vol_area_labels = main_volatility_labels[str(vol)]
+
+
+                    trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],
+                                     showlegend=False,
+                                     line=line)
+                    trace_b = go.Scatter(x=newframe.date, y=newframe[indicator_b], name=vol_area_labels,
+                                         fill="tonexty", fillcolor=vol_area_style,
+                                         line=line)
+                    fig.add_trace(trace_a, row, 1)
+                    fig.add_trace(trace_b, row, 1)
 
 
 

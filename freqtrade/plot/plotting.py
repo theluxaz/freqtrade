@@ -406,14 +406,14 @@ def plot_area(
     if( label=="main"):
 
 
-        main_trend_color_hex = {  5:"rgba(24, 69, 13,0.4)",#"name":"UPPER_DANGER"}
-                            3:"rgba(0,128,0, 0.2)",#"name":"LONG_UPTREND"},
-                            # 2:"rgba(70, 130, 180,0.25)",#"name":"DOWNTREND_UPSWING"},
-                            1:"rgba(255,255,159,0.25)",#"name":"DATA_NOT_LOADED"}, #"rgba(255,255,159,0.1)",
+        main_trend_color_hex = {  5:"rgba(24, 69, 13,0.5)",#"name":"UPPER_DANGER"}
+                            3:"rgba(0,128,0, 0.3)",#"name":"LONG_UPTREND"},
+                            # 2:"rgba(70, 130, 180,0.35)",#"name":"DOWNTREND_UPSWING"},
+                            1:"rgba(255,255,159,0.35)",#"name":"DATA_NOT_LOADED"}, #"rgba(255,255,159,0.1)",
                             0:"rgba(255, 255, 255, 0)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
-                            -1:"rgba(233, 150, 122,0.25)",#"name":"SLOW_DOWNTREND"},
-                            -2:"rgba(255, 0, 0,0.2)",#"name":"LONG_DOWNTREND"},
-                            -3:"rgba(106, 11, 16,0.4)",#"name":"BOTTOM_DANGER"},
+                            -1:"rgba(233, 150, 122,0.35)",#"name":"SLOW_DOWNTREND"},
+                            -2:"rgba(255, 0, 0,0.3)",#"name":"LONG_DOWNTREND"},
+                            -3:"rgba(106, 11, 16,0.5)",#"name":"BOTTOM_DANGER"},
                         }
         main_trend_labels = {  "5":"UPPER_DANGER",
                             "3":"LONG_UPTREND",
@@ -495,14 +495,14 @@ def plot_area(
             sub_filter = None
 
 
-        main_trend_color_hex = {  5:"rgba(24, 69, 13,0.4)",#"name":"UPPER_DANGER"}
-                            3:"rgba(0,128,0, 0.2)",#"name":"LONG_UPTREND"},
-                            # 2:"rgba(70, 130, 180,0.25)",#"name":"DOWNTREND_UPSWING"},
-                            1:"rgba(255,255,159,0.25)",#"name":"DATA_NOT_LOADED"}, #"rgba(255,255,159,0.1)",
+        main_trend_color_hex = {  5:"rgba(24, 69, 13,0.5)",#"name":"UPPER_DANGER"}
+                            3:"rgba(0,128,0, 0.3)",#"name":"LONG_UPTREND"},
+                            # 2:"rgba(70, 130, 180,0.35)",#"name":"DOWNTREND_UPSWING"},
+                            1:"rgba(255,255,159,0.35)",#"name":"DATA_NOT_LOADED"}, #"rgba(255,255,159,0.1)",
                             0:"rgba(255, 255, 255, 0)",#"name":"NOTREND"}, #"rgba(0,176,246,0.2)",
-                            -1:"rgba(233, 150, 122,0.25)",#"name":"SLOW_DOWNTREND"},
-                            -2:"rgba(255, 0, 0,0.2)",#"name":"LONG_DOWNTREND"},
-                            -3:"rgba(106, 11, 16,0.4)",#"name":"BOTTOM_DANGER"},
+                            -1:"rgba(233, 150, 122,0.35)",#"name":"SLOW_DOWNTREND"},
+                            -2:"rgba(255, 0, 0,0.3)",#"name":"LONG_DOWNTREND"},
+                            -3:"rgba(106, 11, 16,0.5)",#"name":"BOTTOM_DANGER"},
                         }
         main_trend_labels = {  "5":"UPPER_DANGER",
                             "3":"LONG_UPTREND",
@@ -513,14 +513,6 @@ def plot_area(
                             "-2":"LONG_DOWNTREND",
                             "-3":"BOTTOM_DANGER"
 
-                        }
-
-        # Sub-filter color overrides (slightly different shades to distinguish combos)
-        sub_filter_color_hex = {
-                    "uptrend":  "rgba(0, 200, 80, 0.25)",
-                    "downtrend":"rgba(200, 80, 0, 0.25)",
-                    "BULL":     "rgba(31, 233, 255, 0.25)",
-                    "BEAR":     "rgba(229, 102, 255, 0.25)",
                         }
 
         main_volatility_hex = {
@@ -565,7 +557,7 @@ def plot_area(
             newframe.loc[hide_mask, 'bb_lowerband'] = newframe['bb_middleband']
 
             if sub_filter:
-                main_trend_area_style = sub_filter_color_hex.get(sub_filter, main_trend_color_hex[m_trend])
+                main_trend_area_style = main_trend_color_hex[m_trend]
                 main_trend_label_style = main_trend_labels[str(m_trend)] + " + " + sub_filter
             else:
                 main_trend_area_style = main_trend_color_hex[m_trend]
@@ -625,7 +617,7 @@ def plot_area(
                 newframe.loc[hide_mask, 'bb_upperband'] = newframe['bb_middleband']
                 newframe.loc[hide_mask, 'bb_lowerband'] = newframe['bb_middleband']
 
-                area_style = sub_filter_color_hex.get(sub_filter, "rgba(255, 255, 255, 0)")
+                area_style = main_trend_color_hex[m_trend]
                 label_style = main_trend_labels[str(m_trend)] + " + " + sub_filter
 
                 trace_a = go.Scatter(x=newframe.date, y=newframe[indicator_a],

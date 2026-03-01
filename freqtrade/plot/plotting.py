@@ -113,7 +113,7 @@ def init_plotscript(config, markets: list, startup_candles: int = 0):
     }
 
 
-def add_indicators(fig, row, indicators: dict[str, dict], data: pd.DataFrame) -> make_subplots:
+def add_indicators(fig, row, indicators: dict[str, dict], data: pd.DataFrame, solo_fade_mask=None) -> make_subplots:
     """
     Generate all the indicators selected by the user for a specific row, based on the configuration
     :param fig: Plot figure to append to
@@ -121,6 +121,7 @@ def add_indicators(fig, row, indicators: dict[str, dict], data: pd.DataFrame) ->
     :param indicators: Dict of Indicators with configuration options.
                        Dict key must correspond to dataframe column.
     :param data: candlestick DataFrame
+    :param solo_fade_mask: Optional boolean Series - True where solo trend is active
     """
     plot_kinds = {
         "scatter": go.Scatter,
@@ -131,36 +132,80 @@ def add_indicators(fig, row, indicators: dict[str, dict], data: pd.DataFrame) ->
 
         ##DRAWS THE NEW TREND INDICATORS
         if(indicator in plot_indicators):
-            fig = plot_trend(fig,  data,label=indicator)
+            fig = plot_trend(fig, data, label=indicator, solo_fade_mask=solo_fade_mask)
 
         elif indicator in data:
-            kwargs = {'x': data['date'],
-                      'y': data[indicator].values,
-                      'name': indicator
-                      }
-
             plot_type = conf.get("type", "scatter")
             color = conf.get("color")
-            if plot_type == "bar":
-                kwargs.update(
-                    {
-                        "marker_color": color or "DarkSlateGrey",
-                        "marker_line_color": color or "DarkSlateGrey",
-                    }
-                )
-            else:
+            
+            # If solo_fade_mask is provided, plot continuous faded line then overlay active portions
+            if solo_fade_mask is not None and plot_type == "scatter":
+                # Convert color to rgba with 0.25 opacity for faded line
+                faded_color = 'rgba(128, 128, 128, 0.25)'
                 if color:
-                    kwargs.update({"line": {"color": color}})
-                kwargs["mode"] = "lines"
-                if plot_type != "scatter":
-                    logger.warning(
-                        f"Indicator {indicator} has unknown plot trace kind {plot_type}"
-                        f', assuming "scatter".'
-                    )
+                    if color.startswith('#') and len(color) == 7:
+                        r = int(color[1:3], 16)
+                        g = int(color[3:5], 16)
+                        b = int(color[5:7], 16)
+                        faded_color = f'rgba({r}, {g}, {b}, 0.25)'
+                    elif color.startswith('rgba'):
+                        faded_color = color.replace('1)', '0.25)').replace('0.8)', '0.25)').replace('0.5)', '0.25)')
+                
+                # First: Plot the FULL continuous line at faded opacity (so line stays connected)
+                kwargs_faded = {'x': data['date'],
+                          'y': data[indicator].values,
+                          'name': indicator + ' (bg)',
+                          'showlegend': False,
+                          'mode': 'lines',
+                          'line': {'color': faded_color},
+                          'hoverinfo': 'skip'
+                          }
+                trace_faded = go.Scatter(**kwargs_faded)
+                fig.add_trace(trace_faded, row, 1)
+                
+                # Second: Overlay the active portions at full opacity
+                # Use None to create gaps in the line where inactive
+                y_values = data[indicator].copy()
+                y_values_masked = y_values.where(solo_fade_mask, other=None)
+                
+                kwargs_active = {'x': data['date'],
+                          'y': y_values_masked,
+                          'name': indicator,
+                          'mode': 'lines',
+                          'connectgaps': False
+                          }
+                if color:
+                    kwargs_active.update({"line": {"color": color}})
+                kwargs_active.update(conf.get("plotly", {}))
+                trace_active = go.Scatter(**kwargs_active)
+                fig.add_trace(trace_active, row, 1)
+            else:
+                # Original behavior - single trace
+                kwargs = {'x': data['date'],
+                          'y': data[indicator].values,
+                          'name': indicator
+                          }
 
-            kwargs.update(conf.get("plotly", {}))
-            trace = plot_kinds[plot_type](**kwargs)
-            fig.add_trace(trace, row, 1)
+                if plot_type == "bar":
+                    kwargs.update(
+                        {
+                            "marker_color": color or "DarkSlateGrey",
+                            "marker_line_color": color or "DarkSlateGrey",
+                        }
+                    )
+                else:
+                    if color:
+                        kwargs.update({"line": {"color": color}})
+                    kwargs["mode"] = "lines"
+                    if plot_type != "scatter":
+                        logger.warning(
+                            f"Indicator {indicator} has unknown plot trace kind {plot_type}"
+                            f', assuming "scatter".'
+                        )
+
+                kwargs.update(conf.get("plotly", {}))
+                trace = plot_kinds[plot_type](**kwargs)
+                fig.add_trace(trace, row, 1)
         else:
             if(not indicator.startswith('solo') and not indicator == 'main'):
                 logger.info(
@@ -669,11 +714,12 @@ def plot_area(
     return fig
 
 
-def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
+def plot_trend(fig, data: pd.DataFrame, label: str = "", solo_fade_mask=None) -> make_subplots:
     """ Creates a plot for the main/volatility trends provided.
     :param fig: Plot figure to append to
     :param data: candlestick DataFrame
     :param label: label for the trend area
+    :param solo_fade_mask: Optional boolean Series - True where solo trend is active
     :return: fig with added  filled_traces plot
     """
 
@@ -794,6 +840,14 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
                     "2":"rgba(73, 187, 204, 0.5)",#"name":"MID"},
                     "3":"rgba(0, 139, 251, 0.5)",#"name":"HIGH"}
                 }
+        
+        # Faded version for inactive areas
+        main_volatility_hex_faded = {
+                    "0":"rgba(0, 0, 0, 0)",
+                    "1":"rgba(175, 225, 233, 0.06)",
+                    "2":"rgba(73, 187, 204, 0.06)",
+                    "3":"rgba(0, 139, 251, 0.06)"
+                }
 
         main_volatility_symbols = {
                     "0":"square",#"name":"NONE"},
@@ -812,47 +866,43 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
         else:
             data['sma_volatility_display'] =(data['sma25']-(data['sma25']/100*distance))
 
-
-
-        # Volatility display above price
-
-        trace_upper1 = px.scatter(data, x="date", y="sma_volatility_display",#,
-                             #hover_name="volatility",
-                             color_discrete_sequence=px.colors.qualitative.Alphabet,
-                             color_discrete_map=main_volatility_hex,
-                             color ="volatility",
-                             symbol ="volatility",
-                             symbol_map =main_volatility_symbols
-                             # symbol ="main_trend",
-                             # height=30,
-                             # opacity =0.5,
-                          )
-
-        ##UNCOMMENT FOR DOUBLE SIZE
-
-        # if(display == "above"):
-        #     data['sma_volatility_display'] =(data['sma_volatility_display']+(data['sma_volatility_display']/100*1))
-        # else:
-        #     data['sma_volatility_display'] =(data['sma_volatility_display']-(data['sma_volatility_display']/100*1))
-        #
-        # trace_upper2 = px.scatter(data, x="date", y="sma_volatility_display",#,
-        #                      #hover_name="volatility",
-        #                      color_discrete_sequence=px.colors.qualitative.Alphabet,
-        #                      color_discrete_map=main_volatility_hex,
-        #                      color ="volatility",
-        #                      symbol ="volatility",
-        #                      symbol_map =main_volatility_symbols
-        #                      # symbol ="main_trend",
-        #                      # height=30,
-        #                      # opacity =0.5,
-        #                   )
-
-        fig.add_traces(
-            list(trace_upper1.select_traces())
-        )
-        # fig.add_traces(
-        #     list(trace_upper2.select_traces())
-        # )
+        # If solo_fade_mask is provided, split into active/faded
+        if solo_fade_mask is not None:
+            data_active = data[solo_fade_mask]
+            data_faded = data[~solo_fade_mask]
+            
+            # Faded traces first
+            if len(data_faded) > 0:
+                trace_faded = px.scatter(data_faded, x="date", y="sma_volatility_display",
+                                 color_discrete_sequence=px.colors.qualitative.Alphabet,
+                                 color_discrete_map=main_volatility_hex_faded,
+                                 color="volatility",
+                                 symbol="volatility",
+                                 symbol_map=main_volatility_symbols
+                              )
+                for trace in trace_faded.select_traces():
+                    trace.showlegend = False
+                fig.add_traces(list(trace_faded.select_traces()))
+            
+            # Active traces on top
+            if len(data_active) > 0:
+                trace_active = px.scatter(data_active, x="date", y="sma_volatility_display",
+                                 color_discrete_sequence=px.colors.qualitative.Alphabet,
+                                 color_discrete_map=main_volatility_hex,
+                                 color="volatility",
+                                 symbol="volatility",
+                                 symbol_map=main_volatility_symbols
+                              )
+                fig.add_traces(list(trace_active.select_traces()))
+        else:
+            trace_upper1 = px.scatter(data, x="date", y="sma_volatility_display",
+                                 color_discrete_sequence=px.colors.qualitative.Alphabet,
+                                 color_discrete_map=main_volatility_hex,
+                                 color ="volatility",
+                                 symbol ="volatility",
+                                 symbol_map =main_volatility_symbols
+                              )
+            fig.add_traces(list(trace_upper1.select_traces()))
 
     if(label == "uptrend"):
         distance = 16
@@ -868,7 +918,20 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
                          "-2.0":"rgba(240,128,128,0.29)",
                          "-3.0":"rgba(220,20,60,0.29)",
                         "-4.0":"rgba(255,0,0,0.20)"
-
+        }
+        
+        # Faded version for inactive areas
+        uptrend_color_hex_faded = {
+                        "4.0":"rgba(0,128,0,0.03)",
+                        "3.0":"rgba(50,205,50,0.04)",
+                         "2.0":"rgba(124,252,0,0.04)",
+                        "1.0":"rgba(152,251,152,0.05)",
+                      "0.0": "rgba(0, 0, 0, 0)",
+                        "-0.0": "rgba(0, 0, 0, 0)",
+                         "-1.0":"rgba(255,160,122,0.05)",
+                         "-2.0":"rgba(240,128,128,0.04)",
+                         "-3.0":"rgba(220,20,60,0.04)",
+                        "-4.0":"rgba(255,0,0,0.03)"
         }
 
         uptrend_symbols = { "4.0":"x",
@@ -886,33 +949,54 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
 
         data['uptrend'] = data['uptrend'].astype(str)
 
-
-
         uptrend_df = data[(data['uptrend'] != "0")&(data['uptrend'] != "nan")]
-
-        #print(uptrend_df['uptrend'].value_counts())
 
         if(display == "above"):
             uptrend_df['sma_uptrend_display'] =(uptrend_df['sma25']+(uptrend_df['sma25']/100*distance))
         else:
             uptrend_df['sma_uptrend_display'] =(uptrend_df['sma25']-(uptrend_df['sma25']/100*distance))
 
-
-        trace_uptrend1 = px.scatter(uptrend_df, x="date", y="sma_uptrend_display",#,
-                            # hover_name="main_trend",
-                             color_discrete_sequence=px.colors.qualitative.Alphabet,
-                             color_discrete_map=uptrend_color_hex,
-                             color ="uptrend",
-                             symbol ="uptrend",
-                             symbol_map =uptrend_symbols
-                             # symbol ="main_trend",
-                             # height=30,
-                             # opacity =0.5,
-                          )
-        print("Drawing uptrend line on chart...")
-        fig.add_traces(
-            list(trace_uptrend1.select_traces())
-        )
+        # If solo_fade_mask is provided, split into active/faded
+        if solo_fade_mask is not None:
+            # Need to align mask with uptrend_df indices
+            uptrend_active_mask = solo_fade_mask.loc[uptrend_df.index]
+            data_active = uptrend_df[uptrend_active_mask]
+            data_faded = uptrend_df[~uptrend_active_mask]
+            
+            # Faded traces first
+            if len(data_faded) > 0:
+                trace_faded = px.scatter(data_faded, x="date", y="sma_uptrend_display",
+                                 color_discrete_sequence=px.colors.qualitative.Alphabet,
+                                 color_discrete_map=uptrend_color_hex_faded,
+                                 color="uptrend",
+                                 symbol="uptrend",
+                                 symbol_map=uptrend_symbols
+                              )
+                for trace in trace_faded.select_traces():
+                    trace.showlegend = False
+                fig.add_traces(list(trace_faded.select_traces()))
+            
+            # Active traces on top
+            if len(data_active) > 0:
+                trace_active = px.scatter(data_active, x="date", y="sma_uptrend_display",
+                                 color_discrete_sequence=px.colors.qualitative.Alphabet,
+                                 color_discrete_map=uptrend_color_hex,
+                                 color="uptrend",
+                                 symbol="uptrend",
+                                 symbol_map=uptrend_symbols
+                              )
+                fig.add_traces(list(trace_active.select_traces()))
+            print("Drawing uptrend line on chart...")
+        else:
+            trace_uptrend1 = px.scatter(uptrend_df, x="date", y="sma_uptrend_display",
+                                 color_discrete_sequence=px.colors.qualitative.Alphabet,
+                                 color_discrete_map=uptrend_color_hex,
+                                 color ="uptrend",
+                                 symbol ="uptrend",
+                                 symbol_map =uptrend_symbols
+                              )
+            print("Drawing uptrend line on chart...")
+            fig.add_traces(list(trace_uptrend1.select_traces()))
 
     if(label == "BULL"):
         distance = 20
@@ -921,6 +1005,13 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
                         "1":"rgba(31,233,255,0.45)",
                       "0": "rgba(0, 0, 0, 0)",
                          "-1":"rgba(229,102,255,0.45)",
+        }
+        
+        # Faded version for inactive areas
+        bull_bear_color_hex_faded = {
+                        "1":"rgba(31,233,255,0.05)",
+                      "0": "rgba(0, 0, 0, 0)",
+                         "-1":"rgba(229,102,255,0.05)",
         }
 
         bull_bear_symbols = {
@@ -934,8 +1025,6 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
 
         bull_bear_df = data[(data['BULL'] != "0")&(data['BULL'] != "nan")]
 
-        # print(bull_bear_df['BULL'].value_counts())
-
         display="below"
 
         if(display == "above"):
@@ -943,22 +1032,47 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
         else:
             bull_bear_df['sma_bull_bear_display'] =(bull_bear_df['sma25']-(bull_bear_df['sma25']/100*distance))
 
-
-        trace_bull_bear1 = px.scatter(bull_bear_df, x="date", y="sma_bull_bear_display",#,
-                            # hover_name="main_trend",
-                             color_discrete_sequence=px.colors.qualitative.Alphabet,
-                             color_discrete_map=bull_bear_color_hex,
-                             color ="BULL",
-                             symbol ="BULL",
-                             symbol_map =bull_bear_symbols
-                             # symbol ="main_trend",
-                             # height=30,
-                             # opacity =0.5,
-                          )
-        print("Drawing bull_bear line on chart...")
-        fig.add_traces(
-            list(trace_bull_bear1.select_traces())
-        )
+        # If solo_fade_mask is provided, split into active/faded
+        if solo_fade_mask is not None:
+            # Need to align mask with bull_bear_df indices
+            bull_active_mask = solo_fade_mask.loc[bull_bear_df.index]
+            data_active = bull_bear_df[bull_active_mask]
+            data_faded = bull_bear_df[~bull_active_mask]
+            
+            # Faded traces first
+            if len(data_faded) > 0:
+                trace_faded = px.scatter(data_faded, x="date", y="sma_bull_bear_display",
+                                 color_discrete_sequence=px.colors.qualitative.Alphabet,
+                                 color_discrete_map=bull_bear_color_hex_faded,
+                                 color="BULL",
+                                 symbol="BULL",
+                                 symbol_map=bull_bear_symbols
+                              )
+                for trace in trace_faded.select_traces():
+                    trace.showlegend = False
+                fig.add_traces(list(trace_faded.select_traces()))
+            
+            # Active traces on top
+            if len(data_active) > 0:
+                trace_active = px.scatter(data_active, x="date", y="sma_bull_bear_display",
+                                 color_discrete_sequence=px.colors.qualitative.Alphabet,
+                                 color_discrete_map=bull_bear_color_hex,
+                                 color="BULL",
+                                 symbol="BULL",
+                                 symbol_map=bull_bear_symbols
+                              )
+                fig.add_traces(list(trace_active.select_traces()))
+            print("Drawing bull_bear line on chart...")
+        else:
+            trace_bull_bear1 = px.scatter(bull_bear_df, x="date", y="sma_bull_bear_display",
+                                 color_discrete_sequence=px.colors.qualitative.Alphabet,
+                                 color_discrete_map=bull_bear_color_hex,
+                                 color ="BULL",
+                                 symbol ="BULL",
+                                 symbol_map =bull_bear_symbols
+                              )
+            print("Drawing bull_bear line on chart...")
+            fig.add_traces(list(trace_bull_bear1.select_traces()))
 
                 #Main trend
 
@@ -991,7 +1105,18 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
                          "-1.0":"rgba(255,160,122,0.35)",
                          "-2.0":"rgba(240,128,128,0.29)",
                          "-3.0":"rgba(220,20,60,0.29)"
-
+        }
+        
+        # Faded version for inactive areas
+        uptrendsmall_color_hex_faded = {
+                        "3.0":"rgba(50,205,50,0.10)",
+                         "2.0":"rgba(124,252,0,0.10)",
+                        "1.0":"rgba(152,251,152,0.12)",
+                      "0.0": "rgba(0, 0, 0, 0)",
+                        "-0.0": "rgba(0, 0, 0, 0)",
+                         "-1.0":"rgba(255,160,122,0.12)",
+                         "-2.0":"rgba(240,128,128,0.10)",
+                         "-3.0":"rgba(220,20,60,0.10)"
         }
 
         uptrendsmall_symbols = {
@@ -1008,33 +1133,54 @@ def plot_trend(fig, data: pd.DataFrame,label: str = "") -> make_subplots:
 
         data['uptrendsmall'] = data['uptrendsmall'].astype(str)
 
-
-
         uptrendsmall_df = data[(data['uptrendsmall'] != "0")&(data['uptrendsmall'] != "nan")]
-
-        #print(uptrend_df['uptrend'].value_counts())
 
         if(display == "above"):
             uptrendsmall_df['sma_uptrendsmall_display'] =(uptrendsmall_df['sma25']+(uptrendsmall_df['sma25']/100*distance))
         else:
             uptrendsmall_df['sma_uptrendsmall_display'] =(uptrendsmall_df['sma25']-(uptrendsmall_df['sma25']/100*distance))
 
-
-        trace_uptrendsmall1 = px.scatter(uptrendsmall_df, x="date", y="sma_uptrendsmall_display",#,
-                            # hover_name="main_trend",
-                             color_discrete_sequence=px.colors.qualitative.Alphabet,
-                             color_discrete_map=uptrendsmall_color_hex,
-                             color ="uptrendsmall",
-                             symbol ="uptrendsmall",
-                             symbol_map =uptrendsmall_symbols
-                             # symbol ="main_trend",
-                             # height=30,
-                             # opacity =0.5,
-                          )
-        print("Drawing uptrendsmall line on chart "+str(display)+"...")
-        fig.add_traces(
-            list(trace_uptrendsmall1.select_traces())
-        )
+        # If solo_fade_mask is provided, split into active/faded
+        if solo_fade_mask is not None:
+            # Need to align mask with uptrendsmall_df indices
+            uptrendsmall_active_mask = solo_fade_mask.loc[uptrendsmall_df.index]
+            data_active = uptrendsmall_df[uptrendsmall_active_mask]
+            data_faded = uptrendsmall_df[~uptrendsmall_active_mask]
+            
+            # Faded traces first
+            if len(data_faded) > 0:
+                trace_faded = px.scatter(data_faded, x="date", y="sma_uptrendsmall_display",
+                                 color_discrete_sequence=px.colors.qualitative.Alphabet,
+                                 color_discrete_map=uptrendsmall_color_hex_faded,
+                                 color="uptrendsmall",
+                                 symbol="uptrendsmall",
+                                 symbol_map=uptrendsmall_symbols
+                              )
+                for trace in trace_faded.select_traces():
+                    trace.showlegend = False
+                fig.add_traces(list(trace_faded.select_traces()))
+            
+            # Active traces on top
+            if len(data_active) > 0:
+                trace_active = px.scatter(data_active, x="date", y="sma_uptrendsmall_display",
+                                 color_discrete_sequence=px.colors.qualitative.Alphabet,
+                                 color_discrete_map=uptrendsmall_color_hex,
+                                 color="uptrendsmall",
+                                 symbol="uptrendsmall",
+                                 symbol_map=uptrendsmall_symbols
+                              )
+                fig.add_traces(list(trace_active.select_traces()))
+            print("Drawing uptrendsmall line on chart "+str(display)+"...")
+        else:
+            trace_uptrendsmall1 = px.scatter(uptrendsmall_df, x="date", y="sma_uptrendsmall_display",
+                                 color_discrete_sequence=px.colors.qualitative.Alphabet,
+                                 color_discrete_map=uptrendsmall_color_hex,
+                                 color ="uptrendsmall",
+                                 symbol ="uptrendsmall",
+                                 symbol_map =uptrendsmall_symbols
+                              )
+            print("Drawing uptrendsmall line on chart "+str(display)+"...")
+            fig.add_traces(list(trace_uptrendsmall1.select_traces()))
 
                 #Main trend
 
@@ -1154,11 +1300,63 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
     fig["layout"]["xaxis"]["rangeslider"].update(visible=False)
     fig.update_layout(modebar_add=["v1hovermode", "toggleSpikeLines"])
 
-    # Common information
-    candles = go.Candlestick(
-        x=data.date, open=data.open, high=data.high, low=data.low, close=data.close, name="Price"
-    )
-    fig.add_trace(candles, 1, 1)
+    # Check if a solo trend is selected and create fade mask
+    solo_fade_mask = None
+    for ind in indicators1:
+        if ind.startswith('solo='):
+            solo_parts = ind.split("=")[1]
+            if "&" in solo_parts:
+                m_trend = int(solo_parts.split("&")[0])
+                sub_filter = solo_parts.split("&")[1]
+            else:
+                m_trend = int(solo_parts)
+                sub_filter = None
+            
+            # Build the active mask (True = trend is active, False = inactive/faded)
+            if 'main_trend' in data.columns:
+                solo_fade_mask = (data['main_trend'] == m_trend)
+                if sub_filter:
+                    if sub_filter == "uptrend" and 'uptrend' in data.columns:
+                        solo_fade_mask = solo_fade_mask & (data['uptrend'] != 0)
+                    elif sub_filter == "downtrend" and 'uptrend' in data.columns:
+                        solo_fade_mask = solo_fade_mask & (data['uptrend'] == 0)
+                    elif sub_filter == "BULL" and 'BULL' in data.columns:
+                        solo_fade_mask = solo_fade_mask & (data['BULL'] == 1)
+                    elif sub_filter == "BEAR" and 'BULL' in data.columns:
+                        solo_fade_mask = solo_fade_mask & (data['BULL'] == -1)
+            break
+
+    # Common information - Candlesticks
+    if solo_fade_mask is not None:
+        # Split data into active and inactive parts
+        data_active = data[solo_fade_mask].copy()
+        data_inactive = data[~solo_fade_mask].copy()
+        
+        # Active candles - full opacity
+        if len(data_active) > 0:
+            candles_active = go.Candlestick(
+                x=data_active.date, open=data_active.open, high=data_active.high, 
+                low=data_active.low, close=data_active.close, name="Price",
+                increasing_line_color='#26a69a', decreasing_line_color='#ef5350',
+                increasing_fillcolor='#26a69a', decreasing_fillcolor='#ef5350',
+            )
+            fig.add_trace(candles_active, 1, 1)
+        
+        # Inactive candles - faded (0.5 opacity)
+        if len(data_inactive) > 0:
+            candles_inactive = go.Candlestick(
+                x=data_inactive.date, open=data_inactive.open, high=data_inactive.high,
+                low=data_inactive.low, close=data_inactive.close, name="Price (faded)",
+                showlegend=False,
+                increasing_line_color='rgba(38, 166, 154, 0.3)', decreasing_line_color='rgba(239, 83, 80, 0.3)',
+                increasing_fillcolor='rgba(38, 166, 154, 0.3)', decreasing_fillcolor='rgba(239, 83, 80, 0.3)',
+            )
+            fig.add_trace(candles_inactive, 1, 1)
+    else:
+        candles = go.Candlestick(
+            x=data.date, open=data.open, high=data.high, low=data.low, close=data.close, name="Price"
+        )
+        fig.add_trace(candles, 1, 1)
     
     # Enable for shorter code or if futures don't work
     # longs = create_scatter(data, "enter_long", "green", "up")
@@ -1190,22 +1388,79 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
 
             for enter_tag in df_buy.enter_tag.copy().drop_duplicates():
                 enter_tag_series = df_buy[df_buy['enter_tag'] == enter_tag]
-                #enter_tag_style="circle"
                 enter_tag_style = generate_enter_tag_style(enter_tag, buy_colours_hex[index%len(buy_colours_hex)], buy_symbols[index%len(buy_symbols)])
-                buys = go.Scatter(
-                    x=enter_tag_series.date,
-                    y=enter_tag_series.close,
-                    mode='markers',
-                    text=enter_tag_series.enter_tag,
-                    name='enter_long',
-                    marker=dict(
-                        symbol=enter_tag_style["symbol"],
-                        size=enter_tag_style["size"],
-                        line=dict(width=1),
-                        color=enter_tag_style["color"]
+                
+                # If solo_fade_mask exists, split buys into active/faded
+                if solo_fade_mask is not None:
+                    buy_indices = enter_tag_series.index
+                    buy_active_mask = solo_fade_mask.loc[buy_indices]
+                    
+                    # Active buys - full opacity
+                    buy_active = enter_tag_series[buy_active_mask]
+                    if len(buy_active) > 0:
+                        buys_active = go.Scatter(
+                            x=buy_active.date,
+                            y=buy_active.close,
+                            mode='markers',
+                            text=buy_active.enter_tag,
+                            name='enter_long',
+                            marker=dict(
+                                symbol=enter_tag_style["symbol"],
+                                size=enter_tag_style["size"],
+                                line=dict(width=1),
+                                color=enter_tag_style["color"]
+                            )
+                        )
+                        fig.add_trace(buys_active, 1, 1)
+                    
+                    # Faded buys - reduced opacity
+                    buy_faded = enter_tag_series[~buy_active_mask]
+                    if len(buy_faded) > 0:
+                        orig_color = enter_tag_style["color"]
+                        if orig_color.startswith('#') and len(orig_color) == 7:
+                            r = int(orig_color[1:3], 16)
+                            g = int(orig_color[3:5], 16)
+                            b = int(orig_color[5:7], 16)
+                            faded_color = f'rgba({r}, {g}, {b}, 0.15)'
+                            faded_line_color = f'rgba({r}, {g}, {b}, 0.15)'
+                        elif orig_color.startswith('RGBA') or orig_color.startswith('rgba'):
+                            # Handle RGBA colors
+                            faded_color = orig_color.replace('1)', '0.15)').replace(',1)', ',0.15)').replace('0.8)', '0.15)')
+                            faded_line_color = faded_color
+                        else:
+                            faded_color = 'rgba(0, 128, 0, 0.15)'
+                            faded_line_color = 'rgba(0, 128, 0, 0.15)'
+                        
+                        buys_faded = go.Scatter(
+                            x=buy_faded.date,
+                            y=buy_faded.close,
+                            mode='markers',
+                            text=buy_faded.enter_tag,
+                            name='enter_long (faded)',
+                            showlegend=False,
+                            marker=dict(
+                                symbol=enter_tag_style["symbol"],
+                                size=enter_tag_style["size"],
+                                line=dict(width=0.5, color=faded_line_color),
+                                color=faded_color
+                            )
+                        )
+                        fig.add_trace(buys_faded, 1, 1)
+                else:
+                    buys = go.Scatter(
+                        x=enter_tag_series.date,
+                        y=enter_tag_series.close,
+                        mode='markers',
+                        text=enter_tag_series.enter_tag,
+                        name='enter_long',
+                        marker=dict(
+                            symbol=enter_tag_style["symbol"],
+                            size=enter_tag_style["size"],
+                            line=dict(width=1),
+                            color=enter_tag_style["color"]
+                        )
                     )
-                )
-                fig.add_trace(buys, 1, 1)
+                    fig.add_trace(buys, 1, 1)
                 index+=1
         else:
             logger.warning("No buy-signals found.")
@@ -1231,22 +1486,77 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
             if("exit_tag" in df_sell):
                 for exit_tag in df_sell.exit_tag.copy().drop_duplicates():
                     sell_reason_series = df_sell[df_sell['exit_tag'] == exit_tag]
-                    #sell_reason_style="circle"
                     sell_reason_style = generate_sell_reason_style(exit_tag, sell_colours_hex[index%len(sell_colours_hex)], sell_symbols[index%len(sell_symbols)])
-                    sells = go.Scatter(
-                        x=sell_reason_series.date,
-                        y=sell_reason_series.close,
-                        mode='markers',
-                        text=sell_reason_series.exit_tag,
-                        name='exit_long',
-                        marker=dict(
-                            symbol=sell_reason_style["symbol"],
-                            size=sell_reason_style["size"],
-                            line=dict(width=1),
-                            color=sell_reason_style["color"],
+                    
+                    # If solo_fade_mask exists, split sells into active/faded
+                    if solo_fade_mask is not None:
+                        # Get the mask values for the sell signal indices
+                        sell_indices = sell_reason_series.index
+                        sell_active_mask = solo_fade_mask.loc[sell_indices]
+                        
+                        # Active sells - full opacity
+                        sell_active = sell_reason_series[sell_active_mask]
+                        if len(sell_active) > 0:
+                            sells_active = go.Scatter(
+                                x=sell_active.date,
+                                y=sell_active.close,
+                                mode='markers',
+                                text=sell_active.exit_tag,
+                                name='exit_long',
+                                marker=dict(
+                                    symbol=sell_reason_style["symbol"],
+                                    size=sell_reason_style["size"],
+                                    line=dict(width=1),
+                                    color=sell_reason_style["color"],
+                                )
+                            )
+                            fig.add_trace(sells_active, 1, 1)
+                        
+                        # Faded sells - reduced opacity
+                        sell_faded = sell_reason_series[~sell_active_mask]
+                        if len(sell_faded) > 0:
+                            # Convert color to faded version
+                            orig_color = sell_reason_style["color"]
+                            if orig_color.startswith('#') and len(orig_color) == 7:
+                                r = int(orig_color[1:3], 16)
+                                g = int(orig_color[3:5], 16)
+                                b = int(orig_color[5:7], 16)
+                                faded_color = f'rgba({r}, {g}, {b}, 0.20)'
+                                faded_line_color = f'rgba({r}, {g}, {b}, 0.20)'
+                            else:
+                                faded_color = 'rgba(139, 0, 0, 0.20)'
+                                faded_line_color = 'rgba(139, 0, 0, 0.20)'
+                            
+                            sells_faded = go.Scatter(
+                                x=sell_faded.date,
+                                y=sell_faded.close,
+                                mode='markers',
+                                text=sell_faded.exit_tag,
+                                name='exit_long (faded)',
+                                showlegend=False,
+                                marker=dict(
+                                    symbol=sell_reason_style["symbol"],
+                                    size=sell_reason_style["size"],
+                                    line=dict(width=0.5, color=faded_line_color),
+                                    color=faded_color,
+                                )
+                            )
+                            fig.add_trace(sells_faded, 1, 1)
+                    else:
+                        sells = go.Scatter(
+                            x=sell_reason_series.date,
+                            y=sell_reason_series.close,
+                            mode='markers',
+                            text=sell_reason_series.exit_tag,
+                            name='exit_long',
+                            marker=dict(
+                                symbol=sell_reason_style["symbol"],
+                                size=sell_reason_style["size"],
+                                line=dict(width=1),
+                                color=sell_reason_style["color"],
+                            )
                         )
-                    )
-                    fig.add_trace(sells, 1, 1)
+                        fig.add_trace(sells, 1, 1)
                     index+=1
         else:
             logger.warning("No sell-signals found.")
@@ -1286,7 +1596,7 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
     except KeyError:
         pass
     # main plot goes to row 1
-    fig = add_indicators(fig=fig, row=1, indicators=plot_config["main_plot"], data=data)
+    fig = add_indicators(fig=fig, row=1, indicators=plot_config["main_plot"], data=data, solo_fade_mask=solo_fade_mask)
     fig = add_areas(fig, 1, data, plot_config["main_plot"])
     fig = plot_trades(fig, trades)
 
@@ -1305,7 +1615,7 @@ def generate_candlestick_graph(pair: str, data: pd.DataFrame, trades: pd.DataFra
         sub_config = plot_config['subplots'][label]
         row = 2 + i
         fig = add_indicators(fig=fig, row=row, indicators=sub_config,
-                             data=data)
+                             data=data, solo_fade_mask=solo_fade_mask)
         # fill area between indicators ( 'fill_to': 'other_indicator')
         fig = add_areas(fig, row, data, sub_config)
 

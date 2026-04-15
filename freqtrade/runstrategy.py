@@ -9,7 +9,7 @@ from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAction, QLineEdit, QMessageBox, \
     QPlainTextEdit, QDateEdit
 from PyQt5.QtGui import QIcon
-from PyQt5.QtCore import pyqtSlot, QDate, QDateTime
+from PyQt5.QtCore import pyqtSlot, pyqtSignal, QDate, QDateTime, QThread
 from PyQt5 import QtCore, QtWidgets
 # from importlib import reload
 from main import main
@@ -68,6 +68,107 @@ timeframes_json = [
                     {"Bull-old": 1491177600000},  # 3 April 2017
                     {"Bitcoin Start": 1486080000000}  # 3 February 2017
                    ]
+
+class LLMOptimizerWorker(QThread):
+    """Worker thread for running LLM optimization without blocking the GUI."""
+    progress = pyqtSignal(str, int, int, object)  # message, current_iter, max_iter, metrics
+    finished = pyqtSignal(object)  # history object
+
+    def __init__(self, strategy_name, config_path, fee, timerange, max_iterations, api_key, model, reload_fn):
+        super().__init__()
+        self.strategy_name = strategy_name
+        self.config_path = config_path
+        self.fee = fee
+        self.timerange = timerange
+        self.max_iterations = max_iterations
+        self.api_key = api_key
+        self.model = model
+        self.reload_fn = reload_fn
+
+    def run(self):
+        from user_data.llm_optimizer.optimizer_loop import run_optimization
+        try:
+            history = run_optimization(
+                strategy_name=self.strategy_name,
+                config_path=self.config_path,
+                fee=self.fee,
+                timerange=self.timerange,
+                max_iterations=self.max_iterations,
+                api_key=self.api_key,
+                model=self.model,
+                callback=self._on_progress,
+                reload_modules_fn=self.reload_fn,
+            )
+            self.finished.emit(history)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            self.progress.emit(f"ERROR: {e}", 0, self.max_iterations, None)
+            self.finished.emit(None)
+
+    def _on_progress(self, message, current_iter, max_iter, metrics):
+        self.progress.emit(message, current_iter, max_iter, metrics)
+
+
+class HyperoptPrepareWorker(QThread):
+    """Worker thread for hyperopt preparation (convert to parameterized)."""
+    progress = pyqtSignal(str)
+    finished = pyqtSignal(object)  # result dict
+
+    def __init__(self, strategy_name, instructions, api_key, model):
+        super().__init__()
+        self.strategy_name = strategy_name
+        self.instructions = instructions
+        self.api_key = api_key
+        self.model = model
+
+    def run(self):
+        from user_data.llm_optimizer.hyperopt_prepare import run_prepare
+        try:
+            result = run_prepare(
+                strategy_name=self.strategy_name,
+                instructions=self.instructions,
+                api_key=self.api_key,
+                model=self.model,
+                callback=lambda msg: self.progress.emit(msg),
+            )
+            self.finished.emit(result)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            self.progress.emit(f"ERROR: {e}")
+            self.finished.emit({"error": str(e)})
+
+
+class HyperoptApplyWorker(QThread):
+    """Worker thread for applying hyperopt results (convert back to hardcoded)."""
+    progress = pyqtSignal(str)
+    finished = pyqtSignal(object)  # result dict
+
+    def __init__(self, strategy_name, instructions, api_key, model):
+        super().__init__()
+        self.strategy_name = strategy_name
+        self.instructions = instructions
+        self.api_key = api_key
+        self.model = model
+
+    def run(self):
+        from user_data.llm_optimizer.hyperopt_apply import run_apply
+        try:
+            result = run_apply(
+                strategy_name=self.strategy_name,
+                instructions=self.instructions,
+                api_key=self.api_key,
+                model=self.model,
+                callback=lambda msg: self.progress.emit(msg),
+            )
+            self.finished.emit(result)
+        except Exception as e:
+            import traceback
+            traceback.print_exc()
+            self.progress.emit(f"ERROR: {e}")
+            self.finished.emit({"error": str(e)})
+
 
 class App(QWidget):
 
@@ -164,6 +265,8 @@ class App(QWidget):
         self.show_plot_clicked = False
         self.hyperopt_clicked = False
         self.download_clicked = False
+        self.llm_optimize_running = False
+        self.llm_worker = None
 
         self.backtest_data_enabled = False #IF TRUE SHOWS DETAILED BACKTESTING DATA CLASHES
         self.backtest_data_issues_display = ""
@@ -646,6 +749,74 @@ class App(QWidget):
         self.plot_button.setToolTip('Create A plot for the selected pair')
         self.plot_button.move(965, 324)
         self.plot_button.clicked.connect(self.on_click_plot)
+
+        # --- LLM Optimize Section ---
+        # Initialize llm_optimize config defaults if missing
+        if "llm_optimize" not in self.data:
+            self.data["llm_optimize"] = {"api_key": "", "max_iterations": 5, "model": "claude-sonnet-4-20250514", "hyperopt_instructions": ""}
+
+        # Button LLM Optimize
+        self.llm_optimize_button = QPushButton('LLM Optimize', self)
+        self.llm_optimize_button.setToolTip('Run LLM-driven strategy optimization (Claude API)')
+        self.llm_optimize_button.move(370, 324)
+        self.llm_optimize_button.clicked.connect(self.on_click_llm_optimize)
+
+        # Label Loops
+        self.llm_loops_label = QLabel(self)
+        self.llm_loops_label.setText('Loops:')
+        self.llm_loops_label.move(460, 326)
+        # Textbox Loops (number of optimization iterations)
+        self.llm_loops_textbox = QLineEdit(self)
+        self.llm_loops_textbox.move(492, 324)
+        self.llm_loops_textbox.resize(25, 20)
+        self.llm_loops_textbox.setText(str(self.data["llm_optimize"].get("max_iterations", 5)))
+        self.llm_loops_textbox.textChanged.connect(self.on_textchange_llm_loops)
+
+        # Label API Key
+        self.llm_api_key_label = QLabel(self)
+        self.llm_api_key_label.setText('API Key:')
+        self.llm_api_key_label.move(525, 326)
+        # Textbox API Key
+        self.llm_api_key_textbox = QLineEdit(self)
+        self.llm_api_key_textbox.move(568, 324)
+        self.llm_api_key_textbox.resize(130, 20)
+        self.llm_api_key_textbox.setEchoMode(QLineEdit.Password)
+        self.llm_api_key_textbox.setText(self.data["llm_optimize"].get("api_key", ""))
+        self.llm_api_key_textbox.setToolTip('Anthropic API key (or set ANTHROPIC_API_KEY env var)')
+        self.llm_api_key_textbox.textChanged.connect(self.on_textchange_llm_api_key)
+
+        # --- Hyperopt Prepare/Apply Section ---
+        # Instructions textbox for hyperopt preparation pointers
+        self.llm_instructions_label = QLabel(self)
+        self.llm_instructions_label.setText('LLM Instructions:')
+        self.llm_instructions_label.move(370, 261)
+        self.llm_instructions_textbox = QLineEdit(self)
+        self.llm_instructions_textbox.move(458, 259)
+        self.llm_instructions_textbox.resize(400, 18)
+        self.llm_instructions_textbox.setPlaceholderText('e.g. only hyperopt rule 11 thresholds in UPTREND_NFI')
+        self.llm_instructions_textbox.setText(self.data["llm_optimize"].get("hyperopt_instructions", ""))
+        self.llm_instructions_textbox.setToolTip('Instructions for Claude when preparing/optimizing (which rules, which params, etc.)')
+        self.llm_instructions_textbox.textChanged.connect(self.on_textchange_llm_instructions)
+
+        # Button Prepare Hyperopt
+        self.hyperopt_prepare_button = QPushButton('Prepare', self)
+        self.hyperopt_prepare_button.setToolTip('Convert strategy to hyperoptable Parameters (Claude API)')
+        self.hyperopt_prepare_button.move(370, 280)
+        self.hyperopt_prepare_button.resize(60, 22)
+        self.hyperopt_prepare_button.clicked.connect(self.on_click_hyperopt_prepare)
+
+        # Button Apply Hyperopt
+        self.hyperopt_apply_button = QPushButton('Finalize', self)
+        self.hyperopt_apply_button.setToolTip('Bake hyperopt results back to hardcoded values (Claude API)')
+        self.hyperopt_apply_button.move(435, 280)
+        self.hyperopt_apply_button.resize(55, 22)
+        self.hyperopt_apply_button.clicked.connect(self.on_click_hyperopt_apply)
+
+        # LLM Status label (shows optimization progress)
+        self.llm_status_label = QLabel(self)
+        self.llm_status_label.setText('')
+        self.llm_status_label.move(500, 282)
+        self.llm_status_label.resize(360, 16)
 
         # # Config  label
         # self.label_config = QLabel(self)
@@ -1256,6 +1427,186 @@ class App(QWidget):
                 self.reload_imports()
         else:
             print("Hyperopt is disabled")
+
+    @pyqtSlot()
+    def on_click_llm_optimize(self):
+        """Handle LLM Optimize button click. Runs full optimization in a background thread."""
+        if self.llm_optimize_running:
+            print("LLM Optimization is already running!")
+            return
+
+        self.update_config_pairs()
+        self.on_click_save_json()
+
+        strategy_name = self.strategies[self.data["strategy"]]
+        config_path = "user_data/" + self.data["config"]
+        fee = fee_amount if fee_enable else 0
+        max_iterations = int(self.data["llm_optimize"].get("max_iterations", 5))
+        api_key = self.data["llm_optimize"].get("api_key", "")
+        model = self.data["llm_optimize"].get("model", "claude-sonnet-4-20250514")
+
+        time_until = ""
+        if self.data["time"]["time_until_enabled"]:
+            time_until = str(self.data["time"]["time_until"])
+        timerange = str(self.data["time"]["time_from"] - data_loading_time_ms) + "-" + str(time_until)
+
+        self.llm_status_label.setText(f"LLM Optimize: Starting {strategy_name} ({max_iterations} loops)...")
+        self.llm_optimize_button.setText("Running...")
+        self.llm_optimize_button.setEnabled(False)
+        self.llm_optimize_running = True
+
+        self.run_command_args_label.setText(f"LLM Optimize: {strategy_name} x{max_iterations} loops")
+
+        self.reload_imports()
+
+        # Launch worker thread
+        self.llm_worker = LLMOptimizerWorker(
+            strategy_name=strategy_name,
+            config_path=config_path,
+            fee=fee,
+            timerange=timerange,
+            max_iterations=max_iterations,
+            api_key=api_key,
+            model=model,
+            reload_fn=self.reload_imports,
+        )
+        self.llm_worker.progress.connect(self.on_llm_progress)
+        self.llm_worker.finished.connect(self.on_llm_finished)
+        self.llm_worker.start()
+
+    @pyqtSlot(str, int, int, object)
+    def on_llm_progress(self, message, current_iter, max_iter, metrics):
+        """Update GUI with optimization progress."""
+        if metrics:
+            profit = metrics.get("total_profit_pct", 0)
+            winrate = metrics.get("winrate_pct", 0)
+            display = f"[{current_iter}/{max_iter}] {profit:+.1f}% | WR:{winrate:.0f}% | {message[:60]}"
+        else:
+            display = f"[{current_iter}/{max_iter}] {message[:80]}"
+        self.llm_status_label.setText(display)
+        print(f"[LLM GUI] {message}")
+
+    @pyqtSlot(object)
+    def on_llm_finished(self, history):
+        """Handle optimization completion."""
+        self.llm_optimize_running = False
+        self.llm_optimize_button.setText("LLM Optimize")
+        self.llm_optimize_button.setEnabled(True)
+
+        if history and history.iterations:
+            best = history.get_best()
+            if best:
+                m = best["metrics"]
+                self.llm_status_label.setText(
+                    f"Done! Best #{best['iteration']}: {m['total_profit_pct']:+.1f}% profit, "
+                    f"{m['winrate_pct']:.0f}% WR, {m['max_drawdown_pct']:.1f}% DD"
+                )
+            self.run_command_args_label.setText(f"LLM Optimize complete. Log: {history.log_file}")
+        else:
+            self.llm_status_label.setText("LLM Optimize: Failed or no results")
+
+        if self.data["enable_sound"]:
+            playsound("Welcome.wav")
+
+    @pyqtSlot(str)
+    def on_textchange_llm_loops(self, text):
+        """Handle loops textbox change."""
+        try:
+            val = int(text)
+            if val > 0:
+                self.data["llm_optimize"]["max_iterations"] = val
+        except (ValueError, KeyError):
+            pass
+
+    @pyqtSlot(str)
+    def on_textchange_llm_api_key(self, text):
+        """Handle API key textbox change."""
+        if "llm_optimize" in self.data:
+            self.data["llm_optimize"]["api_key"] = text
+
+    @pyqtSlot(str)
+    def on_textchange_llm_instructions(self, text):
+        """Handle instructions textbox change."""
+        if "llm_optimize" in self.data:
+            self.data["llm_optimize"]["hyperopt_instructions"] = text
+
+    @pyqtSlot()
+    def on_click_hyperopt_prepare(self):
+        """Convert selected strategy to hyperoptable form using Claude API."""
+        if hasattr(self, '_hyperopt_prepare_worker') and self._hyperopt_prepare_worker and self._hyperopt_prepare_worker.isRunning():
+            print("Hyperopt Prepare is already running!")
+            return
+
+        self.on_click_save_json()
+        strategy_name = self.strategies[self.data["strategy"]]
+        instructions = self.data["llm_optimize"].get("hyperopt_instructions", "")
+        api_key = self.data["llm_optimize"].get("api_key", "")
+        model = self.data["llm_optimize"].get("model", "claude-sonnet-4-20250514")
+
+        self.llm_status_label.setText(f"Preparing {strategy_name} for hyperopt...")
+        self.hyperopt_prepare_button.setEnabled(False)
+        self.hyperopt_prepare_button.setText("...")
+
+        self._hyperopt_prepare_worker = HyperoptPrepareWorker(strategy_name, instructions, api_key, model)
+        self._hyperopt_prepare_worker.progress.connect(self.on_hyperopt_prepare_progress)
+        self._hyperopt_prepare_worker.finished.connect(self.on_hyperopt_prepare_finished)
+        self._hyperopt_prepare_worker.start()
+
+    @pyqtSlot(str)
+    def on_hyperopt_prepare_progress(self, message):
+        self.llm_status_label.setText(message[:80])
+        print(f"[Prepare] {message}")
+
+    @pyqtSlot(object)
+    def on_hyperopt_prepare_finished(self, result):
+        self.hyperopt_prepare_button.setEnabled(True)
+        self.hyperopt_prepare_button.setText("Prepare")
+        if result and not result.get("error"):
+            applied = len(result.get("applied", []))
+            params = len(result.get("parameters_added", []))
+            self.llm_status_label.setText(f"Prepared! {applied} changes, {params} params. Run Hyperopt now.")
+        else:
+            error = result.get("error", "Unknown error") if result else "Failed"
+            self.llm_status_label.setText(f"Prepare failed: {str(error)[:60]}")
+
+    @pyqtSlot()
+    def on_click_hyperopt_apply(self):
+        """Apply hyperopt results back to hardcoded values using Claude API."""
+        if hasattr(self, '_hyperopt_apply_worker') and self._hyperopt_apply_worker and self._hyperopt_apply_worker.isRunning():
+            print("Hyperopt Apply is already running!")
+            return
+
+        self.on_click_save_json()
+        strategy_name = self.strategies[self.data["strategy"]]
+        instructions = self.data["llm_optimize"].get("hyperopt_instructions", "")
+        api_key = self.data["llm_optimize"].get("api_key", "")
+        model = self.data["llm_optimize"].get("model", "claude-sonnet-4-20250514")
+
+        self.llm_status_label.setText(f"Applying hyperopt results to {strategy_name}...")
+        self.hyperopt_apply_button.setEnabled(False)
+        self.hyperopt_apply_button.setText("...")
+
+        self._hyperopt_apply_worker = HyperoptApplyWorker(strategy_name, instructions, api_key, model)
+        self._hyperopt_apply_worker.progress.connect(self.on_hyperopt_apply_progress)
+        self._hyperopt_apply_worker.finished.connect(self.on_hyperopt_apply_finished)
+        self._hyperopt_apply_worker.start()
+
+    @pyqtSlot(str)
+    def on_hyperopt_apply_progress(self, message):
+        self.llm_status_label.setText(message[:80])
+        print(f"[Apply] {message}")
+
+    @pyqtSlot(object)
+    def on_hyperopt_apply_finished(self, result):
+        self.hyperopt_apply_button.setEnabled(True)
+        self.hyperopt_apply_button.setText("Finalize")
+        if result and not result.get("error"):
+            applied = len(result.get("applied", []))
+            values = len(result.get("optimized_values", {}))
+            self.llm_status_label.setText(f"Applied! {applied} changes, {values} values baked in.")
+        else:
+            error = result.get("error", "Unknown error") if result else "Failed"
+            self.llm_status_label.setText(f"Apply failed: {str(error)[:60]}")
 
     @pyqtSlot()
     def on_click_download_data(self):

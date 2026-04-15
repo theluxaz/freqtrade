@@ -67,6 +67,12 @@
   "pair_set2": "ETH\nXRP\nSOL\nUNI\nLINK\nQNT\nAXS\nMKR\nZIL\nHBAR\nRNDR\nSUI\nVET\nFET\nOM",
   "plot_pair": 0,
   "plot_profit": false,
+  "llm_optimize": {
+    "api_key": "",
+    "max_iterations": 5,
+    "model": "claude-sonnet-4-20250514",
+    "hyperopt_instructions": ""
+  },
   "command": "backtesting --config user_data/config.json --fee 0.0025 --timeframe 15m --cache none --strategy x_BUY_LONG_DOWNTREND10 --export trades --timerange=1598497000000-1747112200000",
   "download": {
     "days_to_download": 3450,

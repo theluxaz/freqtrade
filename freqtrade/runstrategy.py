@@ -7,7 +7,8 @@ sys.path.append(file_dir)
 from PyQt5.QtWidgets import QApplication, QWidget, QInputDialog, QComboBox, QLabel, QCheckBox, QScrollBar
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QMainWindow, QApplication, QWidget, QPushButton, QAction, QLineEdit, QMessageBox, \
-    QPlainTextEdit, QDateEdit
+    QPlainTextEdit, QDateEdit, QDialog, QTableWidget, QTableWidgetItem, QVBoxLayout, QHBoxLayout, QHeaderView, \
+    QSlider, QAbstractItemView
 from PyQt5.QtGui import QIcon
 from PyQt5.QtCore import pyqtSlot, pyqtSignal, QDate, QDateTime, QThread
 from PyQt5 import QtCore, QtWidgets
@@ -750,6 +751,12 @@ class App(QWidget):
         self.plot_button.move(965, 324)
         self.plot_button.clicked.connect(self.on_click_plot)
 
+        # Button Rule Overlap
+        self.rule_overlap_button = QPushButton('Rule Overlap', self)
+        self.rule_overlap_button.setToolTip('Detect overlapping or redundant trading rules')
+        self.rule_overlap_button.move(770, 324)
+        self.rule_overlap_button.clicked.connect(self.on_click_rule_overlap)
+
         # --- LLM Optimize Section ---
         # Initialize llm_optimize config defaults if missing
         if "llm_optimize" not in self.data:
@@ -1355,6 +1362,11 @@ class App(QWidget):
             self.show_plot_clicked = True
             self.download_clicked = False
             self.reload_imports()
+
+    @pyqtSlot()
+    def on_click_rule_overlap(self):
+        dialog = RuleOverlapDialog(self)
+        dialog.exec_()
 
     @pyqtSlot()
     def on_click_hyperopt(self):
@@ -2608,6 +2620,373 @@ def days_between_timestamps(from_timestamp, until_timestamp):
 
 def run_commands(command_list):
     main(command_list)
+
+
+# ---------------------------------------------------------------------------
+# Rule Overlap Dialog
+# ---------------------------------------------------------------------------
+
+class RuleOverlapWorker(QThread):
+    """Worker thread for running rule overlap analysis without blocking GUI."""
+    finished = pyqtSignal(object, object)  # results, fingerprints
+    error = pyqtSignal(str)
+
+    def __init__(self, mode, **kwargs):
+        super().__init__()
+        self.mode = mode
+        self.kwargs = kwargs
+
+    def run(self):
+        try:
+            sys.path.insert(0, os.path.join(file_dir, "user_data", "strategies"))
+            from tools.rule_overlap_detector import (
+                analyze_category, analyze_strategy, analyze_cross_strategy, analyze_detail,
+            )
+
+            if self.mode == "category":
+                results, fps = analyze_category(
+                    self.kwargs["category"],
+                    sell=self.kwargs.get("sell", False),
+                    threshold=self.kwargs.get("threshold", 0.5),
+                    top_n=self.kwargs.get("top_n", 50),
+                )
+                self.finished.emit(results, fps)
+            elif self.mode == "strategy":
+                results, fps = analyze_strategy(
+                    self.kwargs["strategy"],
+                    enabled_only=self.kwargs.get("enabled_only", False),
+                    threshold=self.kwargs.get("threshold", 0.5),
+                    top_n=self.kwargs.get("top_n", 50),
+                )
+                self.finished.emit(results, fps)
+            elif self.mode == "compare":
+                results, fps = analyze_cross_strategy(
+                    self.kwargs["strat_a"], self.kwargs["strat_b"],
+                    threshold=self.kwargs.get("threshold", 0.5),
+                    top_n=self.kwargs.get("top_n", 50),
+                )
+                self.finished.emit(results, fps)
+            elif self.mode == "detail":
+                fp_a, fp_b, result = analyze_detail(
+                    self.kwargs["rule_a"], self.kwargs["rule_b"],
+                )
+                if result:
+                    self.finished.emit([result], [fp_a, fp_b])
+                else:
+                    self.error.emit("Could not find or parse one of the rules.")
+        except Exception as e:
+            self.error.emit(str(e))
+
+
+class RuleOverlapDialog(QDialog):
+    """Dialog for analyzing rule overlaps with a GUI."""
+
+    CATEGORIES = [
+        "ANY", "BOTTOM_DANGER", "HIGH", "LONG_DOWNTREND", "LONG_UPTREND",
+        "LOW", "MID", "NOTREND", "SLOW_DOWNTREND", "UPPER_DANGER",
+        "DOWNTREND_UPSWING",
+    ]
+
+    STRATEGIES = [
+        "buyer_dev_ANY", "buyer_dev_BOTTOM_DANGER", "buyer_dev_HIGH",
+        "buyer_dev_LONG_DOWNTREND", "buyer_dev_LONG_UPTREND",
+        "buyer_dev_LOW", "buyer_dev_MID", "buyer_dev_NOTREND",
+        "buyer_dev_SLOW_DOWNTREND", "buyer_dev_UPPER_DANGER",
+        "seller_dev_ANY", "seller_dev_BOTTOM_DANGER", "seller_dev_HIGH",
+        "seller_dev_LONG_DOWNTREND", "seller_dev_LONG_UPTREND",
+        "seller_dev_LOW", "seller_dev_MID", "seller_dev_NOTREND",
+        "seller_dev_SLOW_DOWNTREND", "seller_dev_UPPER_DANGER",
+    ]
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("Rule Overlap Detector")
+        self.setMinimumSize(800, 550)
+        self.resize(900, 600)
+        self.worker = None
+        self._build_ui()
+
+    def closeEvent(self, event):
+        """Ensure worker thread is stopped before closing."""
+        if self.worker is not None and self.worker.isRunning():
+            self.worker.wait(3000)
+        super().closeEvent(event)
+
+    def _build_ui(self):
+        layout = QVBoxLayout(self)
+
+        # --- Top row: Mode + Selection ---
+        top_row = QHBoxLayout()
+
+        top_row.addWidget(QLabel("Mode:"))
+        self.mode_combo = QComboBox()
+        self.mode_combo.addItems(["Category", "Strategy", "Compare"])
+        self.mode_combo.currentIndexChanged.connect(self._on_mode_change)
+        top_row.addWidget(self.mode_combo)
+
+        top_row.addWidget(QLabel("Selection:"))
+        self.selection_combo_a = QComboBox()
+        self.selection_combo_a.addItems(self.CATEGORIES)
+        self.selection_combo_a.setCurrentIndex(self.CATEGORIES.index("HIGH"))
+        top_row.addWidget(self.selection_combo_a)
+
+        self.label_vs = QLabel("vs")
+        self.label_vs.hide()
+        top_row.addWidget(self.label_vs)
+
+        self.selection_combo_b = QComboBox()
+        self.selection_combo_b.addItems(self.STRATEGIES)
+        self.selection_combo_b.hide()
+        top_row.addWidget(self.selection_combo_b)
+
+        layout.addLayout(top_row)
+
+        # --- Second row: Options ---
+        opts_row = QHBoxLayout()
+
+        opts_row.addWidget(QLabel("Threshold:"))
+        self.threshold_slider = QSlider(QtCore.Qt.Horizontal)
+        self.threshold_slider.setMinimum(0)
+        self.threshold_slider.setMaximum(100)
+        self.threshold_slider.setValue(50)
+        self.threshold_slider.setTickInterval(10)
+        self.threshold_slider.valueChanged.connect(self._on_threshold_change)
+        opts_row.addWidget(self.threshold_slider)
+        self.threshold_label = QLabel("0.50")
+        self.threshold_label.setFixedWidth(35)
+        opts_row.addWidget(self.threshold_label)
+
+        self.sell_checkbox = QCheckBox("Sell Rules")
+        opts_row.addWidget(self.sell_checkbox)
+
+        self.enabled_only_checkbox = QCheckBox("Enabled Only")
+        self.enabled_only_checkbox.hide()
+        opts_row.addWidget(self.enabled_only_checkbox)
+
+        self.analyze_button = QPushButton("Analyze")
+        self.analyze_button.clicked.connect(self._on_analyze)
+        opts_row.addWidget(self.analyze_button)
+
+        layout.addLayout(opts_row)
+
+        # --- Status ---
+        self.status_label = QLabel("")
+        layout.addWidget(self.status_label)
+
+        # --- Results Table ---
+        self.table = QTableWidget()
+        self.table.setColumnCount(7)
+        self.table.setHorizontalHeaderLabels([
+            "Rule A", "Rule B", "Score", "Trigger", "Guard", "Prevent", "Summary"
+        ])
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(0, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(3, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(4, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(5, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(6, QHeaderView.Stretch)
+        self.table.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.table.setEditTriggers(QAbstractItemView.NoEditTriggers)
+        self.table.setSortingEnabled(True)
+        layout.addWidget(self.table)
+
+        # --- Detail area ---
+        detail_row = QHBoxLayout()
+        self.detail_button = QPushButton("Show Detail for Selected Pair")
+        self.detail_button.clicked.connect(self._on_detail)
+        self.detail_button.setEnabled(False)
+        detail_row.addWidget(self.detail_button)
+        detail_row.addStretch()
+        layout.addLayout(detail_row)
+
+        self.detail_text = QPlainTextEdit()
+        self.detail_text.setReadOnly(True)
+        self.detail_text.setMaximumHeight(150)
+        self.detail_text.hide()
+        layout.addWidget(self.detail_text)
+
+        self.table.itemSelectionChanged.connect(
+            lambda: self.detail_button.setEnabled(bool(self.table.selectedItems()))
+        )
+
+    def _on_mode_change(self, index):
+        mode = self.mode_combo.currentText()
+        self.selection_combo_a.clear()
+        self.selection_combo_b.hide()
+        self.label_vs.hide()
+        self.sell_checkbox.show()
+        self.enabled_only_checkbox.hide()
+
+        if mode == "Category":
+            self.selection_combo_a.addItems(self.CATEGORIES)
+            self.selection_combo_a.setCurrentIndex(self.CATEGORIES.index("HIGH"))
+        elif mode == "Strategy":
+            self.selection_combo_a.addItems(self.STRATEGIES)
+            self.selection_combo_a.setCurrentIndex(
+                self.STRATEGIES.index("buyer_dev_HIGH") if "buyer_dev_HIGH" in self.STRATEGIES else 0
+            )
+            self.sell_checkbox.hide()
+            self.enabled_only_checkbox.show()
+        elif mode == "Compare":
+            self.selection_combo_a.addItems(self.STRATEGIES)
+            self.selection_combo_b.clear()
+            self.selection_combo_b.addItems(self.STRATEGIES)
+            self.selection_combo_b.show()
+            self.label_vs.show()
+            self.sell_checkbox.hide()
+            if len(self.STRATEGIES) > 1:
+                self.selection_combo_b.setCurrentIndex(1)
+
+    def _on_threshold_change(self, value):
+        self.threshold_label.setText(f"{value / 100:.2f}")
+
+    def _on_analyze(self):
+        # Stop any previous worker before starting a new one
+        if self.worker is not None and self.worker.isRunning():
+            try:
+                self.worker.finished.disconnect()
+                self.worker.error.disconnect()
+            except TypeError:
+                pass  # Signals were not connected
+            self.worker.wait(2000)
+            self.worker = None
+
+        mode_text = self.mode_combo.currentText().lower()
+        threshold = self.threshold_slider.value() / 100.0
+
+        self.analyze_button.setEnabled(False)
+        self.status_label.setText("Analyzing...")
+        self.table.setRowCount(0)
+        self.detail_text.hide()
+
+        kwargs = {"threshold": threshold, "top_n": 50}
+
+        if mode_text == "category":
+            kwargs["category"] = self.selection_combo_a.currentText()
+            kwargs["sell"] = self.sell_checkbox.isChecked()
+        elif mode_text == "strategy":
+            kwargs["strategy"] = self.selection_combo_a.currentText()
+            kwargs["enabled_only"] = self.enabled_only_checkbox.isChecked()
+        elif mode_text == "compare":
+            mode_text = "compare"
+            kwargs["strat_a"] = self.selection_combo_a.currentText()
+            kwargs["strat_b"] = self.selection_combo_b.currentText()
+
+        self.worker = RuleOverlapWorker(mode_text, **kwargs)
+        self.worker.finished.connect(self._on_results)
+        self.worker.error.connect(self._on_error)
+        self.worker.start()
+
+    def _on_results(self, results, fingerprints):
+        self.analyze_button.setEnabled(True)
+        fp_count = len(fingerprints) if fingerprints else 0
+        self.status_label.setText(
+            f"Analyzed {fp_count} rules. Found {len(results)} pairs above threshold."
+        )
+        self._results = results
+        self._fingerprints = fingerprints
+
+        self.table.setSortingEnabled(False)
+        self.table.setRowCount(len(results))
+        for i, r in enumerate(results):
+            self.table.setItem(i, 0, QTableWidgetItem(r.rule_a))
+            self.table.setItem(i, 1, QTableWidgetItem(r.rule_b))
+
+            score_item = QTableWidgetItem()
+            score_item.setData(QtCore.Qt.DisplayRole, round(r.score, 3))
+            self.table.setItem(i, 2, score_item)
+
+            trig_item = QTableWidgetItem()
+            trig_item.setData(QtCore.Qt.DisplayRole, round(r.trigger_score, 3))
+            self.table.setItem(i, 3, trig_item)
+
+            guard_item = QTableWidgetItem()
+            guard_item.setData(QtCore.Qt.DisplayRole, round(r.guard_score, 3))
+            self.table.setItem(i, 4, guard_item)
+
+            prev_item = QTableWidgetItem()
+            prev_item.setData(QtCore.Qt.DisplayRole, round(r.prevent_score, 3))
+            self.table.setItem(i, 5, prev_item)
+
+            self.table.setItem(i, 6, QTableWidgetItem(r.summary))
+        self.table.setSortingEnabled(True)
+
+    def _on_error(self, error_msg):
+        self.analyze_button.setEnabled(True)
+        self.status_label.setText(f"Error: {error_msg}")
+
+    def _on_detail(self):
+        selected = self.table.selectedItems()
+        if not selected:
+            return
+        row = selected[0].row()
+        rule_a = self.table.item(row, 0).text()
+        rule_b = self.table.item(row, 1).text()
+
+        # Find fingerprints
+        fp_a = fp_b = None
+        if hasattr(self, "_fingerprints") and self._fingerprints:
+            for fp in self._fingerprints:
+                if fp and fp.class_name == rule_a:
+                    fp_a = fp
+                elif fp and fp.class_name == rule_b:
+                    fp_b = fp
+
+        lines = [f"Detail: {rule_a} vs {rule_b}"]
+        lines.append(f"Score: {self.table.item(row, 2).data(QtCore.Qt.DisplayRole)}")
+        lines.append("")
+
+        if fp_a and fp_b:
+            # Show column overlap for triggers
+            cols_a = set()
+            cols_b = set()
+            for t in fp_a.triggers:
+                if not t.is_noop:
+                    cols_a |= t.df_columns
+            for t in fp_b.triggers:
+                if not t.is_noop:
+                    cols_b |= t.df_columns
+
+            shared = cols_a & cols_b
+            only_a = cols_a - cols_b
+            only_b = cols_b - cols_a
+
+            lines.append("-- Trigger Columns --")
+            if shared:
+                lines.append(f"  Shared: {sorted(shared)}")
+            if only_a:
+                lines.append(f"  Only {rule_a}: {sorted(only_a)}")
+            if only_b:
+                lines.append(f"  Only {rule_b}: {sorted(only_b)}")
+            if not cols_a and not cols_b:
+                lines.append("  (both triggers are no-ops or NFI delegators)")
+
+            # Show guard details
+            active_guards_a = sum(1 for g in fp_a.guards if not g.is_noop)
+            active_guards_b = sum(1 for g in fp_b.guards if not g.is_noop)
+            lines.append(f"\n-- Guards --")
+            lines.append(f"  {rule_a}: {active_guards_a} active / {len(fp_a.guards)} total")
+            lines.append(f"  {rule_b}: {active_guards_b} active / {len(fp_b.guards)} total")
+
+            # Show prevent details
+            active_prev_a = sum(1 for p in fp_a.prevents if not p.is_noop)
+            active_prev_b = sum(1 for p in fp_b.prevents if not p.is_noop)
+            lines.append(f"\n-- Prevents --")
+            lines.append(f"  {rule_a}: {active_prev_a} active / {len(fp_a.prevents)} total")
+            lines.append(f"  {rule_b}: {active_prev_b} active / {len(fp_b.prevents)} total")
+
+            if fp_a.is_nfi_delegator:
+                lines.append(f"\n  {rule_a} delegates to NFI: {fp_a.nfi_info}")
+            if fp_b.is_nfi_delegator:
+                lines.append(f"  {rule_b} delegates to NFI: {fp_b.nfi_info}")
+        else:
+            lines.append("(Fingerprint details not available for this pair)")
+
+        self.detail_text.setPlainText("\n".join(lines))
+        self.detail_text.show()
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
